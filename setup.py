@@ -6,7 +6,11 @@ import sys
 import imp
 import subprocess
 
-## Python 2.6 subprocess.check_output compatibility. Thanks Greg Hewgill!
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+from distutils import spawn
+
+# Python 2.6 subprocess.check_output compatibility. Thanks Greg Hewgill!
 if 'check_output' not in dir(subprocess):
     def check_output(cmd_args, *args, **kwargs):
         proc = subprocess.Popen(
@@ -18,9 +22,6 @@ if 'check_output' not in dir(subprocess):
         return out
     subprocess.check_output = check_output
 
-from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
-from distutils import spawn
 
 try:
     import colorama
@@ -34,7 +35,7 @@ except ImportError:
 # Add the current directory to the module search path.
 sys.path.insert(0, os.path.abspath('.'))
 
-## Constants
+# Constants
 CODE_DIRECTORY = 'pcc'
 DOCS_DIRECTORY = 'docs'
 TESTS_DIRECTORY = 'tests'
@@ -55,7 +56,7 @@ metadata = imp.load_source(
     'metadata', os.path.join(CODE_DIRECTORY, 'metadata.py'))
 
 
-## Miscellaneous helper functions
+# Miscellaneous helper functions
 
 def get_project_files():
     """Retrieve a list of project files, ignoring hidden files.
@@ -181,7 +182,9 @@ def _test():
     :return: exit code
     """
     # Make sure to import pytest in this function. For the reason, see here:
-    # <http://pytest.org/latest/goodpractises.html#integration-with-setuptools-test-commands>  # NOPEP8
+    # url split in 2, else too long for style parser
+    """<http://pytest.org/latest/goodpractises.html#
+    integration-with-setuptools-test-commands>"""  # NOPEP8
     import pytest
     # This runs the unit tests.
     # It also runs doctest, but only on the modules in TESTS_DIRECTORY.
@@ -201,7 +204,11 @@ def _test_all():
 # Setuptools' automatic run of 2to3 on the source code. The recommended way to
 # run tests is still `paver test_all'.
 # See <http://pythonhosted.org/setuptools/python3.html>
-# Code based on <http://pytest.org/latest/goodpractises.html#integration-with-setuptools-test-commands>  # NOPEP8
+# Code based on
+"""<http://pytest.org/latest/goodpractises.html#
+integration-with-setuptools-test-commands>"""  # NOPEP8
+
+
 class TestAllCommand(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
