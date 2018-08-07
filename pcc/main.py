@@ -8,6 +8,7 @@ import argparse
 import sys
 
 from pcc import metadata
+from pcc.preprocessor.preprocess import preprocess
 
 
 def main(argv):
@@ -37,13 +38,25 @@ URL: <{url}>
         description=metadata.description,
         epilog=epilog)
     arg_parser.add_argument(
+        "filesToProcess")
+    arg_parser.add_argument(
         '-V', '--version',
         action='version',
         version='{0} {1}'.format(metadata.project, metadata.version))
+    arg_parser.add_argument(
+        '-E',
+        help='only run the preprocessor',
+        action='store_true')
+    arguments = arg_parser.parse_args(args=argv[1:])
+    inputFile = arguments.filesToProcess
 
-    arg_parser.parse_args(args=argv[1:])
-
-    print(epilog)
+    if arguments.E is not None:
+        # only perform the preprocessor step
+        preprocessFileString = preprocess(inputFile)
+        print(preprocessFileString, end='')
+        pass
+    else:
+        pass
 
     return 0
 
