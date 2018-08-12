@@ -25,7 +25,7 @@ def runTrigraphReplacement(inputFileAsString):
 
 def preprocess(file):
     with open(file, 'r') as fileToRead:
-        inputFileAsString = fileToRead.read().replace('\n', '')
+        inputFileAsString = fileToRead.read()
     trigraphRelaced = runTrigraphReplacement(inputFileAsString)
 
     return trigraphRelaced

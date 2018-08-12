@@ -30,8 +30,14 @@ class TestTrigraphs(object):
             main(['progname', preprocessorArg, inputFileWithPath])
             out, err = capsys.readouterr()
             with open(outputFileWithPath, 'r') as fileToRead:
-                outputFileAsString = fileToRead.read().replace('\n', '')
+                outputFileAsString = fileToRead.read()
             # the outputted file needs to match exactly
-            assert out == outputFileAsString
+            outputList = out.split('\n')
+            outputFileAsList = outputFileAsString.split('\n')
+            outputListSize = len(outputList)
+            outputFileAsListSize = len(outputFileAsList)
+            assert outputListSize == outputFileAsListSize
+            for i in range(outputFileAsListSize):
+                assert outputList[i] == outputFileAsList[i], 'for line %d' % i
             # there should be no error
             assert err == ''
