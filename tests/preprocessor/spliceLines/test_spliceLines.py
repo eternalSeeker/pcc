@@ -12,10 +12,10 @@ import pytest
 parametrize = pytest.mark.parametrize
 
 
-class TestTrigraphs(object):
+class TestLineSplicing(object):
 
     @parametrize('preprocessorArg', ['-E'])
-    def test_trigraphs(self, preprocessorArg, capsys):
+    def test_lineSplicing(self, preprocessorArg, capsys):
         inputPath = 'input'
         outputPath = 'output'
         pathOfThisFile = abspath(dirname(__file__))
@@ -37,7 +37,7 @@ class TestTrigraphs(object):
             outputListSize = len(outputList)
             outputFileAsListSize = len(outputFileAsList)
             assert outputListSize == outputFileAsListSize, \
-                'for line %s' % fileToPreprocess
+                'for file %s' % fileToPreprocess
             for i in range(outputFileAsListSize):
                 assert outputList[i] == outputFileAsList[i], 'for line %d' % i
             # there should be no error

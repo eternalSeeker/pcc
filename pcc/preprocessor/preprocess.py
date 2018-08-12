@@ -3,6 +3,7 @@
 
 import copy
 
+
 trigraphs = {
     '??=':  '#',
     '??/':  '\\',
@@ -23,9 +24,15 @@ def runTrigraphReplacement(inputFileAsString):
     return trigraphRelaced
 
 
-def preprocess(file):
-    with open(file, 'r') as fileToRead:
-        inputFileAsString = fileToRead.read()
-    trigraphRelaced = runTrigraphReplacement(inputFileAsString)
+def lineSplicing(inputFileAsString):
+    lineSpliced = copy.copy(inputFileAsString)
+    backslashAndNewline = '\\\n'
+    lineSpliced = lineSpliced.replace(backslashAndNewline, '')
 
-    return trigraphRelaced
+    return lineSpliced
+
+
+def preprocess(inputFileAsString):
+    trigraphRelaced = runTrigraphReplacement(inputFileAsString)
+    lineSpliced = lineSplicing(trigraphRelaced)
+    return lineSpliced

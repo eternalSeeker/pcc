@@ -52,7 +52,9 @@ URL: <{url}>
 
     if arguments.E is not None:
         # only perform the preprocessor step
-        preprocessFileString = preprocess(inputFile)
+        with open(inputFile, 'r') as fileToRead:
+            inputFileAsString = fileToRead.read()
+        preprocessFileString = preprocess(inputFileAsString)
         print(preprocessFileString, end='')
         pass
     else:
