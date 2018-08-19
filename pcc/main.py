@@ -8,7 +8,7 @@ import argparse
 import sys
 
 from pcc import metadata
-from pcc.preprocessor.preprocess import preprocess
+from pcc.preprocessor.preprocess import Preprocessor
 
 
 def main(argv):
@@ -54,7 +54,9 @@ URL: <{url}>
         # only perform the preprocessor step
         with open(inputFile, 'r') as fileToRead:
             inputFileAsString = fileToRead.read()
-        preprocessFileString = preprocess(inputFileAsString)
+        preprocessor = Preprocessor(inputFileAsString)
+        preprocessor.preprocess()
+        preprocessFileString = preprocessor.processedFile
         print(preprocessFileString, end='')
         pass
     else:
