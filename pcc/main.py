@@ -44,17 +44,25 @@ URL: <{url}>
         action='version',
         version='{0} {1}'.format(metadata.project, metadata.version))
     arg_parser.add_argument(
+        '-I',
+        help='directory to include',
+        action='append')
+    arg_parser.add_argument(
         '-E',
         help='only run the preprocessor',
         action='store_true')
+    # ignore the name of the program
     arguments = arg_parser.parse_args(args=argv[1:])
     inputFile = arguments.filesToProcess
+    includeDirs = arguments.I
+    if arguments.I:
+        includeDirs = arguments.I
 
     if arguments.E is not None:
         # only perform the preprocessor step
         with open(inputFile, 'r') as fileToRead:
             inputFileAsString = fileToRead.read()
-        preprocessor = Preprocessor(inputFileAsString)
+        preprocessor = Preprocessor(inputFileAsString, includeDirs)
         preprocessor.preprocess()
         preprocessFileString = preprocessor.processedFile
         print(preprocessFileString, end='')

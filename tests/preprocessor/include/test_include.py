@@ -16,6 +16,7 @@ class TestLineSplicing(object):
 
     @parametrize('preprocessorArg', ['-E'])
     def test_include(self, preprocessorArg, capsys):
+        includeDirs = ['-Itests/preprocessor/include/input']
         inputPath = 'input'
         outputPath = 'output'
         pathOfThisFile = abspath(dirname(__file__))
@@ -27,18 +28,27 @@ class TestLineSplicing(object):
             inputFileWithPath = join(inputPath, fileToPreprocess)
             outputFileWithPath = join(outputPath, fileToPreprocess)
             # this test will not raise SystemExit
-            main(['progname', preprocessorArg, inputFileWithPath])
+            argsv = []
+            argsv.append('progname')
+            argsv.append(preprocessorArg)
+            argsv.extend(includeDirs)
+            argsv.append(inputFileWithPath)
+            main(argsv)
             out, err = capsys.readouterr()
             with open(outputFileWithPath, 'r') as fileToRead:
                 outputFileAsString = fileToRead.read()
             # the outputted file needs to match exactly
+            outputFileAsString = outputFileAsString.replace('\r', '')
             outputList = out.split('\n')
             outputFileAsList = outputFileAsString.split('\n')
             outputListSize = len(outputList)
             outputFileAsListSize = len(outputFileAsList)
             assert outputListSize == outputFileAsListSize, \
-                'for file %s' % fileToPreprocess
+                'for file %s, size %d != %d' % \
+                (fileToPreprocess, outputListSize, outputFileAsListSize)
             for i in range(outputFileAsListSize):
-                assert outputList[i] == outputFileAsList[i], 'for line %d' % i
+                assert outputList[i] == outputFileAsList[i], \
+                    'for line %d, <%s> != <%s>' %\
+                    (i, outputList[i], outputFileAsList[i])
             # there should be no error
             assert err == ''

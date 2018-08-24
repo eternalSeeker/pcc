@@ -32,12 +32,14 @@ class TestLineSplicing(object):
             with open(outputFileWithPath, 'r') as fileToRead:
                 outputFileAsString = fileToRead.read()
             # the outputted file needs to match exactly
+            outputFileAsString = outputFileAsString.replace('\r', '')
             outputList = out.split('\n')
             outputFileAsList = outputFileAsString.split('\n')
             outputListSize = len(outputList)
             outputFileAsListSize = len(outputFileAsList)
             assert outputListSize == outputFileAsListSize, \
-                'for file %s' % fileToPreprocess
+                'for file %s, size %d != %d' % \
+                (fileToPreprocess, outputListSize, outputFileAsListSize)
             for i in range(outputFileAsListSize):
                 assert outputList[i] == outputFileAsList[i], 'for line %d' % i
             # there should be no error

@@ -32,8 +32,9 @@ class TestMain(object):
     def test_version(self, versionarg, capsys):
         with raises(SystemExit) as exc_info:
             main(['progname', versionarg])
-        out, err = capsys.readouterr()
+        err, out = capsys.readouterr()
         # Should print out version.
+        assert err == ''
         assert out == '{0} {1}\n'.format(metadata.project, metadata.version)
         # Should exit with zero return code.
         assert exc_info.value.code == 0
