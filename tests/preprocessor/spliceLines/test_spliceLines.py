@@ -38,8 +38,9 @@ class TestLineSplicing(object):
             outputListSize = len(outputList)
             outputFileAsListSize = len(outputFileAsList)
             assert outputListSize == outputFileAsListSize, \
-                'for file %s, size %d != %d' % \
-                (fileToPreprocess, outputListSize, outputFileAsListSize)
+                'for file %s, size %d != %d, output \n<%s>\n testOut \n<%s>' \
+                % (fileToPreprocess, outputListSize, outputFileAsListSize, out,
+                   outputFileAsString)
             for i in range(outputFileAsListSize):
                 assert outputList[i] == outputFileAsList[i], 'for line %d' % i
             # there should be no error
