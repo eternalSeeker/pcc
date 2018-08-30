@@ -15,6 +15,16 @@ class Preprocessor:
             list[i] += '\n'
         return list
 
+    def assertEqual(self, a, b):
+        if isinstance(a, str):
+            assert a == b, '<%s> != <%s>' % (a, b)
+        else:
+            assert a == b, '<%s> != <%s>' % (str(a), str(b))
+
+    def replaceSubStringCurrentLine(self, old, new):
+        self.listOfCodeLines[self.lineCount] = \
+            self.listOfCodeLines[self.lineCount].replace(old, new)
+
     def __init__(self, inputFileAsString, includeDirs):
         self.originalInputFile = copy.copy(inputFileAsString)
         self.processedFile = ''
@@ -36,9 +46,7 @@ class Preprocessor:
 
     def runTrigraphReplacement(self):
         for key in self.trigraphs.keys():
-            tmp = self.listOfCodeLines[self.lineCount].\
-                replace(key, self.trigraphs[key])
-            self.listOfCodeLines[self.lineCount] = tmp
+            self.replaceSubStringCurrentLine(key, self.trigraphs[key])
 
     def lineSplicing(self):
         backslashAndNewline = '\\\n'
@@ -104,23 +112,29 @@ class Preprocessor:
             pprint.pprint(self.listOfCodeLines))
 
     def macroDefinitionAndExpansion(self):
-        if '#define' in self.listOfCodeLines[self.lineCount]:
-            matchObj = re.match(r'.*?#define(.*)\s*(.*)',
+        while '#define' in self.listOfCodeLines[self.lineCount]:
+            matchObj = re.match(r'.*?#define(.*)',
                                 self.listOfCodeLines[self.lineCount],
                                 re.M | re.I | re.DOTALL)
             if matchObj:
-                token = matchObj.group(1)
-                tokenSequence = matchObj.group(2)
-                assert token == '', 'token <%s>' % (token)
+                list = matchObj.group(1).split()
+                token = list[0]
+                if len(list) > 1:
+                    tokenSequence = ''.join(list[1:])
+                else:
+                    tokenSequence = ''
                 self.tokens[token] = tokenSequence
-                self.listOfCodeLines[self.lineCount] = \
-                    re.sub(r'\s*?#define'+token+'.*?\n', ' ',
-                           self.listOfCodeLines[self.lineCount],
-                           re.M | re.I | re.MULTILINE | re.DOTALL)
+                self.listOfCodeLines.pop(self.lineCount)
             else:
-                pass
-                # assert self.listOfCodeLines[self.lineCount] == '', \
-                #    'file <%s>' % ( self.listOfCodeLines[self.lineCount] )
+                self.dumpCodeList()
+        # replace all tokens by their token sequence
+        areThereTokensLeftInTheLine = True
+        while areThereTokensLeftInTheLine:
+            areThereTokensLeftInTheLine = False
+            for token in self.tokens.keys():
+                if token in self.listOfCodeLines[self.lineCount]:
+                    self.replaceSubStringCurrentLine(token, self.tokens[token])
+                    areThereTokensLeftInTheLine = True
 
     def preprocess(self):
         # restart the preprocessing from the original file
@@ -147,8 +161,9 @@ class Preprocessor:
         self.lineCount = 0
         while self.lineCount < len(self.listOfCodeLines):
             # K&R A 12.3
-            # self.macroDefinitionAndExpansion()
+            self.macroDefinitionAndExpansion()
             # R&R A 12.4
             self.includeFiles()
             self.lineCount += 1
+
         self.processedFile = ''.join(self.listOfCodeLines)
