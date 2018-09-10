@@ -6,6 +6,33 @@ import re
 import os.path
 import pprint
 import pcc.utils.warning
+import pcc.utils.stringParsing
+
+
+class MacroObject:
+
+    def __init__(self, identifier, argumentList, tokenSequence):
+        self.identifier = identifier
+        self.tokenSequence = tokenSequence
+        self.argumentList = argumentList
+
+    def getNumberOfArguments(self):
+        return len(self.argumentList)
+
+    def getIdentifier(self):
+        return self.identifier
+
+    def getTokenSequence(self):
+        return self.tokenSequence
+
+    def fillInMacro(self, arguments):
+        macroString = self.tokenSequence
+        assert len(self.argumentList) == 2, '%d' % len(self.argumentList)
+        for i in range(len(self.argumentList)):
+            macroString = macroString.replace(self.argumentList[i],
+                                              arguments[i])
+
+        return macroString
 
 
 class Preprocessor:
@@ -160,9 +187,32 @@ class Preprocessor:
         while areThereTokensLeftInTheLine:
             areThereTokensLeftInTheLine = False
             for token in self.tokens.keys():
-                if token in self.listOfCodeLines[self.lineCount]:
-                    self.replaceSubStringCurrentLine(token, self.tokens[token])
-                    areThereTokensLeftInTheLine = True
+                areThereTokensLeftInTheLine = self.replaceTokenIfFound(
+                    areThereTokensLeftInTheLine, token)
+
+    def replaceTokenIfFound(self, areThereTokensLeftInTheLine, token):
+        if token in self.listOfCodeLines[self.lineCount]:
+            obj = self.tokens[token]
+            if obj.getNumberOfArguments() == 0:
+                self.\
+                    replaceSubStringCurrentLine(token, obj.getTokenSequence())
+            else:
+                startIndex = self.listOfCodeLines[self.lineCount]. \
+                    find(token)
+                argumentString = pcc.utils.stringParsing.\
+                    extractTextForEnclosedParenthesis(self.listOfCodeLines[
+                                                      self.lineCount],
+                                                      startIndex)
+                if argumentString.count(',') > 0:
+                    args = argumentString.split(',')
+                else:
+                    args = list(argumentString)
+                macroString = obj.fillInMacro(args)
+                stringToReplace = token + '(' + argumentString + ')'
+                self.replaceSubStringCurrentLine(stringToReplace,
+                                                 macroString)
+            areThereTokensLeftInTheLine = True
+        return areThereTokensLeftInTheLine
 
     def addTokens(self):
         linePopped = False
@@ -173,11 +223,30 @@ class Preprocessor:
             if matchObj:
                 list = matchObj.group(1).split()
                 token = list[0]
+                if '(' in token:
+                    startIndex = 0
+                    extractedString = pcc.utils.stringParsing.\
+                        extractTextForEnclosedParenthesis(token, startIndex)
+                    numberOfArguments = extractedString.count(',') + 1
+                    if numberOfArguments >= 1:
+                        argumentList = extractedString.split(',')
+                    else:
+                        argumentList = []
+                        argumentList.append(extractedString)
+                    identifier = token.split('(')[0]
+                else:
+                    identifier = token
+                    argumentList = []
+
                 if len(list) > 1:
                     tokenSequence = ''.join(list[1:])
                 else:
                     tokenSequence = ''
-                self.tokens[token] = tokenSequence
+                obj = MacroObject(identifier, argumentList, tokenSequence)
+                if identifier in self.tokens.keys():
+                    self.preproccessorError('Macro already defined')
+                else:
+                    self.tokens[identifier] = obj
                 self.listOfCodeLines.pop(self.lineCount)
                 self.souceLineCount += 1
                 linePopped = True
