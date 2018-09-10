@@ -12,7 +12,7 @@ import pytest
 parametrize = pytest.mark.parametrize
 
 
-class TestLineSplicing(object):
+class TestMacro(object):
 
     @parametrize('preprocessorArg', ['-E'])
     def test_include(self, preprocessorArg, capsys):

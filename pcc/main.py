@@ -62,7 +62,7 @@ URL: <{url}>
         # only perform the preprocessor step
         with open(inputFile, 'r') as fileToRead:
             inputFileAsString = fileToRead.read()
-        preprocessor = Preprocessor(inputFileAsString, includeDirs)
+        preprocessor = Preprocessor(inputFile, inputFileAsString, includeDirs)
         preprocessor.preprocess()
         preprocessFileString = preprocessor.processedFile
         print(preprocessFileString, end='')

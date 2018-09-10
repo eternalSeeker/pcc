@@ -5,9 +5,18 @@ import copy
 import re
 import os.path
 import pprint
+import pcc.utils.warning
 
 
 class Preprocessor:
+
+    def preproccessorWarning(self, message):
+        pcc.utils.warning.warning(self.originalInputFileName,
+                                  self.souceLineCount, message)
+
+    def preproccessorError(self, message):
+        pcc.utils.warning.error(self.originalInputFileName,
+                                self.souceLineCount, message)
 
     def stringToListWithNewLines(self, sourceFile):
         list = sourceFile.split('\n')
@@ -25,13 +34,15 @@ class Preprocessor:
         self.listOfCodeLines[self.lineCount] = \
             self.listOfCodeLines[self.lineCount].replace(old, new)
 
-    def __init__(self, inputFileAsString, includeDirs):
+    def __init__(self, inputFile, inputFileAsString, includeDirs):
+        self.originalInputFileName = inputFile
         self.originalInputFile = copy.copy(inputFileAsString)
         self.processedFile = ''
         self.tokens = dict()
         self.includeDirs = includeDirs
         self.listOfCodeLines = []
         self.lineCount = 0
+        self.souceLineCount = 1
         self.trigraphs = {
             '??=':  '#',
             '??/':  '\\',
@@ -58,6 +69,7 @@ class Preprocessor:
             self.listOfCodeLines[self.lineCount] = \
                 tmp + self.listOfCodeLines[self.lineCount + 1]
             self.listOfCodeLines.pop(self.lineCount + 1)
+            self.souceLineCount += 1
 
     def includeFiles(self):
         if '#include' in self.listOfCodeLines[self.lineCount]:
@@ -71,6 +83,7 @@ class Preprocessor:
                 self.fillInInclude(matchObj)
             else:
                 # no match, nothing to do
+                self.preproccessorWarning('could not parse include statement')
                 pass
 
     def fillInInclude(self, matchObj):
@@ -92,10 +105,8 @@ class Preprocessor:
                     isFileFound = True
         if isFileFound is False:
             # error file does not exist
-            # TODO issue an error if the file does not exits
-            assert filename is None
-            assert filename is not None
-            pass
+            self.preproccessorError('file to include <%s> not found' %
+                                    (filename))
 
     def replaceIncludeWithContentOfFile(self, fileToInclude):
         includedFile = fileToInclude.read()
@@ -111,9 +122,52 @@ class Preprocessor:
         assert self.listOfCodeLines is None, '<%s>' % (
             pprint.pprint(self.listOfCodeLines))
 
+    def removeTokens(self):
+        linePopped = False
+        if '#undef' in self.listOfCodeLines[self.lineCount]:
+            matchObj = re.match(r'.*?#undef (.*)',
+                                self.listOfCodeLines[self.lineCount],
+                                re.M | re.I | re.DOTALL)
+            if matchObj:
+                # remove all spaces and only look at the first element
+                tokenToRemove = matchObj.group(1).split()[0]
+                if tokenToRemove in self.tokens.keys():
+                    self.tokens.pop(tokenToRemove, None)
+                    self.listOfCodeLines.pop(self.lineCount)
+                    self.souceLineCount += 1
+                    linePopped = True
+                else:
+                    self.preproccessorError('token <%s> does not exist' %
+                                            (tokenToRemove))
+        return linePopped
+
     def macroDefinitionAndExpansion(self):
+        linePopped = False
+        # loop until there are no more lines removed from the list
+        while True:
+            linePopped = self.addTokens()
+            if linePopped is True:
+                continue
+            linePopped = self.removeTokens()
+            if linePopped is True:
+                continue
+            self.replaceTokens()
+            break
+
+    def replaceTokens(self):
+        # replace all tokens by their token sequence
+        areThereTokensLeftInTheLine = True
+        while areThereTokensLeftInTheLine:
+            areThereTokensLeftInTheLine = False
+            for token in self.tokens.keys():
+                if token in self.listOfCodeLines[self.lineCount]:
+                    self.replaceSubStringCurrentLine(token, self.tokens[token])
+                    areThereTokensLeftInTheLine = True
+
+    def addTokens(self):
+        linePopped = False
         while '#define' in self.listOfCodeLines[self.lineCount]:
-            matchObj = re.match(r'.*?#define(.*)',
+            matchObj = re.match(r'.*?#define (.*)',
                                 self.listOfCodeLines[self.lineCount],
                                 re.M | re.I | re.DOTALL)
             if matchObj:
@@ -125,16 +179,11 @@ class Preprocessor:
                     tokenSequence = ''
                 self.tokens[token] = tokenSequence
                 self.listOfCodeLines.pop(self.lineCount)
+                self.souceLineCount += 1
+                linePopped = True
             else:
                 self.dumpCodeList()
-        # replace all tokens by their token sequence
-        areThereTokensLeftInTheLine = True
-        while areThereTokensLeftInTheLine:
-            areThereTokensLeftInTheLine = False
-            for token in self.tokens.keys():
-                if token in self.listOfCodeLines[self.lineCount]:
-                    self.replaceSubStringCurrentLine(token, self.tokens[token])
-                    areThereTokensLeftInTheLine = True
+        return linePopped
 
     def preprocess(self):
         # restart the preprocessing from the original file
@@ -147,23 +196,29 @@ class Preprocessor:
         self.listOfCodeLines = copy.copy(list)
 
         self.lineCount = 0
+        self.souceLineCount = 1
         while self.lineCount < len(self.listOfCodeLines):
             # K&R A 12.1
             self.runTrigraphReplacement()
             self.lineCount += 1
+            self.souceLineCount += 1
 
         self.lineCount = 0
+        self.souceLineCount = 1
         while self.lineCount < len(self.listOfCodeLines):
             # K&R A 12.2
             self.lineSplicing()
             self.lineCount += 1
+            self.souceLineCount += 1
 
         self.lineCount = 0
+        self.souceLineCount = 1
         while self.lineCount < len(self.listOfCodeLines):
             # K&R A 12.3
             self.macroDefinitionAndExpansion()
             # R&R A 12.4
             self.includeFiles()
             self.lineCount += 1
+            self.souceLineCount += 1
 
         self.processedFile = ''.join(self.listOfCodeLines)
