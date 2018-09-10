@@ -1,0 +1,2 @@
+/*this file has an error preprocessor directive with a message*/
+#error "error"

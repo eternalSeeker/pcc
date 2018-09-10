@@ -185,6 +185,20 @@ class Preprocessor:
                 self.dumpCodeList()
         return linePopped
 
+    def errorGeneration(self):
+        if '#error' in self.listOfCodeLines[self.lineCount]:
+
+            matchObj = re.match(r'.*?#error(.*)',
+                                self.listOfCodeLines[self.lineCount],
+                                re.M | re.I | re.DOTALL)
+            if matchObj:
+                message = ''
+                if matchObj.group(1):
+                    message = matchObj.group(1)
+                self.preproccessorError(message)
+                self.listOfCodeLines.pop(self.lineCount)
+                self.souceLineCount += 1
+
     def preprocess(self):
         # restart the preprocessing from the original file
         sourceFile = copy.copy(self.originalInputFile)
@@ -216,8 +230,11 @@ class Preprocessor:
         while self.lineCount < len(self.listOfCodeLines):
             # K&R A 12.3
             self.macroDefinitionAndExpansion()
-            # R&R A 12.4
+            # K&R A 12.4
             self.includeFiles()
+
+            # K&R A 12.7
+            self.errorGeneration()
             self.lineCount += 1
             self.souceLineCount += 1
 
