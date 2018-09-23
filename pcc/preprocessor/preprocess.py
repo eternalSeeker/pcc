@@ -186,10 +186,18 @@ class Preprocessor:
             self.replaceTokens()
             break
 
+    def isConditionalCompilationLine(self):
+        conditionalCompilationLines = ['#ifdef', '#ifndef']
+        for lineToExplude in conditionalCompilationLines:
+            if lineToExplude in self.listOfCodeLines[self.lineCount]:
+                return True
+        return False
+
     def replaceTokens(self):
         # replace all tokens by their token sequence
         areThereTokensLeftInTheLine = True
-        while areThereTokensLeftInTheLine:
+        while areThereTokensLeftInTheLine and not \
+                self.isConditionalCompilationLine():
             areThereTokensLeftInTheLine = False
             for token in self.tokens.keys():
                 areThereTokensLeftInTheLine = self.replaceTokenIfFound(
@@ -273,6 +281,93 @@ class Preprocessor:
                 self.listOfCodeLines.pop(self.lineCount)
                 self.souceLineCount += 1
 
+    def evaluateContantExpression(self, constantExpression):
+        return False
+
+    def conditionCompilation(self):
+        if '#if' in self.listOfCodeLines[self.lineCount]:
+            ifLine = self.listOfCodeLines[self.lineCount]
+            partIsActive = self.checkIfBranchIsActive(ifLine)
+            finished = False
+            numberOfNestedConditions = 0
+            currentIndex = self.lineCount+1
+            # add an empty line instead of the #if line
+            codeToInclude = ['\n']
+            while not finished:
+                if '#endif' in self.listOfCodeLines[currentIndex]:
+                    finished, numberOfNestedConditions = self.processEndif(
+                        finished, numberOfNestedConditions)
+                elif '#if' in self.listOfCodeLines[currentIndex]:
+                    numberOfNestedConditions += 1
+                elif '#elif' in self.listOfCodeLines[currentIndex]:
+                    partIsActive = self.checkIfElifIsActive(ifLine,
+                                                            partIsActive)
+                elif '#else' in self.listOfCodeLines[currentIndex]:
+                    partIsActive = self.isElsePartActive(partIsActive)
+                else:
+                    self.parseLine(codeToInclude, currentIndex, partIsActive)
+
+                currentIndex += 1
+            del self.listOfCodeLines[self.lineCount: currentIndex]
+            self.listOfCodeLines[self.lineCount:self.lineCount] = \
+                codeToInclude
+
+    def processEndif(self, finished, numberOfNestedConditions):
+        if numberOfNestedConditions == 0:
+            finished = True
+        else:
+            numberOfNestedConditions -= 1
+        return finished, numberOfNestedConditions
+
+    def parseLine(self, codeToInclude, currentIndex, partIsActive):
+        if partIsActive is True:
+            codeToInclude. \
+                append(self.listOfCodeLines[currentIndex])
+        else:
+            pass
+
+    def isElsePartActive(self, partIsActive):
+        if partIsActive is False:
+            partIsActive = True
+        elif partIsActive is True:
+            partIsActive = None
+        return partIsActive
+
+    def checkIfElifIsActive(self, ifLine, partIsActive):
+        if partIsActive is True:
+            partIsActive = None
+        elif partIsActive is False:
+            constantExpression = ifLine.split('#elif ')[1]
+            partIsActive = \
+                self.evaluateContantExpression(constantExpression)
+        return partIsActive
+
+    def checkIfBranchIsActive(self, ifLine):
+        # check the branches of the conditional compilation
+        # partIsActive is True if the branch is active
+        #                 False if the active branch is not yet encountered
+        #                 None if the active branch is already added
+        if '#ifdef' in ifLine:
+            identifier = ifLine.split('#ifdef')[1]
+            identifier = ''.join(identifier.split())
+            if identifier in self.tokens.keys():
+                partIsActive = True
+            else:
+                partIsActive = False
+        elif '#ifndef' in ifLine:
+            identifier = ifLine.split('#ifndef')[1]
+            identifier = ''.join(identifier.split())
+            if identifier not in self.tokens.keys():
+                partIsActive = True
+            else:
+                partIsActive = False
+
+        else:
+            constantExpression = ifLine.split('#if ')[1]
+            partIsActive = \
+                self.evaluateContantExpression(constantExpression)
+        return partIsActive
+
     def preprocess(self):
         # restart the preprocessing from the original file
         sourceFile = copy.copy(self.originalInputFile)
@@ -306,7 +401,8 @@ class Preprocessor:
             self.macroDefinitionAndExpansion()
             # K&R A 12.4
             self.includeFiles()
-
+            # K&R A 12.5
+            self.conditionCompilation()
             # K&R A 12.7
             self.errorGeneration()
             self.lineCount += 1
