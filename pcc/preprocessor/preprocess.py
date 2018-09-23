@@ -103,11 +103,16 @@ class Preprocessor:
             # regex DOTALL dot also matches newline,
             # .*? any sequence of chars optional
             # TODO #include can only start with whitespace chars
-            matchObj = re.match(r'.*?#include.*?\"(.*)\".*?',
-                                self.listOfCodeLines[self.lineCount],
-                                re.M | re.I | re.MULTILINE | re.DOTALL)
-            if matchObj:
-                self.fillInInclude(matchObj)
+            matchObjQuotes = re.match(r'.*?#include.*?\"(.*)\".*?',
+                                      self.listOfCodeLines[self.lineCount],
+                                      re.M | re.I | re.MULTILINE | re.DOTALL)
+            matchObjLessThan = re.match(r'.*?#include.*?<(.*)>.*?',
+                                        self.listOfCodeLines[self.lineCount],
+                                        re.M | re.I | re.MULTILINE | re.DOTALL)
+            if matchObjQuotes:
+                self.fillInInclude(matchObjQuotes)
+            elif matchObjLessThan:
+                self.fillInInclude(matchObjLessThan)
             else:
                 # no match, nothing to do
                 self.preproccessorWarning('could not parse include statement')
