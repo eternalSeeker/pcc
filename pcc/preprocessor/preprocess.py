@@ -187,7 +187,7 @@ class Preprocessor:
             break
 
     def isConditionalCompilationLine(self):
-        conditionalCompilationLines = ['#ifdef', '#ifndef']
+        conditionalCompilationLines = ['#ifdef', '#ifndef', '#if ']
         for lineToExplude in conditionalCompilationLines:
             if lineToExplude in self.listOfCodeLines[self.lineCount]:
                 return True
@@ -293,21 +293,45 @@ class Preprocessor:
             currentIndex = self.lineCount+1
             # add an empty line instead of the #if line
             codeToInclude = ['\n']
-            while not finished:
+            addLine = True
+            while finished is False \
+                    and currentIndex < len(self.listOfCodeLines):
                 if '#endif' in self.listOfCodeLines[currentIndex]:
-                    finished, numberOfNestedConditions = self.processEndif(
+                    finished, numberOfNestedConditions, addLine = \
+                        self.processEndif(
                         finished, numberOfNestedConditions)
+
                 elif '#if' in self.listOfCodeLines[currentIndex]:
                     numberOfNestedConditions += 1
+                    addLine = True
+                elif numberOfNestedConditions > 0:
+                    # add all in the nested part
+                    addLine = True
                 elif '#elif' in self.listOfCodeLines[currentIndex]:
+                    # if the part was active, add it
+                    # if the part was not active and  became active, do not
+                    #   add it
+                    # else it was not active so not add it
+                    addLine = partIsActive
                     partIsActive = self.checkIfElifIsActive(ifLine,
                                                             partIsActive)
                 elif '#else' in self.listOfCodeLines[currentIndex]:
+                    # if the part was active, add it
+                    # if the part was not active and  became active, do not
+                    #   add it
+                    # else it was not active so not add it
+                    addLine = partIsActive
                     partIsActive = self.isElsePartActive(partIsActive)
                 else:
+                    addLine = True
+
+                if addLine is True:
                     self.parseLine(codeToInclude, currentIndex, partIsActive)
 
                 currentIndex += 1
+            if finished is False:
+                message = 'could not find closing #endif'
+                self.preproccessorError(message)
             del self.listOfCodeLines[self.lineCount: currentIndex]
             self.listOfCodeLines[self.lineCount:self.lineCount] = \
                 codeToInclude
@@ -317,7 +341,11 @@ class Preprocessor:
             finished = True
         else:
             numberOfNestedConditions -= 1
-        return finished, numberOfNestedConditions
+        if finished is True:
+            addLine = False
+        else:
+            addLine = True
+        return finished, numberOfNestedConditions, addLine
 
     def parseLine(self, codeToInclude, currentIndex, partIsActive):
         if partIsActive is True:
@@ -350,6 +378,7 @@ class Preprocessor:
         if '#ifdef' in ifLine:
             identifier = ifLine.split('#ifdef')[1]
             identifier = ''.join(identifier.split())
+
             if identifier in self.tokens.keys():
                 partIsActive = True
             else:

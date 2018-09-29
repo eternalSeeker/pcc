@@ -48,7 +48,7 @@ class TestConditionalCompilation(object):
                 (fileToPreprocess, outputListSize, outputFileAsListSize)
             for i in range(outputFileAsListSize):
                 assert outputList[i] == outputFileAsList[i], \
-                    'for line %d, <%s> != <%s>' %\
-                    (i, outputList[i], outputFileAsList[i])
+                    'for file %s line %d, <%s> != <%s>' %\
+                    (fileToPreprocess, i, outputList[i], outputFileAsList[i])
             # there should be no error
             assert err == ''
