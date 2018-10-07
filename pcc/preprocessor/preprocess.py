@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import copy
@@ -298,8 +298,7 @@ class Preprocessor:
                     and currentIndex < len(self.listOfCodeLines):
                 if '#endif' in self.listOfCodeLines[currentIndex]:
                     finished, numberOfNestedConditions, addLine = \
-                        self.processEndif(
-                        finished, numberOfNestedConditions)
+                        self.processEndif(finished, numberOfNestedConditions)
 
                 elif '#if' in self.listOfCodeLines[currentIndex]:
                     numberOfNestedConditions += 1
