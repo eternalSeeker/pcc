@@ -84,10 +84,6 @@ Instructions
 
         pip install -r requirements-dev.txt
 
-#. Install ``argparse`` package when developing for Python 2.6::
-
-        pip install argparse
-
 #. Run the tests::
 
         paver test_all
@@ -186,31 +182,37 @@ Jython_ and IronPython_ may also work, but have not been tested. If there is int
 Licenses
 ========
 
-The code which makes up this Python project template is licensed under the MIT/X11 license. Feel free to use it in your free software/open-source or proprietary projects.
+.. _`Python Software Foundation License`: https://docs.python.org/3/license.html
+.. _`Sphinx Simplified BSD License`: https://github.com/sphinx-doc/sphinx/blob/master/LICENSE
+.. _`Paver Modified BSD License`: https://github.com/paver/paver/blob/master/LICENSE.txt
+.. _`colorama Modified BSD License`: https://github.com/tartley/colorama/blob/master/LICENSE.txt
+.. _`flake8 MIT/X11 License`: https://gitlab.com/pycqa/flake8/blob/master/LICENSE
+.. _`mock Modified BSD License`: https://github.com/testing-cabal/mock/blob/master/LICENSE.txt
+.. _`pytest MIT/X11 License`: https://docs.pytest.org/en/latest/license.html
+.. _`tox MIT/X11 License`: https://github.com/tox-dev/tox/blob/master/LICENSE
 
+The code which makes up this Python project template is licensed under the MIT/X11 license. Feel free to use it in your free software/open-source or proprietary projects.
 The template also uses a number of other pieces of software, whose licenses are listed here for convenience. It is your responsibility to ensure that these licenses are up-to-date for the version of each tool you are using.
 
-+------------------------+----------------------------------+
-|Project                 |License                           |
-+========================+==================================+
-|Python itself           |Python Software Foundation License|
-+------------------------+----------------------------------+
-|argparse (now in stdlib)|Python Software Foundation License|
-+------------------------+----------------------------------+
-|Sphinx                  |Simplified BSD License            |
-+------------------------+----------------------------------+
-|Paver                   |Modified BSD License              |
-+------------------------+----------------------------------+
-|colorama                |Modified BSD License              |
-+------------------------+----------------------------------+
-|flake8                  |MIT/X11 License                   |
-+------------------------+----------------------------------+
-|mock                    |Modified BSD License              |
-+------------------------+----------------------------------+
-|pytest                  |MIT/X11 License                   |
-+------------------------+----------------------------------+
-|tox                     |MIT/X11 License                   |
-+------------------------+----------------------------------+
++------------------------+---------------------------------------+
+|Project                 |License                                |
++========================+=======================================+
+|Python itself           |`Python Software Foundation License`_  |
++------------------------+---------------------------------------+
+|Sphinx                  |`Sphinx Simplified BSD License`_       |
++------------------------+---------------------------------------+
+|Paver                   |`Paver Modified BSD License`_          |
++------------------------+---------------------------------------+
+|colorama                |`colorama Modified BSD License`_       |
++------------------------+---------------------------------------+
+|flake8                  |`flake8 MIT/X11 License`_              |
++------------------------+---------------------------------------+
+|mock                    |`mock Modified BSD License`_           |
++------------------------+---------------------------------------+
+|pytest                  |`pytest MIT/X11 License`_              |
++------------------------+---------------------------------------+
+|tox                     |`tox MIT/X11 License`_                 |
++------------------------+---------------------------------------+
 
 Issues
 ======
