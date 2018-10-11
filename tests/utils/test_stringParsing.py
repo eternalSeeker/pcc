@@ -8,6 +8,7 @@ class testObjects:
         self.inputString = inputString
         self.startIndex = startIndex
         self.outputString = outputString
+        self.testObjects = []
 
 
 class TestStringParsing(object):

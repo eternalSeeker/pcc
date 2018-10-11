@@ -28,8 +28,7 @@ class TestTrigraphs(object):
             inputFileWithPath = join(inputPath, fileToPreprocess)
             outputFileWithPath = join(outputPath, fileToPreprocess)
             # this test will not raise SystemExit
-            argsv = []
-            argsv.append('progname')
+            argsv = list(['progname'])
             argsv.append(preprocessorArg)
             argsv.extend(includeDirs)
             argsv.append(inputFileWithPath)
@@ -47,7 +46,7 @@ class TestTrigraphs(object):
             assert outputListSize == outputFileAsListSize, \
                 'for file %s, size %d != %d, output \n<%s>\n testOut \n<%s>' \
                 % (fileToPreprocess, outputListSize, outputFileAsListSize,
-                   (out), (outputFileAsString))
+                   out, outputFileAsString)
             for i in range(outputFileAsListSize):
                 assert outputList[i] == outputFileAsList[i],  \
                     'for file %s, line %d  <%s> != <%s> ' % \

@@ -45,13 +45,15 @@ class Preprocessor:
         pcc.utils.warning.error(self.originalInputFileName,
                                 self.souceLineCount, message)
 
-    def stringToListWithNewLines(self, sourceFile):
+    @staticmethod
+    def stringToListWithNewLines(sourceFile):
         list = sourceFile.split('\n')
         for i in range(len(list) - 1):
             list[i] += '\n'
         return list
 
-    def assertEqual(self, a, b):
+    @staticmethod
+    def assertEqual(a, b):
         if isinstance(a, str):
             assert a == b, '<%s> != <%s>' % (a, b)
         else:
@@ -88,7 +90,7 @@ class Preprocessor:
 
     def lineSplicing(self):
         backslashAndNewline = '\\\n'
-        while(backslashAndNewline in self.listOfCodeLines[self.lineCount]):
+        while backslashAndNewline in self.listOfCodeLines[self.lineCount]:
 
             tmp = self.listOfCodeLines[self.lineCount].\
                 replace(backslashAndNewline, '')
@@ -121,9 +123,8 @@ class Preprocessor:
         # there is an include in the file
         # get the filename from the match
         filename = matchObj.group(1)
-        dirsToSearch = []
-        # add the current dirrectory to the include dirs
-        dirsToSearch.append(os.getcwd())
+        # add the current directory to the include dirs
+        dirsToSearch = list(os.getcwd())
         if self.includeDirs:
             dirsToSearch.extend(self.includeDirs)
         isFileFound = False
@@ -137,7 +138,7 @@ class Preprocessor:
         if isFileFound is False:
             # error file does not exist
             self.preproccessorError('file to include <%s> not found' %
-                                    (filename))
+                                    filename)
 
     def replaceIncludeWithContentOfFile(self, fileToInclude):
         includedFile = fileToInclude.read()
@@ -169,11 +170,10 @@ class Preprocessor:
                     linePopped = True
                 else:
                     self.preproccessorError('token <%s> does not exist' %
-                                            (tokenToRemove))
+                                            tokenToRemove)
         return linePopped
 
     def macroDefinitionAndExpansion(self):
-        linePopped = False
         # loop until there are no more lines removed from the list
         while True:
             linePopped = self.addTokens()
@@ -243,8 +243,7 @@ class Preprocessor:
                     if numberOfArguments >= 1:
                         argumentList = extractedString.split(',')
                     else:
-                        argumentList = []
-                        argumentList.append(extractedString)
+                        argumentList = list(extractedString)
                     identifier = token.split('(')[0]
                 else:
                     identifier = token
@@ -292,7 +291,6 @@ class Preprocessor:
             currentIndex = self.lineCount+1
             # add an empty line instead of the #if line
             codeToInclude = ['\n']
-            addLine = True
             while finished is False \
                     and currentIndex < len(self.listOfCodeLines):
                 if '#endif' in self.listOfCodeLines[currentIndex]:
@@ -334,7 +332,8 @@ class Preprocessor:
             self.listOfCodeLines[self.lineCount:self.lineCount] = \
                 codeToInclude
 
-    def processEndif(self, finished, numberOfNestedConditions):
+    @staticmethod
+    def processEndif(finished, numberOfNestedConditions):
         if numberOfNestedConditions == 0:
             finished = True
         else:
@@ -352,7 +351,8 @@ class Preprocessor:
         else:
             pass
 
-    def isElsePartActive(self, partIsActive):
+    @staticmethod
+    def isElsePartActive(partIsActive):
         if partIsActive is False:
             partIsActive = True
         elif partIsActive is True:

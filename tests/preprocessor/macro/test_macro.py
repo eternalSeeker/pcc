@@ -28,8 +28,7 @@ class TestMacro(object):
             inputFileWithPath = join(inputPath, fileToPreprocess)
             outputFileWithPath = join(outputPath, fileToPreprocess)
             # this test will not raise SystemExit
-            argsv = []
-            argsv.append('progname')
+            argsv = list(['progname'])
             argsv.append(preprocessorArg)
             argsv.extend(includeDirs)
             argsv.append(inputFileWithPath)
