@@ -102,11 +102,10 @@ class Preprocessor:
         if '#include' in self.listOfCodeLines[self.lineCount]:
             # regex DOTALL dot also matches newline,
             # .*? any sequence of chars optional
-            # TODO #include can only start with whitespace chars
-            matchObjQuotes = re.match(r'.*?#include.*?\"(.*)\".*?',
+            matchObjQuotes = re.match(r'\s*?#include.*?\"(.*)\".*?',
                                       self.listOfCodeLines[self.lineCount],
                                       re.M | re.I | re.MULTILINE | re.DOTALL)
-            matchObjLessThan = re.match(r'.*?#include.*?<(.*)>.*?',
+            matchObjLessThan = re.match(r'\s*?#include.*?<(.*)>.*?',
                                         self.listOfCodeLines[self.lineCount],
                                         re.M | re.I | re.MULTILINE | re.DOTALL)
             if matchObjQuotes:
