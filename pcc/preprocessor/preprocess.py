@@ -291,46 +291,54 @@ class Preprocessor:
             currentIndex = self.lineCount+1
             # add an empty line instead of the #if line
             codeToInclude = ['\n']
-            while finished is False \
-                    and currentIndex < len(self.listOfCodeLines):
-                if '#endif' in self.listOfCodeLines[currentIndex]:
-                    finished, numberOfNestedConditions, addLine = \
-                        self.processEndif(finished, numberOfNestedConditions)
-
-                elif '#if' in self.listOfCodeLines[currentIndex]:
-                    numberOfNestedConditions += 1
-                    addLine = True
-                elif numberOfNestedConditions > 0:
-                    # add all in the nested part
-                    addLine = True
-                elif '#elif' in self.listOfCodeLines[currentIndex]:
-                    # if the part was active, add it
-                    # if the part was not active and  became active, do not
-                    #   add it
-                    # else it was not active so not add it
-                    addLine = partIsActive
-                    partIsActive = self.checkIfElifIsActive(ifLine,
-                                                            partIsActive)
-                elif '#else' in self.listOfCodeLines[currentIndex]:
-                    # if the part was active, add it
-                    # if the part was not active and  became active, do not
-                    #   add it
-                    # else it was not active so not add it
-                    addLine = partIsActive
-                    partIsActive = self.isElsePartActive(partIsActive)
-                else:
-                    addLine = True
-
-                if addLine is True:
-                    self.parseLine(codeToInclude, currentIndex, partIsActive)
-
-                currentIndex += 1
+            currentIndex, finished = \
+                self.add_active_branch(codeToInclude, currentIndex, finished,
+                                       ifLine, numberOfNestedConditions,
+                                       partIsActive)
             if finished is False:
                 message = 'could not find closing #endif'
                 self.preproccessorError(message)
             del self.listOfCodeLines[self.lineCount: currentIndex]
             self.listOfCodeLines[self.lineCount:self.lineCount] = \
                 codeToInclude
+
+    def add_active_branch(self, codeToInclude, currentIndex, finished, ifLine,
+                          numberOfNestedConditions, partIsActive):
+        while finished is False \
+                and currentIndex < len(self.listOfCodeLines):
+            if '#endif' in self.listOfCodeLines[currentIndex]:
+                finished, numberOfNestedConditions, addLine = \
+                    self.processEndif(finished, numberOfNestedConditions)
+
+            elif '#if' in self.listOfCodeLines[currentIndex]:
+                numberOfNestedConditions += 1
+                addLine = True
+            elif numberOfNestedConditions > 0:
+                # add all in the nested part
+                addLine = True
+            elif '#elif' in self.listOfCodeLines[currentIndex]:
+                # if the part was active, add it
+                # if the part was not active and  became active, do not
+                #   add it
+                # else it was not active so not add it
+                addLine = partIsActive
+                partIsActive = self.checkIfElifIsActive(ifLine,
+                                                        partIsActive)
+            elif '#else' in self.listOfCodeLines[currentIndex]:
+                # if the part was active, add it
+                # if the part was not active and  became active, do not
+                #   add it
+                # else it was not active so not add it
+                addLine = partIsActive
+                partIsActive = self.isElsePartActive(partIsActive)
+            else:
+                addLine = True
+
+            if addLine is True:
+                self.parseLine(codeToInclude, currentIndex, partIsActive)
+
+            currentIndex += 1
+        return currentIndex, finished
 
     @staticmethod
     def processEndif(finished, numberOfNestedConditions):
