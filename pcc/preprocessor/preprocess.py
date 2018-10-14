@@ -7,6 +7,7 @@ import os.path
 import pprint
 import pcc.utils.warning
 import pcc.utils.stringParsing
+from .constantExpression import constantExpression
 
 
 class MacroObject:
@@ -279,8 +280,10 @@ class Preprocessor:
                 self.listOfCodeLines.pop(self.lineCount)
                 self.souceLineCount += 1
 
-    def evaluateContantExpression(self, constantExpression):
-        return False
+    def evaluateContantExpression(self, expression_string):
+        expression = constantExpression(expression_string)
+        evaluation = expression.evaluate()
+        return evaluation
 
     def conditionCompilation(self):
         if '#if' in self.listOfCodeLines[self.lineCount]:
@@ -371,9 +374,8 @@ class Preprocessor:
         if partIsActive is True:
             partIsActive = None
         elif partIsActive is False:
-            constantExpression = ifLine.split('#elif ')[1]
-            partIsActive = \
-                self.evaluateContantExpression(constantExpression)
+            expression = ifLine.split('#elif ')[1]
+            partIsActive = self.evaluateContantExpression(expression)
         return partIsActive
 
     def checkIfBranchIsActive(self, ifLine):
@@ -398,9 +400,9 @@ class Preprocessor:
                 partIsActive = False
 
         else:
-            constantExpression = ifLine.split('#if ')[1]
+            expression = ifLine.split('#if ')[1]
             partIsActive = \
-                self.evaluateContantExpression(constantExpression)
+                self.evaluateContantExpression(expression)
         return partIsActive
 
     def preprocess(self):
