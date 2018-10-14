@@ -1,11 +1,32 @@
 
-from enum import Enum
+from enum import Enum, unique
 
 
+@unique
 class logic(Enum):
-    OR = 1
-    AND = 2
-    XOR = 3
+
+    def and_function(self, first_member):
+        if first_member is False:
+            return False
+        else:
+            return None
+
+    def or_function(self, first_member):
+        if first_member is True:
+            return True
+        else:
+            return None
+
+    OR = (1, or_function)
+    AND = (2, and_function)
+    XOR = (3, or_function)
+
+    def __init__(self, enum_value, evaluate_function):
+        self.enum_value = enum_value
+        self.evaluate_function = evaluate_function
+
+    def evaluate(self, first_member):
+        return self.evaluate_function(self, first_member)
 
 
 class constantExpression:
@@ -24,16 +45,40 @@ class constantExpression:
         result = False
         string = self.constantExpressionString.strip()
 
+        list_of_elements = self.parse_input_string(string)
+
+        i = 0
+        while i < len(list_of_elements):
+            element = list_of_elements[i]
+            if isinstance(element, str):
+                # check if the eval is something like '1' or '0'
+                stripped_string = list_of_elements[i].strip()
+                if stripped_string.isdigit():
+                    number = int(stripped_string)
+                    result = number != 0
+            elif isinstance(element, logic):
+                tmp = element.evaluate(result)
+                if tmp:
+                    return tmp
+            i += 1
+
+        return result
+
+    def parse_input_string(self, string):
         list_of_elements = []
         element = ''
         i = 0
         while i < len(string):
-            if string[i] == '|' and 1+1 < len(string) and string[i+1] == '|':
+            if string[i] == '|' \
+                    and 1 + 1 < len(string) \
+                    and string[i + 1] == '|':
                 list_of_elements.append(element)
                 list_of_elements.append(logic.OR)
                 i += 2
                 element = ''
-            elif string[i] == '&' and 1+1 < len(string) and string[i+1] == '&':
+            elif string[i] == '&' \
+                    and 1 + 1 < len(string) \
+                    and string[i + 1] == '&':
                 list_of_elements.append(element)
                 list_of_elements.append(logic.AND)
                 i += 2
@@ -43,13 +88,4 @@ class constantExpression:
                 i += 1
         # add the last parsed element to the list
         list_of_elements.append(element)
-        i = 0
-        while i < len(list_of_elements):
-            # check if the eval is something like '1' or '0'
-            stripped_string = list_of_elements[i].strip()
-            if stripped_string.isdigit():
-                number = int(stripped_string)
-                result = number != 0
-            i += 1
-
-        return result
+        return list_of_elements
