@@ -9,6 +9,7 @@ import sys
 
 from pcc import metadata
 from pcc.preprocessor.preprocess import Preprocessor
+from pcc.AST.ast import Ast
 
 
 def main(argv):
@@ -51,25 +52,31 @@ URL: <{url}>
         '-E',
         help='only run the preprocessor',
         action='store_true')
+    arg_parser.add_argument(
+        '-fdump_tree',
+        help='dump the AST',
+        action='store_true')
     # ignore the name of the program
     arguments = arg_parser.parse_args(args=argv[1:])
     inputFile = arguments.filesToProcess
     includeDirs = arguments.I
     if arguments.I:
         includeDirs = arguments.I
-
-    if arguments.E is not None:
+    with open(inputFile, 'r') as fileToRead:
+        inputFileAsString = fileToRead.read()
+    preprocessor = Preprocessor(inputFile, inputFileAsString, includeDirs)
+    preprocessor.preprocess()
+    preprocessFileString = preprocessor.processedFile
+    if arguments.E:
         # only perform the preprocessor step
-        with open(inputFile, 'r') as fileToRead:
-            inputFileAsString = fileToRead.read()
-        preprocessor = Preprocessor(inputFile, inputFileAsString, includeDirs)
-        preprocessor.preprocess()
-        preprocessFileString = preprocessor.processedFile
         print(preprocessFileString, end='')
-        pass
-    else:
-        pass
-
+        return 0
+    ast = Ast(preprocessFileString)
+    result = ast.run_ast()
+    if result != 0:
+        return result
+    if arguments.fdump_tree:
+        print(ast.to_string(), end='')
     return 0
 
 
