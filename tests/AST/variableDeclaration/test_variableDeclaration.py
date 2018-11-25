@@ -31,6 +31,7 @@ def generate_ast_outputs():
         output_buffer = open(file_output_path, 'w')
         ast = pycparser.parse_file(file_input_path, use_cpp=False)
         ast.show(buf=output_buffer, showcoord=False)
+        output_buffer.close()
 
 
 class TestConditionalCompilation(object):
