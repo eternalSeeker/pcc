@@ -21,7 +21,8 @@ class VariableDeclaration(Statement):
         string += '    TypeDecl: ' + self.name + ', []\n'
         string += '      IdentifierType: [\'' + self.type + '\']\n'
         if self.initializer:
-            string += '    Constant: ' + self.type + ', ' + self.initializer
+            string += '    Constant: ' + self.type + ', ' + self.initializer \
+                      + '\n'
         return string
 
 
@@ -70,7 +71,7 @@ class Ast:
             identifier = list_of_tokens[1]
         if len(list_of_tokens) > 2:
             if list_of_tokens[2] == '=':
-                operand = self.read_initializer(list_of_tokens[2:])
+                operand = self.read_initializer(list_of_tokens[3:])
         if identifier:
             statement = VariableDeclaration(variable_type, identifier, operand)
             self.current_node.add_statement(statement)

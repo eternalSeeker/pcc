@@ -17,7 +17,11 @@ generate_outputs = tests.generateOutputsDecorator.generate_outputs
 parametrize = pytest.mark.parametrize
 
 files_to_test = [
-    'oneGlobalVariable.c'
+    'oneGlobalVariable.c',
+    'twoGlobalVariables.c',
+    'allTypes.c',
+    'variableInitialisation.c',
+    #  'variableComplexInitialisation.c' not yet implemented
 ]
 
 
