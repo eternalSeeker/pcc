@@ -2,17 +2,35 @@
 
 from pcc.main import main
 from os.path import join, abspath, dirname
+import pycparser
+import tests.generateOutputsDecorator
+import pytest
+
+
+generate_outputs = tests.generateOutputsDecorator.generate_outputs
 
 # The parametrize function is generated, so this doesn't work:
 #
 #     from pytest.mark import parametrize
 #
-import pytest
+
 parametrize = pytest.mark.parametrize
 
 files_to_test = [
     'oneGlobalVariable.c'
 ]
+
+
+@generate_outputs
+def generate_ast_outputs():
+    for file in files_to_test:
+        folder = dirname(__file__)
+        file_input_path = join(folder, 'input', file)
+        file_output_path = join(folder, 'output', file)
+
+        output_buffer = open(file_output_path, 'w')
+        ast = pycparser.parse_file(file_input_path, use_cpp=False)
+        ast.show(buf=output_buffer, showcoord=False)
 
 
 class TestConditionalCompilation(object):

@@ -15,7 +15,7 @@ from paver.tasks import environment
 # Import parameters from the setup file.
 from setup import (
     setup_dict, get_project_files, print_success_message,
-    print_failure_message, _lint, _test, _test_all,
+    print_failure_message, _lint, _test, _test_all, _generate_test_outputs,
     CODE_DIRECTORY, DOCS_DIRECTORY, TESTS_DIRECTORY, PYTEST_FLAGS)
 
 options(setup=setup_dict)
@@ -118,6 +118,13 @@ def test_all():
     else:
         print_failed()
     raise SystemExit(retcode)
+
+
+@task
+def generate_testOutputs():
+    """"Generate the outputs for all inputs of the tests"""
+    print("generate")
+    _generate_test_outputs()
 
 
 @task

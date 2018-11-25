@@ -83,7 +83,7 @@ class Ast:
         self.index += 1
 
     def to_string(self):
-        string = 'FileAST:\n'
+        string = 'FileAST: \n'
         for element in self.root_node.statement_sequence:
             string += element.to_string()
 

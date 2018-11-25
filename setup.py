@@ -10,6 +10,7 @@ import subprocess
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from distutils import spawn
+from tests.generateOutputsDecorator import generate_outputs
 
 # Python 2.6 subprocess.check_output compatibility. Thanks Greg Hewgill!
 if 'check_output' not in dir(subprocess):
@@ -198,6 +199,12 @@ def _test_all():
     :return: exit code
     """
     return _lint() + _test()
+
+
+def _generate_test_outputs():
+    print('found %d functions to call' % len(generate_outputs.registry))
+    for g in generate_outputs.registry:
+        g()
 
 
 # The following code is to allow tests to be run with `python setup.py test'.
