@@ -64,17 +64,27 @@ class Ast:
     def read_variable(self, statement):
         list_of_tokens = statement.split()
         variable_type = None
-        identifier = None
-        operand = None
         if list_of_tokens[0] in self.types:
             variable_type = list_of_tokens[0]
-            identifier = list_of_tokens[1]
-        if len(list_of_tokens) > 2:
-            if list_of_tokens[2] == '=':
-                operand = self.read_initializer(list_of_tokens[3:])
-        if identifier:
-            statement = VariableDeclaration(variable_type, identifier, operand)
-            self.current_node.add_statement(statement)
+        if variable_type:
+            declarations = statement.replace(variable_type + ' ', '')
+            list_of_declarations = declarations.split(',')
+            for declaration in list_of_declarations:
+                if '=' in declaration:
+                    parts = declaration.split('=')
+                    identifier = parts[0]
+                    initializer = parts[1]
+                    # remove all whitespace chars from initializer
+                    initializer = ''.join(initializer.split())
+                else:
+                    identifier = declaration
+                    initializer = None
+                # remove all whitespace chars from identifier
+                identifier = ''.join(identifier.split())
+                statement = VariableDeclaration(variable_type,
+                                                identifier,
+                                                initializer)
+                self.current_node.add_statement(statement)
 
     def read_next_statement(self):
         line = self.source_code_list[self.index]
