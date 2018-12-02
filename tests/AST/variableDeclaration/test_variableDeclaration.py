@@ -21,7 +21,8 @@ files_to_test = [
     'twoGlobalVariables.c',
     'allTypes.c',
     'variableInitialisation.c',
-    'combinedDeclaration.c'
+    'combinedDeclaration.c',
+    'combinedDeclarationWithInitializer.c'
     #  'variableComplexInitialisation.c' not yet implemented
 ]
 

@@ -10,19 +10,21 @@ class Statement:
 
 class VariableDeclaration(Statement):
 
-    def __init__(self, type, name, initializer):
+    def __init__(self, type, name, initializer, initializer_type):
         super(VariableDeclaration, self).__init__()
         self.type = type
         self.name = name
         self.initializer = initializer
+        self.initializer_type = initializer_type
 
     def to_string(self):
         string = '  Decl: ' + self.name + ', [], [], []\n'
         string += '    TypeDecl: ' + self.name + ', []\n'
         string += '      IdentifierType: [\'' + self.type + '\']\n'
         if self.initializer:
-            string += '    Constant: ' + self.type + ', ' + self.initializer \
-                      + '\n'
+            string += '    Constant: ' + \
+                      self.initializer_type + ', ' + \
+                      self.initializer + '\n'
         return string
 
 
@@ -56,10 +58,17 @@ class Ast:
 
         return 0
 
-    def read_initializer(self, args):
-        if args:
-            return args[0]
-        return None
+    def get_type_of_expression(self, expression):
+        type_string = None
+        try:
+            int(expression, 0)
+            type_string = 'int'
+            return type_string
+        except ValueError:
+            # it was not a number
+            pass
+
+        return type_string
 
     def read_variable(self, statement):
         list_of_tokens = statement.split()
@@ -76,14 +85,17 @@ class Ast:
                     initializer = parts[1]
                     # remove all whitespace chars from initializer
                     initializer = ''.join(initializer.split())
+                    initializer_type = self.get_type_of_expression(initializer)
                 else:
                     identifier = declaration
                     initializer = None
+                    initializer_type = None
                 # remove all whitespace chars from identifier
                 identifier = ''.join(identifier.split())
                 statement = VariableDeclaration(variable_type,
                                                 identifier,
-                                                initializer)
+                                                initializer,
+                                                initializer_type)
                 self.current_node.add_statement(statement)
 
     def read_next_statement(self):
