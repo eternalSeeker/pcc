@@ -1,1 +1,1 @@
-/*this file has an empty error preprocessor directive*/
+ error

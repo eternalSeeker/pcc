@@ -1,1 +1,1 @@
-/* this is a simple file*/
+int simple;

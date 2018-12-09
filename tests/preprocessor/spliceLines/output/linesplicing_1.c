@@ -1,8 +1,11 @@
-/*this tests if the line splicing works*/
-// I have a line of comments that continue here because that is what it should do
-// this line should not be spliced, as there is a 'a' \a
 
-// this has a random char \ inside
 
-// this line as first the newline and than the backslash
-\ and the rest of the line
+
+_I_have_a_line_of_comments_that_continue_here_because_that_is_what_it_should_do
+
+this_line_should_not_be_spliced,_as_there_is_a_'a'_\a
+
+this_has_a_random_char_\_inside
+
+this_line_as_first_the_newline_and_than_the_backslash
+\_and_the_rest_of_the_line

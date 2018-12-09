@@ -8,7 +8,10 @@ from os.path import join, abspath, dirname
 #     from pytest.mark import parametrize
 #
 import pytest
+import subprocess
+import tests.generateOutputsDecorator
 parametrize = pytest.mark.parametrize
+generate_outputs = tests.generateOutputsDecorator.generate_outputs
 
 files_to_test = [
     'constantExpression.c',
@@ -17,8 +20,32 @@ files_to_test = [
     'simple.c',
     'constantExpression_0.c',
     'else.c',
-    'nested_else.c'
+    # 'nested_else.c'
 ]
+
+
+@generate_outputs
+def generate_ast_outputs():
+    for file in files_to_test:
+        folder = dirname(__file__)
+        file_input_path = join(folder, 'input', file)
+        file_output_path = join(folder, 'output', file)
+        command = 'gcc -E %s' % file_input_path
+
+        response = subprocess.run(command, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE, shell=True)
+        # decode the outputted string to ascii and split the line while
+        # keeping the new line character(s)
+        captured_result = response.stdout.decode('ascii').splitlines(True)
+
+        if response:
+            if response.returncode == 0:
+                with open(file_output_path, 'w') as f:
+                    for output_line in captured_result:
+                        if '#' not in output_line:
+                            f.write(output_line)
+            else:
+                print('ERROR checking %s, got <%s>' % (file, response.stderr))
 
 
 class TestConditionalCompilation(object):
@@ -51,11 +78,12 @@ class TestConditionalCompilation(object):
         outputListSize = len(outputList)
         outputFileAsListSize = len(outputFileAsList)
         assert outputListSize == outputFileAsListSize, \
-            'for file %s, size %d != %d' % \
-            (fileToPreprocess, outputListSize, outputFileAsListSize)
+            'for file %s, size %d(got) != %d(req), got <%s> should be <%s>' % \
+            (fileToPreprocess, outputListSize, outputFileAsListSize,
+             out, outputFileAsString)
         for i in range(outputFileAsListSize):
             assert outputList[i] == outputFileAsList[i], \
                 'for file %s line %d, <%s> != <%s>' %\
-                (fileToPreprocess, i, outputList[i], outputFileAsList[i])
+                (fileToPreprocess, i, outputList, outputFileAsList)
         # there should be no error
         assert err == ''

@@ -1,2 +1,3 @@
-/*one simmple macro substitution*/
-int result = (2+5);
+
+
+int result = (2 + 5);

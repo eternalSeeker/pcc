@@ -98,7 +98,7 @@ class Preprocessor:
 
             self.listOfCodeLines[self.lineCount] = \
                 tmp + self.listOfCodeLines[self.lineCount + 1]
-            self.listOfCodeLines.pop(self.lineCount + 1)
+            self.listOfCodeLines[self.lineCount + 1] = '\n'
             self.souceLineCount += 1
 
     def includeFiles(self):
@@ -166,7 +166,8 @@ class Preprocessor:
                 tokenToRemove = matchObj.group(1).split()[0]
                 if tokenToRemove in self.tokens.keys():
                     self.tokens.pop(tokenToRemove, None)
-                    self.listOfCodeLines.pop(self.lineCount)
+                    # remove the line of the undef statement
+                    self.listOfCodeLines[self.lineCount] = '\n'
                     self.souceLineCount += 1
                     linePopped = True
                 else:
@@ -251,7 +252,17 @@ class Preprocessor:
                     argumentList = []
 
                 if len(list) > 1:
-                    tokenSequence = ''.join(list[1:])
+                    # find the start of the sequence part of the Macro,
+                    # by finding all occurances for the substring 'list[1]'
+                    # in the complete match object (this retains spacing
+                    # information)
+                    original_string = matchObj.group(1)
+                    start_of_sequence_string = list[1]
+                    starts = [match.start() for match in re.finditer(
+                        re.escape(start_of_sequence_string), original_string)]
+                    start_of_sequence = starts[-1]
+                    tokenSequence = original_string[start_of_sequence:]
+                    tokenSequence = tokenSequence.replace('\n', '')
                 else:
                     tokenSequence = ''
                 obj = MacroObject(identifier, argumentList, tokenSequence)
@@ -259,7 +270,8 @@ class Preprocessor:
                     self.preproccessorError('Macro already defined')
                 else:
                     self.tokens[identifier] = obj
-                self.listOfCodeLines.pop(self.lineCount)
+                # clear the line that contained the define
+                self.listOfCodeLines[self.lineCount] = '\n'
                 self.souceLineCount += 1
                 linePopped = True
             else:
@@ -286,6 +298,7 @@ class Preprocessor:
         return evaluation
 
     def conditionCompilation(self):
+
         if '#if' in self.listOfCodeLines[self.lineCount]:
             ifLine = self.listOfCodeLines[self.lineCount]
             partIsActive = self.checkIfBranchIsActive(ifLine)
@@ -301,30 +314,30 @@ class Preprocessor:
             if finished is False:
                 message = 'could not find closing #endif'
                 self.preproccessorError(message)
+
             del self.listOfCodeLines[self.lineCount: currentIndex]
-            self.listOfCodeLines[self.lineCount:self.lineCount] = \
-                codeToInclude
+            self.listOfCodeLines[self.lineCount:self.lineCount] = codeToInclude
+            assert True
 
     def add_active_branch(self, codeToInclude, currentIndex, finished, ifLine,
                           numberOfNestedConditions, partIsActive):
-        while finished is False \
-                and currentIndex < len(self.listOfCodeLines):
+        while finished is False and currentIndex < len(self.listOfCodeLines):
             if '#endif' in self.listOfCodeLines[currentIndex]:
-                finished, numberOfNestedConditions, addLine = \
-                    self.processEndif(finished, numberOfNestedConditions)
+                finished, numberOfNestedConditions = \
+                    self.processEndif(finished, numberOfNestedConditions,
+                                      currentIndex)
 
             elif '#if' in self.listOfCodeLines[currentIndex]:
                 numberOfNestedConditions += 1
-                addLine = True
             elif numberOfNestedConditions > 0:
                 # add all in the nested part
-                addLine = True
+                pass
             elif '#elif' in self.listOfCodeLines[currentIndex]:
                 # if the part was active, add it
                 # if the part was not active and  became active, do not
                 #   add it
                 # else it was not active so not add it
-                addLine = partIsActive
+                # TODO not correct
                 partIsActive = self.checkIfElifIsActive(ifLine,
                                                         partIsActive)
             elif '#else' in self.listOfCodeLines[currentIndex]:
@@ -332,33 +345,27 @@ class Preprocessor:
                 # if the part was not active and  became active, do not
                 #   add it
                 # else it was not active so not add it
-                addLine = partIsActive
                 partIsActive = self.isElsePartActive(partIsActive)
+                self.listOfCodeLines[currentIndex] = '\n'
             else:
-                addLine = True
+                pass
 
-            if addLine is True:
-                self.parseLine(codeToInclude, currentIndex, partIsActive)
+            self.parseLine(codeToInclude, currentIndex, partIsActive)
 
             currentIndex += 1
         return currentIndex, finished
 
-    @staticmethod
-    def processEndif(finished, numberOfNestedConditions):
+    def processEndif(self, finished, numberOfNestedConditions, currentIndex):
         if numberOfNestedConditions == 0:
             finished = True
+            self.listOfCodeLines[currentIndex] = '\n'
         else:
             numberOfNestedConditions -= 1
-        if finished is True:
-            addLine = False
-        else:
-            addLine = True
-        return finished, numberOfNestedConditions, addLine
+        return finished, numberOfNestedConditions
 
     def parseLine(self, codeToInclude, currentIndex, partIsActive):
         if partIsActive is True:
-            codeToInclude. \
-                append(self.listOfCodeLines[currentIndex])
+            codeToInclude.append(self.listOfCodeLines[currentIndex])
         else:
             pass
 

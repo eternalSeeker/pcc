@@ -8,7 +8,10 @@ from os.path import join, abspath, dirname
 #     from pytest.mark import parametrize
 #
 import pytest
+import subprocess
+import tests.generateOutputsDecorator
 parametrize = pytest.mark.parametrize
+generate_outputs = tests.generateOutputsDecorator.generate_outputs
 
 files_to_test = [
     'includeFishHook.c',
@@ -17,6 +20,31 @@ files_to_test = [
     'nestedInclude.c',
     'oneInclude.c'
 ]
+
+
+@generate_outputs
+def generate_ast_outputs():
+    for file in files_to_test:
+        folder = dirname(__file__)
+        file_input_path = join(folder, 'input', file)
+        file_output_path = join(folder, 'output', file)
+        command = 'gcc -E -Itests/preprocessor/include/input %s' % \
+                  file_input_path
+
+        response = subprocess.run(command, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE, shell=True)
+        # decode the outputted string to ascii and split the line while
+        # keeping the new line character(s)
+        captured_result = response.stdout.decode('ascii').splitlines(True)
+
+        if response:
+            if response.returncode == 0:
+                with open(file_output_path, 'w') as f:
+                    for output_line in captured_result:
+                        if '#' not in output_line:
+                            f.write(output_line)
+            else:
+                print('ERROR checking %s, got <%s>' % (file, response.stderr))
 
 
 class TestInclude(object):

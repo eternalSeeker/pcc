@@ -1,4 +1,4 @@
-/*this file contains a more realistic piece of C code using all trigraphs*/
+
 ??=include "helpMe.h"
 ??=define A_MULTI_LINE_DEFINE ??/
     (0x42)

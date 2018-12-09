@@ -1,2 +1,2 @@
-/*this file has an error preprocessor directive with a message*/
+int start;
 #error "error"

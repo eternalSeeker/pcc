@@ -1,2 +1,6 @@
-/*add more define in a file*/
-int res = (ONE+2);
+
+
+
+
+
+int res = (ONE + 2);

@@ -6,7 +6,6 @@ void foo(void);
 
 void foo(void)
 {
-    /*nice function*/
     int j = 0;
     test(j);
 }

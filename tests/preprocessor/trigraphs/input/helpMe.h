@@ -1,1 +1,1 @@
-/*included helpMe.h*/
+int help_me_h;
