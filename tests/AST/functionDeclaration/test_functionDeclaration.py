@@ -17,7 +17,13 @@ generate_outputs = tests.generateOutputsDecorator.generate_outputs
 parametrize = pytest.mark.parametrize
 
 files_to_test = [
-    'zeroArgsNoReturnArg.c'
+    'zeroArgsNoReturnArg.c',
+    'zeroArgsReturnInt.c',
+    'zeroArgsReturndouble.c',
+    'oneIntArgReturnInt.c',
+    'oneIntArgReturnChar.c',
+    'oneIntOneCharArgReturnInt.c',
+    'twoIntsArgReturnInt.c'
 ]
 
 

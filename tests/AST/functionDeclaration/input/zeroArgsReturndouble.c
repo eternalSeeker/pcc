@@ -1,0 +1,2 @@
+
+double bar(void);

@@ -12,19 +12,22 @@ class Statement:
 
 class VariableDeclaration(Statement):
 
-    def __init__(self, type, name, initializer, initializer_type):
+    def __init__(self, variable_type, name, initializer, initializer_type,
+                 depth=1):
         super(VariableDeclaration, self).__init__()
-        self.type = type
+        self.variable_type = variable_type
         self.name = name
         self.initializer = initializer
         self.initializer_type = initializer_type
+        self.depth = depth
 
     def __str__(self):
-        string = '  Decl: ' + self.name + ', [], [], []\n'
-        string += '    TypeDecl: ' + self.name + ', []\n'
-        string += '      IdentifierType: [\'' + self.type + '\']\n'
+        string = self.depth * '  ' + 'Decl: ' + self.name + ', [], [], []\n'
+        string += self.depth * '  ' + '  TypeDecl: ' + self.name + ', []\n'
+        string += self.depth * '  ' + '    IdentifierType: [\'' \
+            + self.variable_type + '\']\n'
         if self.initializer:
-            string += '    Constant: ' + \
+            string += self.depth * '  ' + '  Constant: ' + \
                       self.initializer_type + ', ' + \
                       self.initializer + '\n'
         return string
@@ -32,34 +35,41 @@ class VariableDeclaration(Statement):
 
 class FunctionArgument:
 
-    def __init__(self, type_name, type_decl, identifier):
+    def __init__(self, type_name, type_decl, identifier, depth=1):
         self.type_name = type_name
         self.type_decl = type_decl
         self.identifier = identifier
+        self.depth = depth
+
+    def __str__(self):
+        string = ''
+        string += self.depth * '  ' + 'Typename: ' \
+            + str(self.type_name) + ', []\n'
+        string += self.depth * '  ' + '  TypeDecl: ' \
+            + str(self.type_decl) + ', []\n'
+        string += self.depth * '  ' + '    IdentifierType: [\'' \
+            + str(self.identifier) + '\']\n'
+        return string
 
 
 class FunctionDeclaration(Statement):
 
-        def __init__(self, return_type, name, argument_list):
-            super(FunctionDeclaration, self).__init__()
-            self.return_type = return_type
-            self.name = name
-            self.argument_list = argument_list
+    def __init__(self, return_type, name, argument_list):
+        super(FunctionDeclaration, self).__init__()
+        self.return_type = return_type
+        self.name = name
+        self.argument_list = argument_list
 
-        def __str__(self):
-            string = '  Decl: ' + self.name + ', [], [], []\n'
-            string += '    FuncDecl: \n'
-            string += '      ParamList: \n'
-            for arg in self.argument_list:
-                string += '        Typename: ' + str(arg.type_name) + ', []\n'
-                string += '          TypeDecl: ' +\
-                          str(arg.type_decl) + ', []\n'
-                string += '            IdentifierType: [\'' + \
-                          str(arg.identifier) + '\']\n'
-            string += '      TypeDecl: ' + self.name + ', []\n'
-            string += '        IdentifierType: [\'' +\
-                      self.return_type + '\']\n'
-            return string
+    def __str__(self):
+        string = '  Decl: ' + self.name + ', [], [], []\n'
+        string += '    FuncDecl: \n'
+        string += '      ParamList: \n'
+        for arg in self.argument_list:
+            string += str(arg)
+        string += '      TypeDecl: ' + self.name + ', []\n'
+        string += '        IdentifierType: [\'' + \
+                  self.return_type + '\']\n'
+        return string
 
 
 class AstNode:
@@ -73,7 +83,6 @@ class AstNode:
 
 
 class Ast:
-
     c_types = ['int', 'char', 'float', 'double', 'void']
 
     def __init__(self, source_code):
@@ -84,6 +93,14 @@ class Ast:
         self.current_node = self.root_node
         self.source_code_list = []
         self.index = 0
+
+    def get_depth_in_tree(self):
+        depth = 1
+        node = self.current_node
+        while node != self.root_node:
+            node = node.parent_node
+            depth += 1
+        return depth
 
     def run_ast(self):
         self.source_code_list = self.source_code.split('\n')
@@ -104,9 +121,10 @@ class Ast:
 
         return type_string
 
-    def read_variable(self, statement):
+    def extract_variable_declaration_from_string(self, statement):
         list_of_tokens = statement.split()
         variable_type = None
+        result_list = []
         if list_of_tokens[0] in self.types:
             variable_type = list_of_tokens[0]
         if variable_type:
@@ -129,12 +147,18 @@ class Ast:
                 if '(' in identifier:
                     # there cannnot be a parentesis in the variable name,
                     # this is probably a function
-                    return
+                    return []
                 statement = VariableDeclaration(variable_type,
                                                 identifier,
                                                 initializer,
                                                 initializer_type)
-                self.current_node.add_statement(statement)
+                result_list.append(statement)
+        return result_list
+
+    def read_variable(self, statement):
+        result_list = self.extract_variable_declaration_from_string(statement)
+        for stat in result_list:
+            self.current_node.add_statement(stat)
 
     def read_function_declaration(self, statement):
         list_of_tokens = statement.split()
@@ -153,13 +177,23 @@ class Ast:
             for arg in list_of_args:
                 parts = arg.split()
                 arg_type = parts[0]
-                if arg_type != 'void':
-                    arg_name = parts[1]
-                else:
-                    arg_name = arg_type
+                if arg_type == 'void':
+                    depth = self.get_depth_in_tree()
+                    depth += 3
+                    arg_name = parts[0]
                     arg_type = None
-                funct_arg = FunctionArgument(arg_type, None, arg_name)
-                function_arguments.append(funct_arg)
+                    funct_arg = FunctionArgument(arg_type, None, arg_name,
+                                                 depth)
+                    function_arguments.append(funct_arg)
+                else:
+                    res = self.extract_variable_declaration_from_string(arg)
+                    if len(res) == 1:
+                        depth = self.get_depth_in_tree()
+                        depth += 3
+                        variable_declaration = res[0]
+                        variable_declaration.depth = depth
+                        function_arguments.append(variable_declaration)
+
             function_declaration = \
                 FunctionDeclaration(return_type, function_name,
                                     function_arguments)
@@ -176,6 +210,6 @@ class Ast:
     def to_string(self):
         string = 'FileAST: \n'
         for element in self.root_node.statement_sequence:
-            string += element.__str__()
+            string += str(element)
 
         return string
