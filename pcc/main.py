@@ -71,7 +71,7 @@ URL: <{url}>
         # only perform the preprocessor step
         print(preprocessFileString, end='')
         return 0
-    ast = Ast(preprocessFileString)
+    ast = Ast(preprocessFileString, inputFile)
     result = ast.run_ast()
     if result != 0:
         return result

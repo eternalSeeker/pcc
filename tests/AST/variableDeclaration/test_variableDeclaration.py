@@ -23,7 +23,7 @@ files_to_test = [
     'variableInitialisation.c',
     'combinedDeclaration.c',
     'combinedDeclarationWithInitializer.c'
-    #  'variableComplexInitialisation.c' not yet implemented
+    # 'variableComplexInitialisation.c' not yet implemented
 ]
 
 
