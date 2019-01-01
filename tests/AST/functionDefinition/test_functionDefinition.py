@@ -17,7 +17,11 @@ generate_outputs = tests.generateOutputsDecorator.generate_outputs
 parametrize = pytest.mark.parametrize
 
 files_to_test = [
-    'void_no_args.c'
+    'void_no_args.c',
+    'void_int_arg.c',
+    'void_double_arg.c',
+    'void_char_arg.c',
+    'void_int_char_args.c'
 ]
 
 

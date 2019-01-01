@@ -6,10 +6,16 @@ import copy
 
 class AstNode:
 
-    def __init__(self, depth=1):
+    def __init__(self, depth):
         self.statement_sequence = []
         self.parent_node = None
         self._depth = depth
+
+    def __str__(self):
+        string = ''
+        for arg in self.statement_sequence:
+            string += str(arg)
+        return string
 
     def add_statement(self, statement):
         statement.parent_node = self
@@ -33,7 +39,7 @@ class Statement(AstNode):
 class VariableDeclaration(Statement):
 
     def __init__(self, variable_type, name, initializer, initializer_type,
-                 depth=1):
+                 depth):
         super(VariableDeclaration, self).__init__(depth)
         self.variable_type = variable_type
         self.name = name
@@ -54,7 +60,7 @@ class VariableDeclaration(Statement):
 
 class FunctionArgument(Statement):
 
-    def __init__(self, type_name, type_decl, identifier, depth=1):
+    def __init__(self, type_name, type_decl, identifier, depth):
         super(FunctionArgument, self).__init__(depth)
         self.type_name = type_name
         self.type_decl = type_decl
@@ -62,18 +68,18 @@ class FunctionArgument(Statement):
 
     def __str__(self):
         string = ''
-        string += (self._depth+3) * '  ' + 'Typename: ' \
+        string += self._depth * '  ' + 'Typename: ' \
             + str(self.type_name) + ', []\n'
-        string += (self._depth+3) * '  ' + '  TypeDecl: ' \
+        string += self._depth * '  ' + '  TypeDecl: ' \
             + str(self.type_decl) + ', []\n'
-        string += (self._depth+3) * '  ' + '    IdentifierType: [\'' \
+        string += self._depth * '  ' + '    IdentifierType: [\'' \
             + str(self.identifier) + '\']\n'
         return string
 
 
 class FunctionDeclaration(Statement):
 
-    def __init__(self, return_type, name, argument_list, depth=1):
+    def __init__(self, return_type, name, argument_list, depth):
         super(FunctionDeclaration, self).__init__(depth)
         self.return_type = return_type
         self.name = name
@@ -94,18 +100,19 @@ class FunctionDeclaration(Statement):
         return_type = self.return_type
         name = self.name
         argument_list = copy.deepcopy(self.argument_list)
-        new_copy = type(self)(return_type, name, argument_list)
+        depth = self._depth
+        new_copy = type(self)(return_type, name, argument_list, depth)
         return new_copy
 
     def update_depth(self, depth):
         super(FunctionDeclaration, self).update_depth(depth)
         for argument in self.argument_list:
-            argument.update_depth(depth)
+            argument.update_depth(depth+3)
 
 
 class FunctionDefinition(Statement):
 
-    def __init__(self, depth=1):
+    def __init__(self, depth):
         super(FunctionDefinition, self).__init__(depth)
 
     def __str__(self):
@@ -157,7 +164,7 @@ class Ast:
         self.source_code = source_code
         self.is_completed = False
         self.types = Ast.c_types
-        self.root_node = AstNode()
+        self.root_node = AstNode(depth=1)
         self.current_node = self.root_node
         self.source_code_list = []
         self.index = 0
@@ -233,10 +240,13 @@ class Ast:
                     # there cannot be a parenthesis in the variable name,
                     # this is probably a function
                     return []
+                # todo check if correct
+                depth = self.get_depth_in_tree()
                 statement = VariableDeclaration(variable_type,
                                                 identifier,
                                                 initializer,
-                                                initializer_type)
+                                                initializer_type,
+                                                depth)
                 result_list.append(statement)
         return result_list
 
@@ -266,10 +276,8 @@ class Ast:
         self.current_node.add_statement(function_definition)
         self.current_node = function_definition
         decl = copy.deepcopy(function_declaration)
-        depth = self.get_depth_in_tree()
-        decl.update_depth(depth)
-        # todo investigate why it is needed to do the following line
-        function_declaration.update_depth(depth-1)
+        # todo access to protected member
+        decl.update_depth(decl._depth+1)
         self.current_node.add_statement(decl)
 
         line_number = self.parse_line(statements)
@@ -381,17 +389,17 @@ class Ast:
                     res = self.extract_variable_declaration_from_string(arg)
                     if len(res) == 1:
                         depth = self.get_depth_in_tree()
-                        depth += 3
                         variable_declaration = res[0]
-                        variable_declaration.update_depth(depth)
+                        variable_declaration.update_depth(depth+3)
                         function_arguments.append(variable_declaration)
-
+            # todo check
+            depth = self.get_depth_in_tree()
             function_declaration = \
                 FunctionDeclaration(return_type, function_name,
-                                    function_arguments)
-
+                                    function_arguments, depth)
             self.current_node.add_statement(function_declaration)
             self.declared_functions.append(function_declaration)
+            function_declaration.update_depth(depth)
             self.index += 1
         else:
             # not a function declaration
