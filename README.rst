@@ -5,30 +5,7 @@
 .. image:: https://travis-ci.org/seanfisk/python-project-template.png
    :target: https://travis-ci.org/seanfisk/python-project-template
 
-This project provides a best-practices template Python project which integrates several different tools. It saves you work by setting up a number of things, including documentation, code checking, and unit test runners.
-
-As it is an all-in-one solution, the tools used are rather opinionated. They include:
-
-* Paver_ for running miscellaneous tasks
-* Setuptools_ for distribution (Setuptools and Distribute_ have merged_)
-* Sphinx_ for documentation
-* flake8_ for source code checking
-* pytest_ for unit testing
-* mock_ for mocking (not required by the template, but included anyway)
-* tox_ for testing on multiple Python versions
-
-If you are new to Python or new to creating Python projects, see Kenneth Reitz's `Hitchhiker's Guide to Python`_ for an explanation of some of the tools used here.
-
-.. _Paver: http://paver.github.io/paver/
-.. _Setuptools: http://pythonhosted.org/setuptools/merge.html
-.. _Distribute: http://pythonhosted.org/distribute/
-.. _merged: http://pythonhosted.org/setuptools/merge.html
-.. _Sphinx: http://sphinx-doc.org/
-.. _flake8: https://pypi.python.org/pypi/flake8
-.. _pytest: http://pytest.org/latest/
-.. _mock: http://www.voidspace.org.uk/python/mock/
-.. _tox: http://testrun.org/tox/latest/
-.. _Hitchhiker's Guide to Python: http://docs.python-guide.org/en/latest/
+This project is intended to give an insight into the operation of a conmpiler. This compiler is written in Python and is optimized for readability of the source code rather than speed or size of the executables it produces.
 
 Project Setup
 =============
@@ -40,27 +17,8 @@ Instructions
 
 #. Clone the template project, replacing ``my-project`` with the name of the project you are creating::
 
-        git clone https://github.com/seanfisk/python-project-template.git my-project
+        git clone https://github.com/eternalSeeker/pcc.git my-project
         cd my-project
-
-#. Edit the metadata file ``my_module/metadata.py`` to correctly describe your project.
-
-#. Generate files based upon the project metadata you just entered::
-
-        python internal/generate.py
-
-   The generation script will remove all the template files and generate real files, then self-destruct upon completion.
-
-#. Delete the old git history and optionally re-initialize the repository::
-
-        rm -rf .git # or `ri -recurse -force .git' for PowerShell
-        git init
-
-#. Change the license in ``setup.py`` and replace the generated ``LICENSE`` file with the one of your choice. If you would like to use the MIT license, no change is necessary.
-
-#. Change the ``classifiers`` keyword in ``setup.py``. This *will* require modification.
-
-#. Replace this ``README`` with your own text.
 
 #. *(Optional, but good practice)* Create a new virtual environment for your project:
 
@@ -93,13 +51,16 @@ Instructions
        $ paver test_all
        ---> pavement.test_all
        No style errors
-       ========================================= test session starts =========================================
-       platform darwin -- Python 2.7.3 -- pytest-2.3.4
-       collected 5 items
+       ============================================ test session starts =============================================
+       platform cygwin -- Python 3.6.4, pytest-3.7.1, py-1.5.4, pluggy-0.7.1
+       rootdir: /cygdrive/c/Users/Bart/Downloads/pcc, inifile:
+
+       collected X items
 
        tests/test_main.py .....
+       <other tests>
 
-       ====================================== 5 passed in 0.05 seconds =======================================
+       ====================================== X passed in Y.ZZ seconds =======================================
          ___  _   ___ ___ ___ ___
         | _ \/_\ / __/ __| __|   \
         |  _/ _ \\__ \__ \ _|| |) |
@@ -121,14 +82,15 @@ Using Paver
 The ``pavement.py`` file comes with a number of tasks already set up for you. You can see a full list by typing ``paver help`` in the project root directory. The following are included::
 
     Tasks from pavement:
-    lint             - Perform PEP8 style check, run PyFlakes, and run McCabe complexity metrics on the code.
-    doc_open         - Build the HTML docs and open them in a web browser.
-    coverage         - Run tests and show test coverage report.
-    doc_watch        - Watch for changes in the Sphinx documentation and rebuild when changed.
-    test             - Run the unit tests.
-    get_tasks        - Get all paver-defined tasks.
-    commit           - Commit only if all the tests pass.
-    test_all         - Perform a style check and run all unit tests.
+    lint                 - Perform PEP8 style check, run PyFlakes, and run McCabe complexity metrics on the code.
+    doc_open             - Build the HTML docs and open them in a web browser.
+    coverage             - Run tests and show test coverage report.
+    doc_watch            - Watch for changes in the Sphinx documentation and rebuild when changed.
+    test                 - Run the unit tests.
+    get_tasks            - Get all paver-defined tasks.
+    commit               - Commit only if all the tests pass.
+    test_all             - Perform a style check and run all unit tests.
+    generate_testOutputs - Generate the output for the self generated test inputs
 
 For example, to run the both the unit tests and lint, run the following in the project root directory::
 
@@ -164,20 +126,6 @@ For more information, see the answer provided by Ian Bicking (author of pip) to 
 .. _ensure repeatability: http://www.pip-installer.org/en/latest/cookbook.html#ensuring-repeatability
 .. _this StackOverflow question: http://stackoverflow.com/questions/6947988/when-to-use-pip-requirements-file-versus-install-requires-in-setup-py
 
-Supported Python Versions
-=========================
-
-Python Project Template supports the following versions out of the box:
-
-* CPython 2.6, 2.7, 3.3
-* PyPy 1.9
-
-CPython 3.0-3.2 may also work but are at this point unsupported. PyPy 2.0.2 is known to work but is not run on Travis-CI.
-
-Jython_ and IronPython_ may also work, but have not been tested. If there is interest in support for these alternative implementations, please open a feature request!
-
-.. _Jython: http://jython.org/
-.. _IronPython: http://ironpython.net/
 
 Licenses
 ========
@@ -214,6 +162,8 @@ The template also uses a number of other pieces of software, whose licenses are 
 |tox                     |`tox MIT/X11 License`_                 |
 +------------------------+---------------------------------------+
 
+This project was based on the https://github.com/seanfisk/python-project-template/ from Sean Fisk and Benjamin Schwarze.
+
 Issues
 ======
 
@@ -235,5 +185,4 @@ This command line would just test Python 2.7.
 Authors
 =======
 
-* Sean Fisk
-* Benjamin Schwarze
+* Bart Opsomer
