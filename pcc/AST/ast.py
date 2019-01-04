@@ -134,6 +134,18 @@ class CompoundStatement(Statement):
         return string
 
 
+class FunctionCall(Statement):
+
+    def __init__(self, depth, id):
+        super(FunctionCall, self).__init__(depth)
+        self.id = id
+
+    def __str__(self):
+        string = self._depth * '  ' + 'FuncCall: \n'
+        string += self._depth * '  ' + '  ID: %s\n' % self.id
+        return string
+
+
 class Ast:
     c_types = ['int', 'char', 'float', 'double', 'void']
 
@@ -153,7 +165,7 @@ class Ast:
     def find_first_non_empty_in_list(list_of_source_code):
         line_number = 0
         for line in list_of_source_code:
-            if line.isspace():
+            if line == '' or line.isspace():
                 line_number += 1
             else:
                 return line_number
@@ -285,6 +297,9 @@ class Ast:
             message = 'could not find the definition of function %s' % \
                       function_declaration.name
             self.ast_error(message)
+        else:
+            # the function defenition is complete go back up to its parent
+            self.current_node = function_definition.parent_node
         return line_number
 
     def read_compound_statement(self, code_list):
@@ -310,6 +325,31 @@ class Ast:
 
         return line_number
 
+    def read_function_call(self, code_list):
+        line_number, statement = self.join_lines_until_next_semicolon(
+            code_list)
+        if line_number == -1:
+            return line_number
+        if '(' not in statement:
+            # a function call always has an opening and closing bracket
+            return -1
+        splitted_statement = statement.split('(')[0]
+        splitted_statement = splitted_statement.split()
+        for part in splitted_statement:
+            if self.is_function_declared(part):
+                function_name = part
+                start_index = statement.index('(')
+                arguments = extractTextForEnclosedParenthesis(statement,
+                                                              start_index)
+                if arguments == '' or arguments.isspace():
+                    depth = self.get_depth_in_tree()
+                    function_call = FunctionCall(depth, function_name)
+                    self.current_node.add_statement(function_call)
+                else:
+                    # todo parse arguments
+                    pass
+        return line_number
+
     def read_function_definition(self, statements):
         found = False
         for line in statements:
@@ -320,12 +360,17 @@ class Ast:
         if line_number == -1:
             return line_number
         list_of_tokens = statement.split()
+
         for token in list_of_tokens:
             if '(' in token:
                 token = token.split('(')[0]
             function_declaration = self.is_function_declared(token)
             if function_declaration:
                 # todo assuming the the function matches
+                if function_declaration.return_type != list_of_tokens[0]:
+                    # if the first part does not match the return type,
+                    # it is not a function definition
+                    return -1
                 next_statements = statements[line_number+1:]
                 line_number += 1
                 line_number += self.parse_function_definition_statement(
@@ -439,6 +484,11 @@ class Ast:
         processed_line_count = self.read_compound_statement(list(lines))
         if processed_line_count > -1:
             # it is a compound statement
+            return processed_line_count
+
+        processed_line_count = self.read_function_call(list(lines))
+        if processed_line_count > -1:
+            # it is a function call
             return processed_line_count
 
         message = ''
