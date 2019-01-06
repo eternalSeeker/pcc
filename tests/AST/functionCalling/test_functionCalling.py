@@ -17,7 +17,8 @@ generate_outputs = tests.generateOutputsDecorator.generate_outputs
 parametrize = pytest.mark.parametrize
 
 files_to_test = [
-    'simple.c'
+    'simple.c',
+    'int_arg.c'
 ]
 
 

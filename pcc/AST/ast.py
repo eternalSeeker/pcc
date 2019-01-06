@@ -57,6 +57,18 @@ class VariableDeclaration(Statement):
                       self.initializer + '\n'
         return string
 
+    def is_compatible_to(self, variable_declaration):
+        """
+        Args:
+            variable_declaration (VariableDeclaration): the variable to
+            compare to
+        Returns:
+            bool: if the object is compatible
+        """
+        if self.variable_type == variable_declaration.variable_type:
+            return True
+        return False
+
 
 class FunctionArgument(Statement):
 
@@ -136,13 +148,28 @@ class CompoundStatement(Statement):
 
 class FunctionCall(Statement):
 
-    def __init__(self, depth, id):
+    def __init__(self, depth, identifier, expression_list=[]):
         super(FunctionCall, self).__init__(depth)
-        self.id = id
+        self.id = identifier
+        self.expression_list = expression_list
 
     def __str__(self):
         string = self._depth * '  ' + 'FuncCall: \n'
         string += self._depth * '  ' + '  ID: %s\n' % self.id
+        if self.expression_list:
+            string += self._depth * '  ' + '  ExprList: \n'
+            for expression in self.expression_list:
+                string += str(expression)
+        return string
+
+
+class Expression(AstNode):
+    def __init__(self, depth, name):
+        super(Expression, self).__init__(depth)
+        self.name = name
+
+    def __str__(self):
+        string = self._depth * '  ' + 'ID: %s\n' % self.name
         return string
 
 
@@ -319,11 +346,52 @@ class Ast:
             self.current_node.add_statement(compound_statement)
             self.current_node = compound_statement
             next_statements = code_list[start_line+1:returned_line]
-            self.parse_line(next_statements)
+            while len(next_statements) > 0:
+                new_index = self.parse_line(next_statements)
+                next_statements = next_statements[new_index+1:]
             compound_statement.update_depth(depth)
             line_number = returned_line
 
         return line_number
+
+    @staticmethod
+    def are_arguments_compatible(list_a, list_b):
+
+        compatible = False
+        if len(list_a) != len(list_b):
+            # if the list sizes do no match, it is not compatible
+            return compatible
+        for i in range(len(list_a)):
+            argument_a = list_a[i]
+            argument_b = list_b[i]
+            if not argument_a.is_compatible_to(argument_b):
+                # argument_a is not compatible to argument_b
+                return compatible
+        # all checks passed, the lists are compatible
+        compatible = True
+        return compatible
+
+    def get_variable_definition_from_id(self, name_id):
+
+        node = self.current_node
+        while node:
+            for statement in node.statement_sequence:
+                if isinstance(statement, VariableDeclaration):
+                    if statement.name == name_id:
+                        # found it
+                        return statement
+            node = node.parent_node
+        # no match found
+        return None
+
+    def get_variables_from_ids(self, argument_string):
+        arg_list = argument_string.split(',')
+        variable_list = []
+        for arg in arg_list:
+            var_def = self.get_variable_definition_from_id(arg)
+            if var_def:
+                variable_list.append(var_def)
+        return variable_list
 
     def read_function_call(self, code_list):
         line_number, statement = self.join_lines_until_next_semicolon(
@@ -336,7 +404,8 @@ class Ast:
         splitted_statement = statement.split('(')[0]
         splitted_statement = splitted_statement.split()
         for part in splitted_statement:
-            if self.is_function_declared(part):
+            function_declaration = self.is_function_declared(part)
+            if function_declaration:
                 function_name = part
                 start_index = statement.index('(')
                 arguments = extractTextForEnclosedParenthesis(statement,
@@ -346,12 +415,29 @@ class Ast:
                     function_call = FunctionCall(depth, function_name)
                     self.current_node.add_statement(function_call)
                 else:
-                    # todo parse arguments
-                    pass
+                    variables = self.get_variables_from_ids(arguments)
+                    argument_list = function_declaration.argument_list
+                    if self.are_arguments_compatible(variables, argument_list):
+                        expression_list = []
+                        depth = self.get_depth_in_tree() + 2
+                        for variable in variables:
+                            expression = Expression(depth, variable.name)
+                            expression_list.append(expression)
+                        function_call = FunctionCall(depth, function_name,
+                                                     expression_list)
+                        self.current_node.add_statement(function_call)
+                    else:
+                        message = 'the arguments for function %s are not ' \
+                                  'compatible to the function ' \
+                                  'declaration\nGot %s but expected %s' % (
+                                   function_name, variables, argument_list)
+                        self.ast_error(message)
+
         return line_number
 
     def read_function_definition(self, statements):
         found = False
+        # todo check why
         for line in statements:
             if '{' in line:
                 pass
@@ -360,7 +446,8 @@ class Ast:
         if line_number == -1:
             return line_number
         list_of_tokens = statement.split()
-
+        if 'test2' in statement:
+            pass
         for token in list_of_tokens:
             if '(' in token:
                 token = token.split('(')[0]
@@ -461,7 +548,7 @@ class Ast:
             self.index += processed_line_count + 1
 
     def parse_line(self, lines):
-
+        # todo check why
         for line in lines:
             if '{' in line:
                 break
