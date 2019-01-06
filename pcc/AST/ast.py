@@ -65,6 +65,9 @@ class VariableDeclaration(Statement):
         Returns:
             bool: if the object is compatible
         """
+        if isinstance(variable_declaration, FunctionArgument):
+            if self.variable_type == variable_declaration.identifier:
+                return True
         if self.variable_type == variable_declaration.variable_type:
             return True
         return False
@@ -279,7 +282,7 @@ class Ast:
                     # there cannot be a parenthesis in the variable name,
                     # this is probably a function
                     return []
-                # todo check if correct
+
                 depth = self.get_depth_in_tree()
                 statement = VariableDeclaration(variable_type,
                                                 identifier,
@@ -303,6 +306,15 @@ class Ast:
         return line_number
 
     def is_function_declared(self, function_name):
+        """
+            check if the name corresponds to a known function
+        Args:
+            function_name (str): the identifier to check
+
+        Returns:
+            FunctionDeclaration: the declared fucntion that corresponds to
+            the function_name or None if not found
+        """
         for function_declaration in self.declared_functions:
             if function_declaration.name == function_name:
                 return function_declaration
@@ -435,28 +447,89 @@ class Ast:
 
         return line_number
 
+    def check_function_argument(self, argument_a, argument_b,
+                                function_declaration):
+        message = None
+        if hasattr(argument_a, 'type_name'):
+            name_a = argument_a.type_name
+        elif hasattr(argument_a, 'name'):
+            name_a = argument_a.name
+        if hasattr(argument_b, 'type_name'):
+            name_b = argument_b.type_name
+        elif hasattr(argument_b, 'name'):
+            name_b = argument_b.name
+        if name_a is None or name_a == 'void':
+            if name_b is None or name_b == 'void':
+                return message
+        if name_a != name_b:
+            message = 'variable name of function %s, does ' \
+                      'not match the one from the ' \
+                      'declaration declaration %s ' \
+                      'definition %s' % \
+                      (function_declaration.name,
+                       name_a, name_b)
+
+        return message
+
+    def does_definition_and_declaration_match(self, statement,
+                                              function_declaration):
+        start_index = statement.index('(')
+        arguments = extractTextForEnclosedParenthesis(statement,
+                                                      start_index)
+        args = self.extract_variable_declaration_from_string(arguments)
+        if len(function_declaration.argument_list) != len(args):
+            message = 'the number of arguments do not match the ' \
+                      'function declaration, got %d, expected %d' % \
+                      (len(args),
+                       len(function_declaration.argument_list))
+            self.ast_error(message)
+            return -1
+        for i in range(len(args)):
+            argument_a = args[i]
+            argument_b = function_declaration.argument_list[i]
+            if argument_a.is_compatible_to(argument_b):
+                message = self.check_function_argument(argument_a, argument_b,
+                                                       function_declaration)
+                if message:
+                    self.ast_warning(message)
+            else:
+                if hasattr(argument_b, 'identifier'):
+                    type_name = argument_b.identifier
+                elif hasattr(argument_b, 'variable_type'):
+                    type_name = argument_b.variable_type
+                message = 'the argument type does not match the ' \
+                          'expected type, Expected %s, got %s' % (
+                              type_name,
+                              argument_a.variable_type)
+                if False:
+                    # todo fix
+                    self.ast_error(message)
+                    return -1
+
+        return 0
+
     def read_function_definition(self, statements):
         found = False
-        # todo check why
-        for line in statements:
-            if '{' in line:
-                pass
+
         line_number, statement = self.join_lines_until_next_non_empty_line(
             statements)
         if line_number == -1:
             return line_number
         list_of_tokens = statement.split()
-        if 'test2' in statement:
-            pass
+
         for token in list_of_tokens:
             if '(' in token:
                 token = token.split('(')[0]
             function_declaration = self.is_function_declared(token)
             if function_declaration:
-                # todo assuming the the function matches
                 if function_declaration.return_type != list_of_tokens[0]:
                     # if the first part does not match the return type,
                     # it is not a function definition
+                    return -1
+                result = self.\
+                    does_definition_and_declaration_match(statement,
+                                                          function_declaration)
+                if result == -1:
                     return -1
                 next_statements = statements[line_number+1:]
                 line_number += 1
@@ -524,7 +597,7 @@ class Ast:
                         variable_declaration = res[0]
                         variable_declaration.update_depth(depth+3)
                         function_arguments.append(variable_declaration)
-            # todo check
+
             depth = self.get_depth_in_tree()
             function_declaration = \
                 FunctionDeclaration(return_type, function_name,
@@ -548,10 +621,6 @@ class Ast:
             self.index += processed_line_count + 1
 
     def parse_line(self, lines):
-        # todo check why
-        for line in lines:
-            if '{' in line:
-                break
 
         processed_line_count = self.read_variable(list(lines))
         if processed_line_count > -1:
