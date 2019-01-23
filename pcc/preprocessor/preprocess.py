@@ -12,10 +12,10 @@ from .constantExpression import constantExpression
 
 class MacroObject:
 
-    def __init__(self, identifier, argumentList, tokenSequence):
+    def __init__(self, identifier, argument_list, token_sequence):
         self.identifier = identifier
-        self.tokenSequence = tokenSequence
-        self.argumentList = argumentList
+        self.tokenSequence = token_sequence
+        self.argumentList = argument_list
 
     def getNumberOfArguments(self):
         return len(self.argumentList)
@@ -40,18 +40,18 @@ class Preprocessor:
 
     def preproccessorWarning(self, message):
         pcc.utils.warning.warning(self.originalInputFileName,
-                                  self.souceLineCount, message)
+                                  self.sourceLineCount, message)
 
     def preproccessorError(self, message):
         pcc.utils.warning.error(self.originalInputFileName,
-                                self.souceLineCount, message)
+                                self.sourceLineCount, message)
 
     @staticmethod
-    def stringToListWithNewLines(sourceFile):
-        list = sourceFile.split('\n')
-        for i in range(len(list) - 1):
-            list[i] += '\n'
-        return list
+    def stringToListWithNewLines(source_file):
+        source_file_list = source_file.split('\n')
+        for i in range(len(source_file_list) - 1):
+            source_file_list[i] += '\n'
+        return source_file_list
 
     @staticmethod
     def assertEqual(a, b):
@@ -64,15 +64,15 @@ class Preprocessor:
         self.listOfCodeLines[self.lineCount] = \
             self.listOfCodeLines[self.lineCount].replace(old, new)
 
-    def __init__(self, inputFile, inputFileAsString, includeDirs):
-        self.originalInputFileName = inputFile
-        self.originalInputFile = copy.copy(inputFileAsString)
+    def __init__(self, input_file, input_file_string, include_dirs):
+        self.originalInputFileName = input_file
+        self.originalInputFile = copy.copy(input_file_string)
         self.processedFile = ''
         self.tokens = dict()
-        self.includeDirs = includeDirs
+        self.includeDirs = include_dirs
         self.listOfCodeLines = []
         self.lineCount = 0
-        self.souceLineCount = 1
+        self.sourceLineCount = 1
         self.trigraphs = {
             '??=':  '#',
             '??/':  '\\',
@@ -99,7 +99,7 @@ class Preprocessor:
             self.listOfCodeLines[self.lineCount] = \
                 tmp + self.listOfCodeLines[self.lineCount + 1]
             self.listOfCodeLines[self.lineCount + 1] = '\n'
-            self.souceLineCount += 1
+            self.sourceLineCount += 1
 
     def includeFiles(self):
         if '#include' in self.listOfCodeLines[self.lineCount]:
@@ -120,17 +120,17 @@ class Preprocessor:
                 self.preproccessorWarning('could not parse include statement')
                 pass
 
-    def fillInInclude(self, matchObj):
+    def fillInInclude(self, match_obj):
         # there is an include in the file
         # get the filename from the match
-        filename = matchObj.group(1)
+        filename = match_obj.group(1)
         # add the current directory to the include dirs
         dirsToSearch = list(os.getcwd())
         if self.includeDirs:
             dirsToSearch.extend(self.includeDirs)
         isFileFound = False
-        for dir in dirsToSearch:
-            fileWithDir = os.path.join(dir, filename)
+        for dir_to_search in dirsToSearch:
+            fileWithDir = os.path.join(dir_to_search, filename)
             if os.path.isfile(fileWithDir):
                 # the file to include exists
                 with open(fileWithDir, 'r') as fileToInclude:
@@ -141,8 +141,8 @@ class Preprocessor:
             self.preproccessorError('file to include <%s> not found' %
                                     filename)
 
-    def replaceIncludeWithContentOfFile(self, fileToInclude):
-        includedFile = fileToInclude.read()
+    def replaceIncludeWithContentOfFile(self, file_to_include):
+        includedFile = file_to_include.read()
         includedFile = includedFile.replace('\r', '')
         includedFileAsList = \
             self.stringToListWithNewLines(includedFile)
@@ -168,7 +168,7 @@ class Preprocessor:
                     self.tokens.pop(tokenToRemove, None)
                     # remove the line of the undef statement
                     self.listOfCodeLines[self.lineCount] = '\n'
-                    self.souceLineCount += 1
+                    self.sourceLineCount += 1
                     linePopped = True
                 else:
                     self.preproccessorError('token <%s> does not exist' %
@@ -189,8 +189,8 @@ class Preprocessor:
 
     def isConditionalCompilationLine(self):
         conditionalCompilationLines = ['#ifdef', '#ifndef', '#if ']
-        for lineToExplude in conditionalCompilationLines:
-            if lineToExplude in self.listOfCodeLines[self.lineCount]:
+        for lineToExclude in conditionalCompilationLines:
+            if lineToExclude in self.listOfCodeLines[self.lineCount]:
                 return True
         return False
 
@@ -204,7 +204,7 @@ class Preprocessor:
                 areThereTokensLeftInTheLine = self.replaceTokenIfFound(
                     areThereTokensLeftInTheLine, token)
 
-    def replaceTokenIfFound(self, areThereTokensLeftInTheLine, token):
+    def replaceTokenIfFound(self, are_there_tokens_left_in_the_line, token):
         if token in self.listOfCodeLines[self.lineCount]:
             obj = self.tokens[token]
             if obj.getNumberOfArguments() == 0:
@@ -225,8 +225,8 @@ class Preprocessor:
                 stringToReplace = token + '(' + argumentString + ')'
                 self.replaceSubStringCurrentLine(stringToReplace,
                                                  macroString)
-            areThereTokensLeftInTheLine = True
-        return areThereTokensLeftInTheLine
+            are_there_tokens_left_in_the_line = True
+        return are_there_tokens_left_in_the_line
 
     def addTokens(self):
         linePopped = False
@@ -235,8 +235,8 @@ class Preprocessor:
                                 self.listOfCodeLines[self.lineCount],
                                 re.M | re.I | re.DOTALL)
             if matchObj:
-                list = matchObj.group(1).split()
-                token = list[0]
+                list_of_tokens = matchObj.group(1).split()
+                token = list_of_tokens[0]
                 if '(' in token:
                     startIndex = 0
                     extractedString = pcc.utils.stringParsing.\
@@ -251,13 +251,13 @@ class Preprocessor:
                     identifier = token
                     argumentList = []
 
-                if len(list) > 1:
+                if len(list_of_tokens) > 1:
                     # find the start of the sequence part of the Macro,
-                    # by finding all occurances for the substring 'list[1]'
-                    # in the complete match object (this retains spacing
-                    # information)
+                    # by finding all occurrences for the substring
+                    # 'list_of_tokens[1]' in the complete match object
+                    # (this retains spacing information)
                     original_string = matchObj.group(1)
-                    start_of_sequence_string = list[1]
+                    start_of_sequence_string = list_of_tokens[1]
                     starts = [match.start() for match in re.finditer(
                         re.escape(start_of_sequence_string), original_string)]
                     start_of_sequence = starts[-1]
@@ -272,7 +272,7 @@ class Preprocessor:
                     self.tokens[identifier] = obj
                 # clear the line that contained the define
                 self.listOfCodeLines[self.lineCount] = '\n'
-                self.souceLineCount += 1
+                self.sourceLineCount += 1
                 linePopped = True
             else:
                 self.dumpCodeList()
@@ -290,9 +290,10 @@ class Preprocessor:
                     message = matchObj.group(1)
                 self.preproccessorError(message)
                 self.listOfCodeLines.pop(self.lineCount)
-                self.souceLineCount += 1
+                self.sourceLineCount += 1
 
-    def evaluateContantExpression(self, expression_string):
+    @staticmethod
+    def evaluateConstantExpression(expression_string):
         expression = constantExpression(expression_string)
         evaluation = expression.evaluate()
         return evaluation
@@ -319,87 +320,89 @@ class Preprocessor:
             self.listOfCodeLines[self.lineCount:self.lineCount] = codeToInclude
             assert True
 
-    def add_active_branch(self, codeToInclude, currentIndex, finished, ifLine,
-                          numberOfNestedConditions, partIsActive):
-        while finished is False and currentIndex < len(self.listOfCodeLines):
-            if '#endif' in self.listOfCodeLines[currentIndex]:
-                finished, numberOfNestedConditions = \
-                    self.processEndif(finished, numberOfNestedConditions,
-                                      currentIndex)
+    def add_active_branch(self, code_to_include, current_index, finished,
+                          if_line, number_of_nested_conditions,
+                          part_is_active):
+        while finished is False and current_index < len(self.listOfCodeLines):
+            if '#endif' in self.listOfCodeLines[current_index]:
+                finished, number_of_nested_conditions = \
+                    self.processEndif(finished, number_of_nested_conditions,
+                                      current_index)
 
-            elif '#if' in self.listOfCodeLines[currentIndex]:
-                numberOfNestedConditions += 1
-            elif numberOfNestedConditions > 0:
+            elif '#if' in self.listOfCodeLines[current_index]:
+                number_of_nested_conditions += 1
+            elif number_of_nested_conditions > 0:
                 # add all in the nested part
                 pass
-            elif '#elif' in self.listOfCodeLines[currentIndex]:
+            elif '#elif' in self.listOfCodeLines[current_index]:
                 # if the part was active, add it
                 # if the part was not active and  became active, do not
                 #   add it
                 # else it was not active so not add it
                 # TODO not correct
-                partIsActive = self.checkIfElifIsActive(ifLine,
-                                                        partIsActive)
-            elif '#else' in self.listOfCodeLines[currentIndex]:
+                part_is_active = self.checkIfElifIsActive(if_line,
+                                                          part_is_active)
+            elif '#else' in self.listOfCodeLines[current_index]:
                 # if the part was active, add it
                 # if the part was not active and  became active, do not
                 #   add it
                 # else it was not active so not add it
-                partIsActive = self.isElsePartActive(partIsActive)
-                self.listOfCodeLines[currentIndex] = '\n'
+                part_is_active = self.isElsePartActive(part_is_active)
+                self.listOfCodeLines[current_index] = '\n'
             else:
                 pass
 
-            self.parseLine(codeToInclude, currentIndex, partIsActive)
+            self.parseLine(code_to_include, current_index, part_is_active)
 
-            currentIndex += 1
-        return currentIndex, finished
+            current_index += 1
+        return current_index, finished
 
-    def processEndif(self, finished, numberOfNestedConditions, currentIndex):
-        if numberOfNestedConditions == 0:
+    def processEndif(self, finished, number_of_nested_conditions,
+                     current_index):
+        if number_of_nested_conditions == 0:
             finished = True
-            self.listOfCodeLines[currentIndex] = '\n'
+            self.listOfCodeLines[current_index] = '\n'
         else:
-            numberOfNestedConditions -= 1
-        return finished, numberOfNestedConditions
+            number_of_nested_conditions -= 1
+        return finished, number_of_nested_conditions
 
-    def parseLine(self, codeToInclude, currentIndex, partIsActive):
-        if partIsActive is True:
-            codeToInclude.append(self.listOfCodeLines[currentIndex])
+    def parseLine(self, code_to_include, current_index, part_is_active):
+        if part_is_active is True:
+            code_to_include.append(self.listOfCodeLines[current_index])
         else:
             pass
 
     @staticmethod
-    def isElsePartActive(partIsActive):
-        if partIsActive is False:
-            partIsActive = True
-        elif partIsActive is True:
-            partIsActive = None
-        return partIsActive
+    def isElsePartActive(part_is_active):
+        if part_is_active is False:
+            part_is_active = True
+        elif part_is_active is True:
+            part_is_active = None
+        return part_is_active
 
-    def checkIfElifIsActive(self, ifLine, partIsActive):
-        if partIsActive is True:
-            partIsActive = None
-        elif partIsActive is False:
-            expression = ifLine.split('#elif ')[1]
-            partIsActive = self.evaluateContantExpression(expression)
-        return partIsActive
+    def checkIfElifIsActive(self, if_line, part_is_active):
+        if part_is_active is True:
+            part_is_active = None
+        elif part_is_active is False:
+            expression = if_line.split('#elif ')[1]
+            part_is_active = self.evaluateConstantExpression(expression)
+        return part_is_active
 
-    def checkIfBranchIsActive(self, ifLine):
+    def checkIfBranchIsActive(self, if_line):
         # check the branches of the conditional compilation
         # partIsActive is True if the branch is active
         #                 False if the active branch is not yet encountered
         #                 None if the active branch is already added
-        if '#ifdef' in ifLine:
-            identifier = ifLine.split('#ifdef')[1]
+        if '#ifdef' in if_line:
+            identifier = if_line.split('#ifdef')[1]
             identifier = ''.join(identifier.split())
 
             if identifier in self.tokens.keys():
                 partIsActive = True
             else:
                 partIsActive = False
-        elif '#ifndef' in ifLine:
-            identifier = ifLine.split('#ifndef')[1]
+        elif '#ifndef' in if_line:
+            identifier = if_line.split('#ifndef')[1]
             identifier = ''.join(identifier.split())
             if identifier not in self.tokens.keys():
                 partIsActive = True
@@ -407,9 +410,9 @@ class Preprocessor:
                 partIsActive = False
 
         else:
-            expression = ifLine.split('#if ')[1]
+            expression = if_line.split('#if ')[1]
             partIsActive = \
-                self.evaluateContantExpression(expression)
+                self.evaluateConstantExpression(expression)
         return partIsActive
 
     def preprocess(self):
@@ -419,27 +422,27 @@ class Preprocessor:
         sourceFile = sourceFile.replace('\r', '')
         # split the source file in lines of code
         # but do not remove the '\n' char
-        list = self.stringToListWithNewLines(sourceFile)
-        self.listOfCodeLines = copy.copy(list)
+        list_of_code = self.stringToListWithNewLines(sourceFile)
+        self.listOfCodeLines = copy.copy(list_of_code)
 
         self.lineCount = 0
-        self.souceLineCount = 1
+        self.sourceLineCount = 1
         while self.lineCount < len(self.listOfCodeLines):
             # K&R A 12.1
             self.runTrigraphReplacement()
             self.lineCount += 1
-            self.souceLineCount += 1
+            self.sourceLineCount += 1
 
         self.lineCount = 0
-        self.souceLineCount = 1
+        self.sourceLineCount = 1
         while self.lineCount < len(self.listOfCodeLines):
             # K&R A 12.2
             self.lineSplicing()
             self.lineCount += 1
-            self.souceLineCount += 1
+            self.sourceLineCount += 1
 
         self.lineCount = 0
-        self.souceLineCount = 1
+        self.sourceLineCount = 1
         while self.lineCount < len(self.listOfCodeLines):
             # K&R A 12.3
             self.macroDefinitionAndExpansion()
@@ -450,6 +453,6 @@ class Preprocessor:
             # K&R A 12.7
             self.errorGeneration()
             self.lineCount += 1
-            self.souceLineCount += 1
+            self.sourceLineCount += 1
 
         self.processedFile = ''.join(self.listOfCodeLines)
