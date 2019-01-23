@@ -166,6 +166,18 @@ class FunctionCall(Statement):
         return string
 
 
+class ReturnStatement(Statement):
+
+    def __init__(self, depth, identifier):
+        super(ReturnStatement, self).__init__(depth)
+        self.id = identifier
+
+    def __str__(self):
+        string = self._depth * '  ' + 'Return: \n'
+        string += self._depth * '  ' + '  ID: %s\n' % self.id
+        return string
+
+
 class Expression(AstNode):
     def __init__(self, depth, name):
         super(Expression, self).__init__(depth)
@@ -508,6 +520,24 @@ class Ast:
 
         return 0
 
+    def read_return_statement(self, code_list):
+        line_number, statement = self.join_lines_until_next_semicolon(
+            code_list)
+        if line_number == -1:
+            return line_number
+        splited_statement = statement.split()
+        if 'return' == splited_statement[0]:
+            depth = self.get_depth_in_tree()
+            if len(splited_statement) == 2:
+                retval = splited_statement[1]
+                if self.get_variable_definition_from_id(retval):
+                    return_statement = ReturnStatement(depth, retval)
+                    self.current_node.add_statement(return_statement)
+                else:
+                    # probably is a constant expression
+                    pass
+        return line_number
+
     def read_function_definition(self, statements):
         found = False
 
@@ -643,6 +673,11 @@ class Ast:
             return processed_line_count
 
         processed_line_count = self.read_function_call(list(lines))
+        if processed_line_count > -1:
+            # it is a function call
+            return processed_line_count
+
+        processed_line_count = self.read_return_statement(list(lines))
         if processed_line_count > -1:
             # it is a function call
             return processed_line_count

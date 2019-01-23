@@ -18,7 +18,10 @@ parametrize = pytest.mark.parametrize
 
 files_to_test = [
     'simple.c',
-    'int_arg.c'
+    'int_arg.c',
+    'void_return_int.c',
+    'void_return_char.c'
+
 ]
 
 
