@@ -3,7 +3,7 @@
 =========================
 
 .. image:: https://travis-ci.org/eternalSeeker/pcc.png
-   :target: https://travis-ci.org/seanfisk/python-project-template
+   :target: https://travis-ci.org/eternalSeeker/pcc
 
 This project is intended to give an insight into the operation of a conmpiler. This compiler is written in Python and is optimized for readability of the source code rather than speed or size of the executables it produces.
 
