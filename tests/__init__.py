@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+"""tests: avoid already-imported warning: PYTEST_DONT_REWRITE."""
 import pkgutil
 
 

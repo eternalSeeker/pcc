@@ -187,10 +187,15 @@ def _test():
     # url split in 2, else too long for style parser
     """<http://pytest.org/latest/goodpractises.html#
     integration-with-setuptools-test-commands>"""  # NOPEP8
-    import pytest
     # This runs the unit tests.
     # It also runs doctest, but only on the modules in TESTS_DIRECTORY.
-    return pytest.main(PYTEST_FLAGS + [TESTS_DIRECTORY])
+    import subprocess
+    return_code = 0
+    try:
+        subprocess.check_call(["pytest", *PYTEST_FLAGS ,TESTS_DIRECTORY])
+    except subprocess.CalledProcessError as e:
+        return_code = e.returncode
+    return return_code
 
 
 def _test_all():
