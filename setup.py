@@ -43,9 +43,7 @@ DOCS_DIRECTORY = 'docs'
 TESTS_DIRECTORY = 'tests'
 PYTEST_FLAGS = ['--doctest-modules']
 
-# Import metadata. Normally this would just be:
-#
-#     from pcc import metadata
+# Import metadata. Normally this would just the default import
 #
 # However, when we do this, we also import `pcc/__init__.py'. If this
 # imports names from some other modules and these modules have third-party
@@ -170,9 +168,10 @@ def _lint():
     # - The result of subprocess call outputs are byte strings, meaning we need
     #   to pass a byte string to endswith.
     project_python_files = [filename for filename in get_project_files()
-                            if filename.endswith(b'.py')]
+                            if filename.endswith(b'.py') and
+                            b'docs' not in filename]
     retcode = subprocess.call(
-        ['flake8', '--max-complexity=10'] + project_python_files)
+        ['pylama', '-o pylama.ini'] + project_python_files)
     if retcode == 0:
         print_success_message('No style errors')
     return retcode
@@ -192,7 +191,10 @@ def _test():
     import subprocess
     return_code = 0
     try:
-        subprocess.check_call(["pytest", *PYTEST_FLAGS ,TESTS_DIRECTORY])
+        args = ["pytest"]
+        args.extend(PYTEST_FLAGS)
+        args.append(TESTS_DIRECTORY)
+        subprocess.check_call(args)
     except subprocess.CalledProcessError as e:
         return_code = e.returncode
     return return_code
@@ -288,10 +290,6 @@ setup_dict = dict(
         'console_scripts': [
             'pcc_cli = pcc.main:entry_point'
         ],
-        # if you have a gui, use this
-        # 'gui_scripts': [
-        #     'pcc_gui = pcc.gui:entry_point'
-        # ]
     }
 )
 

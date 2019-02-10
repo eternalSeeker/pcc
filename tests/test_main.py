@@ -5,10 +5,7 @@ from pytest import raises
 from pcc import metadata
 from pcc.main import main
 
-# The parametrize function is generated, so this doesn't work:
-#
-#     from pytest.mark import parametrize
-#
+# The parametrize function is generated, so it does not work to import
 import pytest
 parametrize = pytest.mark.parametrize
 

@@ -9,11 +9,7 @@ import pytest
 
 generate_outputs = tests.generateOutputsDecorator.generate_outputs
 
-# The parametrize function is generated, so this doesn't work:
-#
-#     from pytest.mark import parametrize
-#
-
+# The parametrize function is generated, so it does not work to import
 parametrize = pytest.mark.parametrize
 
 files_to_test = [

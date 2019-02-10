@@ -2,17 +2,15 @@
 --requirement requirements.txt
 
 # Testing
-pytest==3.8.2
+pytest==4.2.0
 py==1.5.4
 mock==2.0.0
 pycparser==2.19
 
 # Linting
-flake8==3.5.0
-mccabe==0.6.1
-pep8==1.7.1
-pyflakes==2.0.
-
+pylama==7.6.6
+pylama-pylint==3.1.1
+eradicate==1.0
 
 # Documentation
 Sphinx==1.7.6

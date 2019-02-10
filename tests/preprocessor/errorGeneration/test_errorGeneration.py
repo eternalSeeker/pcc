@@ -3,10 +3,7 @@
 from pcc.main import main
 from os.path import join, abspath, dirname
 
-# The parametrize function is generated, so this doesn't work:
-#
-#     from pytest.mark import parametrize
-#
+# The parametrize function is generated, so it does not work to import
 import pytest
 import subprocess
 import tests.generateOutputsDecorator

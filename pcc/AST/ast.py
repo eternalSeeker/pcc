@@ -686,7 +686,6 @@ class Ast:
         for line in lines:
             if line != '' and not line.isspace():
                 message += 'following line not recognized:\"%s\"\n' % line
-        # self.AST_error(message)
         return processed_line_count
 
     def to_string(self):

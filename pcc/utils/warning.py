@@ -11,6 +11,6 @@ def warning(fileName, lineNumber, message):
 
 
 def error(fileName, lineNumber, message):
-        messageString = 'ERROR: file %s line %d, %s' % (fileName, lineNumber,
-                                                        message)
-        print(messageString, file=sys.stderr)
+    messageString = 'ERROR: file %s line %d, %s' % (fileName, lineNumber,
+                                                    message)
+    print(messageString, file=sys.stderr)
