@@ -73,6 +73,29 @@ class VariableDeclaration(Statement):
         return False
 
 
+class ArrayDeclaration(Statement):
+
+    def __init__(self, variable_type, name, initializer, initializer_type,
+                 depth):
+        super(ArrayDeclaration, self).__init__(depth)
+        self.variable_type = variable_type
+        self.name = name
+        self.initializer = initializer
+        self.initializer_type = initializer_type
+
+    def __str__(self):
+        string = self._depth * '  ' + 'Decl: ' + self.name + ', [], [], []\n'
+        string += self._depth * '  ' + '  ArrayDecl: []\n'
+        string += self._depth * '  ' + '    TypeDecl: ' + self.name + ', []\n'
+        string += self._depth * '  ' + '      IdentifierType: [\'' \
+            + self.variable_type + '\']\n'
+        if self.initializer:
+            string += self._depth * '  ' + '    Constant: ' + \
+                      self.initializer_type + ', ' + \
+                      self.initializer + '\n'
+        return string
+
+
 class FunctionArgument(Statement):
 
     def __init__(self, type_name, type_decl, identifier, depth):
@@ -294,13 +317,35 @@ class Ast:
                     # there cannot be a parenthesis in the variable name,
                     # this is probably a function
                     return []
-
                 depth = self.get_depth_in_tree()
-                statement = VariableDeclaration(variable_type,
-                                                identifier,
-                                                initializer,
-                                                initializer_type,
-                                                depth)
+                if '[' in identifier:
+                    start_index = identifier.index('[')
+                    end_index, _ = \
+                        extract_closing_char(list(identifier),
+                                             open_char='[',
+                                             start_index=start_index,
+                                             start_line=0,
+                                             closing_char=']')
+                    content = identifier[start_index+1:end_index]
+                    if content == '':
+                        array_len = None
+                    else:
+                        array_len = content
+                        initializer_type = 'int'
+
+                    name = identifier[:start_index]
+                    statement = ArrayDeclaration(variable_type,
+                                                 name,
+                                                 array_len,
+                                                 initializer_type,
+                                                 depth)
+
+                else:
+                    statement = VariableDeclaration(variable_type,
+                                                    identifier,
+                                                    initializer,
+                                                    initializer_type,
+                                                    depth)
                 result_list.append(statement)
         return result_list
 
@@ -324,7 +369,7 @@ class Ast:
             function_name (str): the identifier to check
 
         Returns:
-            FunctionDeclaration: the declared fucntion that corresponds to
+            FunctionDeclaration: the declared function that corresponds to
             the function_name or None if not found
         """
         for function_declaration in self.declared_functions:
