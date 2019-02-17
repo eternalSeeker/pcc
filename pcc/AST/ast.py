@@ -339,30 +339,9 @@ class Ast:
                     return []
                 depth = self.get_depth_in_tree()
                 if '[' in identifier:
-                    start_index = identifier.index('[')
-                    end_index, _ = \
-                        extract_closing_char(list(identifier),
-                                             open_char='[',
-                                             start_index=start_index,
-                                             start_line=0,
-                                             closing_char=']')
-                    content = identifier[start_index+1:end_index]
-                    array_size = None
-                    array_size_type = None
-                    if content != '':
-                        array_size = content
-                        array_size_type = self.get_type_of_expression(
-                            content)
-                    initializer_type = self.get_type_of_expression(
-                        initializer)
-                    name = identifier[:start_index]
-                    statement = ArrayDeclaration(variable_type,
-                                                 name,
-                                                 initializer,
-                                                 initializer_type,
-                                                 array_size,
-                                                 array_size_type,
-                                                 depth)
+                    statement = self.parse_array_declaration(depth, identifier,
+                                                             initializer,
+                                                             variable_type)
 
                 else:
                     statement = VariableDeclaration(variable_type,
@@ -372,6 +351,34 @@ class Ast:
                                                     depth)
                 result_list.append(statement)
         return result_list
+
+    def parse_array_declaration(self, depth, identifier, initializer,
+                                variable_type):
+        start_index = identifier.index('[')
+        end_index, _ = \
+            extract_closing_char(list(identifier),
+                                 open_char='[',
+                                 start_index=start_index,
+                                 start_line=0,
+                                 closing_char=']')
+        content = identifier[start_index + 1:end_index]
+        array_size = None
+        array_size_type = None
+        if content != '':
+            array_size = content
+            array_size_type = self.get_type_of_expression(
+                content)
+        initializer_type = self.get_type_of_expression(
+            initializer)
+        name = identifier[:start_index]
+        statement = ArrayDeclaration(variable_type,
+                                     name,
+                                     initializer,
+                                     initializer_type,
+                                     array_size,
+                                     array_size_type,
+                                     depth)
+        return statement
 
     def read_variable(self, statements):
         line_number, statement = self.join_lines_until_next_semicolon(
@@ -418,7 +425,7 @@ class Ast:
                       function_declaration.name
             self.ast_error(message)
         else:
-            # the function defenition is complete go back up to its parent
+            # the function definition is complete go back up to its parent
             self.current_node = function_definition.parent_node
         return line_number
 
