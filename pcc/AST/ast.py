@@ -294,6 +294,9 @@ class Ast:
             str: the type
         """
         type_string = None
+        if not expression:
+            # no valid expression, so None type
+            return type_string
         try:
             int(expression, 0)
             type_string = 'int'
@@ -346,14 +349,12 @@ class Ast:
                     content = identifier[start_index+1:end_index]
                     array_size = None
                     array_size_type = None
-                    if not initializer:
-                        if content != '':
-                            array_size = content
-                            array_size_type = self.get_type_of_expression(
-                                content)
-                    else:
-                        initializer_type = self.get_type_of_expression(
-                            initializer)
+                    if content != '':
+                        array_size = content
+                        array_size_type = self.get_type_of_expression(
+                            content)
+                    initializer_type = self.get_type_of_expression(
+                        initializer)
                     name = identifier[:start_index]
                     statement = ArrayDeclaration(variable_type,
                                                  name,

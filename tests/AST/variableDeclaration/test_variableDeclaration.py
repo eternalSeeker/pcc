@@ -21,7 +21,8 @@ files_to_test = [
     'combinedDeclarationWithInitializer.c',
     'charArray.c',
     'charArraySize.c',
-    'charArrayInitialization.c'
+    'charArrayInitialization.c',
+    'charArraySizeInitialization.c'
     # 'variableComplexInitialisation.c' not yet implemented
 ]
 
