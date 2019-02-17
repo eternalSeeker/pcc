@@ -76,12 +76,14 @@ class VariableDeclaration(Statement):
 class ArrayDeclaration(Statement):
 
     def __init__(self, variable_type, name, initializer, initializer_type,
-                 depth):
+                 array_size, array_size_type, depth):
         super(ArrayDeclaration, self).__init__(depth)
         self.variable_type = variable_type
         self.name = name
         self.initializer = initializer
         self.initializer_type = initializer_type
+        self.array_size = array_size
+        self.array_size_type = array_size_type
 
     def __str__(self):
         string = self._depth * '  ' + 'Decl: ' + self.name + ', [], [], []\n'
@@ -89,8 +91,12 @@ class ArrayDeclaration(Statement):
         string += self._depth * '  ' + '    TypeDecl: ' + self.name + ', []\n'
         string += self._depth * '  ' + '      IdentifierType: [\'' \
             + self.variable_type + '\']\n'
-        if self.initializer:
+        if self.array_size:
             string += self._depth * '  ' + '    Constant: ' + \
+                      self.array_size_type + ', ' + \
+                      self.array_size + '\n'
+        if self.initializer:
+            string += self._depth * '  ' + '  Constant: ' + \
                       self.initializer_type + ', ' + \
                       self.initializer + '\n'
         return string
@@ -279,6 +285,14 @@ class Ast:
 
     @staticmethod
     def get_type_of_expression(expression):
+        """Return the type of the expression as string
+
+        Args:
+            expression (str): the expression to analyse
+
+        Returns:
+            str: the type
+        """
         type_string = None
         try:
             int(expression, 0)
@@ -287,6 +301,9 @@ class Ast:
         except ValueError:
             # it was not a number
             pass
+        ind = expression.find('\"')
+        if ind > -1:
+            type_string = 'string'
 
         return type_string
 
@@ -327,17 +344,23 @@ class Ast:
                                              start_line=0,
                                              closing_char=']')
                     content = identifier[start_index+1:end_index]
-                    if content == '':
-                        array_len = None
+                    array_size = None
+                    array_size_type = None
+                    if not initializer:
+                        if content != '':
+                            array_size = content
+                            array_size_type = self.get_type_of_expression(
+                                content)
                     else:
-                        array_len = content
-                        initializer_type = 'int'
-
+                        initializer_type = self.get_type_of_expression(
+                            initializer)
                     name = identifier[:start_index]
                     statement = ArrayDeclaration(variable_type,
                                                  name,
-                                                 array_len,
+                                                 initializer,
                                                  initializer_type,
+                                                 array_size,
+                                                 array_size_type,
                                                  depth)
 
                 else:
