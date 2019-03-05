@@ -377,25 +377,19 @@ info = 0
 align = 1
 entry size = 0
 
+The name is located at 0x145 + 0x1b (2e 74 65 78 74 00) or ".text". The type is
+1 or SHT_PROGBITS, meaning program defined. The flags field is 6, so
+SHF_ALLOC(2) and SHF_EXECINSTR(4) are set. The section is allocated inside the
+program and contains executable instructions. The contents of the section are
+located at byte offset 0x40, which is directly after the elf header in our
+example. But the size is 0 so no contents. Our code example did not have any
+executable code, so this is as expected. No other relevant information.
+
+
 Section 2
 ---------
 
 name = 0x21
-type = 1
-flags = 0x3
-address = 0
-offset = 0x40
-size = 0
-link = 0
-info = 0
-align = 1
-entry size = 0
-
-
-Section 3
----------
-
-name = 0x27
 type = 1
 flags = 0x3
 address = 0
@@ -405,6 +399,33 @@ link = 0
 info = 0
 align = 1
 entry size = 0
+
+The name is located at 0x145 + 0x21 = 0x166 (2e 64  61 74 61 00) or ".data".
+The type is again SHT_PROGBITS, the flags for SHF_WRITE(1) and SHF_ALLOC(2) are
+set. The section contains writable data allocated in the program. The size is
+6 and it is located at byte offset 0x40. This is (74 65 73 74 0a 00). This is
+the ascci string "test\n". .data contains writable data for the
+program.
+
+
+Section 3
+---------
+
+name = 0x27
+type = 1
+flags = 0x3
+address = 0
+offset = 0x46
+size = 0
+link = 0
+info = 0
+align = 1
+entry size = 0
+
+The name is located at 0x145 + 0x27 = 0x16c (2e 62 73 73 00) or ".bss". The
+type is again SHT_PROGBITS, the flags for SHF_WRITE(1) and SHF_ALLOC(2) are
+set. The size is 0, so there is no content for our example. The section
+contains writable data allocated in the program.
 
 Section 4
 ---------
@@ -420,6 +441,17 @@ info = 0
 align = 1
 entry size = 1
 
+The name is located at 0x145 + 0x2c = 0x171 (2e 63 6f 6d 6d 65 6e 74 00) or
+".comment". The type is again SHT_PROGBITS, and the flags for SHF_WRITE(1)
+and SHF_ALLOC(2) are set. At offset 0x46 there are 0x2b bytes. The size of the
+entry is 1. THe .comment section typically contains version control information.
+ The contents of that sections are:
+
+47 43 43 3a 20 28 55 62 75 6e 74 75 20 37 2e 33 2e 30 2d 32 37 75 62 75 6e
+74 75 31 7e 31 38 2e 30  34 29 20 37 2e 33 2e 30 00
+
+Which can be interpreted as
+GCC: (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0
 
 Section 5
 ---------
@@ -435,6 +467,10 @@ info = 0
 align = 1
 entry size = 0
 
+The name is located at 0x145 + 0x35 = 0x17a (2e 6e 6f 74 65 2e 47 4e 55 2d 73
+74 61 63  6b 00) or ".note.GNU-stack". The type is again SHT_PROGBITS, and
+no flags are set. It does not have any contents.
+
 Section 6
 ---------
 
@@ -448,6 +484,12 @@ link = 0x7
 info = 0x7
 align = 8
 entry size = 0x18
+
+The name is located at 0x145 + 0x1 = 0x146 (2e 73  79 6d 74 61 62 00) or
+".systab". The type is SHT_SYMTAB, and no flags are set. The contents are
+located at byteoffset 0x78 and the size is 0xc. This contains the linker
+symbol table. It link to section 7, and info field is 7. The section is
+alligned on a multiple of 8 bytes. The size of the entry is 0x18.
 
 Section 7
 ---------
@@ -463,6 +505,12 @@ info = 0
 align = 1
 entry size = 0
 
+The name is located at 0x145 + 0x9 = 0x14e (2e 73 74 72 74 61 62 00) or
+".strtab".  The type is SHT_STRTAB, a string table thus. t=The flags for
+SHF_WRITE(1) and SHF_ALLOC(2) are set. The byteoffset is 0x138 and the size is
+0xd. The content is:
+
+00 74 65 73 74 2e 63 00 6e 61 6d 65 00 or "test.c" and "name"
 
 Rest
 ----
