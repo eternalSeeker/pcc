@@ -6,10 +6,12 @@ from __future__ import print_function
 
 import argparse
 import sys
+import os
 
 from pcc import metadata
 from pcc.preprocessor.preprocess import Preprocessor
 from pcc.AST.ast import Ast
+from pcc.compiler.compiler import Compiler
 
 
 def main(argv):
@@ -56,10 +58,24 @@ URL: <{url}>
         '-fdump_tree',
         help='dump the AST',
         action='store_true')
+    arg_parser.add_argument(
+        '-c',
+        help='compile, no link',
+        action='store_true')
+    arg_parser.add_argument(
+        '-o',
+        type=str,
+        help='output file name',
+        action='store')
     # ignore the name of the program
     arguments = arg_parser.parse_args(args=argv[1:])
     inputFile = arguments.filesToProcess
     includeDirs = arguments.I
+
+    output_file_name = os.path.basename(inputFile)
+    output_file_name = os.path.splitext(output_file_name)[0] + '.o'
+    if arguments.o:
+        output_file_name = arguments.o
     if arguments.I:
         includeDirs = arguments.I
     with open(inputFile, 'r') as fileToRead:
@@ -77,6 +93,12 @@ URL: <{url}>
         return result
     if arguments.fdump_tree:
         print(ast.to_string(), end='')
+        return 0
+    compiler = Compiler(ast.root_node)
+    compiler.compile()
+    if arguments.c:
+        compiler.write_object_file_to_file(output_file_name)
+        return 0
     return 0
 
 

@@ -4,6 +4,14 @@ import pcc
 import copy
 
 
+class CompiledObject:
+
+    def __init__(self, name, size, value):
+        self.name = name
+        self.size = size
+        self.value = value
+
+
 class AstNode:
 
     def __init__(self, depth):
@@ -71,6 +79,19 @@ class VariableDeclaration(Statement):
         if self.variable_type == variable_declaration.variable_type:
             return True
         return False
+
+    def compile(self):
+        """Compile this statement
+
+        Returns:
+            CompiledObject: the compiled version of this statement
+        """
+        size = 4
+        value = bytearray()
+        value.append(int(self.initializer))
+        compiled_object = CompiledObject(self.name, size, value)
+
+        return compiled_object
 
 
 class ArrayDeclaration(Statement):
