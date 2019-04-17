@@ -552,21 +552,8 @@ class ObjectFile:
         byte_array = self.elf_header.to_binary_array()
         byte_array += section_content
 
-        keys = [
-                'none',
-                '.text',
-                '.data',
-                '.bss',
-                '.comment',
-                '.note.GNU-stack',
-                '.symtab',
-                '.strtab',
-                '.shstrtab'
-                ]
-
-        for i in range(len(keys)):
-            section_name = keys[i]
-            section = self.get_section(section_name)
+        for i in range(len(self.sections)):
+            section = self.sections[i]
             tmp = section.to_binary_array()
             byte_array += tmp
         return byte_array
