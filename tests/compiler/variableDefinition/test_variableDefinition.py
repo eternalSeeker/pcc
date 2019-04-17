@@ -13,7 +13,8 @@ generate_outputs = tests.generateOutputsDecorator.generate_outputs
 parametrize = pytest.mark.parametrize
 
 files_to_test = [
-    ('charOne.c', 'charOne_helper.c', 'charOne.out')
+    ('charOne.c', 'charOne_helper.c', 'charOne.out'),
+    ('intOne.c', 'intOne_helper.c', 'intOne.out')
 ]
 
 
