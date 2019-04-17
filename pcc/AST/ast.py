@@ -88,7 +88,7 @@ class VariableDeclaration(Statement):
         Returns:
             CompiledObject: the compiled version of this statement
         """
-        size = 4
+        size = self.variable_type.size
         value = bytearray()
         value.append(int(self.initializer))
         compiled_object = CompiledObject(self.name, size, value)
