@@ -58,7 +58,7 @@ class VariableDeclaration(Statement):
         string = self._depth * '  ' + 'Decl: ' + self.name + ', [], [], []\n'
         string += self._depth * '  ' + '  TypeDecl: ' + self.name + ', []\n'
         string += self._depth * '  ' + '    IdentifierType: [\'' \
-            + self.variable_type + '\']\n'
+            + self.variable_type.name + '\']\n'
         if self.initializer:
             string += self._depth * '  ' + '  Constant: ' + \
                       self.initializer_type + ', ' + \
@@ -76,6 +76,8 @@ class VariableDeclaration(Statement):
         if isinstance(variable_declaration, FunctionArgument):
             if self.variable_type == variable_declaration.identifier:
                 return True
+            else:
+                return False
         if self.variable_type == variable_declaration.variable_type:
             return True
         return False
@@ -111,7 +113,7 @@ class ArrayDeclaration(Statement):
         string += self._depth * '  ' + '  ArrayDecl: []\n'
         string += self._depth * '  ' + '    TypeDecl: ' + self.name + ', []\n'
         string += self._depth * '  ' + '      IdentifierType: [\'' \
-            + self.variable_type + '\']\n'
+            + self.variable_type.name + '\']\n'
         if self.array_size:
             string += self._depth * '  ' + '    Constant: ' + \
                       self.array_size_type + ', ' + \
@@ -158,7 +160,7 @@ class FunctionDeclaration(Statement):
             string += str(arg)
         string += self._depth * '  ' + '    TypeDecl: ' + self.name + ', []\n'
         string += self._depth * '  ' + '      IdentifierType: [\'' \
-            + self.return_type + '\']\n'
+            + self.return_type.name + '\']\n'
         return string
 
     def __deepcopy__(self, memodict={}):
@@ -238,8 +240,18 @@ class Expression(AstNode):
         return string
 
 
+class VariableType:
+    def __init__(self, name, size):
+        self.name = name
+        self.size = size
+
+
 class Ast:
-    c_types = ['int', 'char', 'float', 'double', 'void']
+    c_types = [VariableType('int', 4),
+               VariableType('char', 1),
+               VariableType('float', 8),
+               VariableType('double', 8),
+               VariableType('void', 0)]
 
     @staticmethod
     def find_first_semicolon_in_list(list_of_source_code):
@@ -275,6 +287,20 @@ class Ast:
         self.filename = file_name
         self.declared_functions = []
         self.tree_string = ''
+
+    def get_type_from_name(self, type_name):
+        """Get the type from the type name.
+
+        Args:
+            type_name (str): The name of the type
+
+        Returns:
+            VariableType: the type for the variable name
+        """
+        for known_type in self.types:
+            if known_type.name == type_name:
+                return known_type
+        return None
 
     def ast_warning(self, message):
         pcc.utils.warning.warning(self.filename,
@@ -335,10 +361,9 @@ class Ast:
         list_of_tokens = statement.split()
         variable_type = None
         result_list = []
-        if list_of_tokens[0] in self.types:
-            variable_type = list_of_tokens[0]
+        variable_type = self.get_type_from_name(list_of_tokens[0])
         if variable_type:
-            declarations = statement.replace(variable_type + ' ', '')
+            declarations = statement.replace(variable_type.name + ' ', '')
             list_of_declarations = declarations.split(',')
             for declaration in list_of_declarations:
                 if '=' in declaration:
@@ -649,7 +674,7 @@ class Ast:
                 token = token.split('(')[0]
             function_declaration = self.is_function_declared(token)
             if function_declaration:
-                if function_declaration.return_type != list_of_tokens[0]:
+                if function_declaration.return_type.name != list_of_tokens[0]:
                     # if the first part does not match the return type,
                     # it is not a function definition
                     return -1
@@ -692,8 +717,9 @@ class Ast:
         if line_number == -1:
             return line_number
         list_of_tokens = statement.split()
-        if list_of_tokens[0] in self.types:
-            return_type = list_of_tokens[0]
+        variable_type = self.get_type_from_name(list_of_tokens[0])
+        if variable_type:
+            return_type = variable_type
             name_start = statement.index(list_of_tokens[1])
             if '(' not in statement:
                 # not a function declaration
