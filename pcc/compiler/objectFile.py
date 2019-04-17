@@ -244,16 +244,18 @@ class SectionFlags(enum.IntEnum):
 
 
 class Section:
-    def __init__(self, name, type, flags):
+    def __init__(self, name, name_offset, type, flags):
         """Create a section for an object file.
 
         Args:
-            name (int): the index of the name of the section in the section
-            string table
+            name (str): the canonical name of this section
+            name_offset (int): the index of the name of the section
+            in the section string table
             type (SectionType): the type of the section
             flags (list[SectionFlags]): the list off all flags of the section
         """
         self.name = name
+        self.name_offset = name_offset
         self.type = type
         self.flags = flags
         self.address = 0
@@ -261,7 +263,7 @@ class Section:
         self.size = 0
         self.link = 0
         self.info = 0
-        self.alignement = 1
+        self.alignment = 1
         self.entry_size = 0
 
         self.section_content = bytearray()
@@ -271,14 +273,14 @@ class Section:
 
     def clear(self):
         self.type = 0
-        self.name = 0
+        self.name_offset = 0
         self.flags = [SectionFlags.SHF_NONE]
         self.address = 0
         self.offset = 0
         self.size = 0
         self.link = 0
         self.info = 0
-        self.alignement = 0
+        self.alignment = 0
         self.entry_size = 0
 
     def to_binary_array(self):
@@ -293,7 +295,7 @@ class Section:
             flags += flag
         if self.section_content:
             self.size = len(self.section_content)
-        byte_array += number_to_bytearray(self.name, 4)
+        byte_array += number_to_bytearray(self.name_offset, 4)
         byte_array += number_to_bytearray(self.type, 4)
         byte_array += number_to_bytearray(flags, 8)
         byte_array += number_to_bytearray(self.address, 8)
@@ -301,7 +303,7 @@ class Section:
         byte_array += number_to_bytearray(self.size, 8)
         byte_array += number_to_bytearray(self.link, 4)
         byte_array += number_to_bytearray(self.info, 4)
-        byte_array += number_to_bytearray(self.alignement, 8)
+        byte_array += number_to_bytearray(self.alignment, 8)
         byte_array += number_to_bytearray(self.entry_size, 8)
         return byte_array
 
@@ -440,32 +442,32 @@ class ObjectFile:
         dot_note_gnu_stack = add_to_table('.note.GNU-stack',
                                           self.section_string_table)
 
-        self.sections = {
+        self.sections = [
             # the first section header is all zero
-            'none': Section(none, SectionType.SHT_NULL, no_flags),
-            '.text': Section(dot_text, SectionType.SHT_PROGBITS, ax_flags),
-            '.data': Section(dot_data, SectionType.SHT_PROGBITS, wa_flags),
-            '.bss': Section(dot_bss, SectionType.SHT_NOBITS, wa_flags),
-            '.comment': Section(dot_comment, SectionType.SHT_PROGBITS,
-                                ms_flags),
-            '.note.GNU-stack': Section(dot_note_gnu_stack,
-                                       SectionType.SHT_PROGBITS, no_flags),
-            '.symtab': Section(dot_symtab, SectionType.SHT_SYMTAB, no_flags),
-            '.strtab': Section(dot_strtab, SectionType.SHT_STRTAB, no_flags),
-            '.shstrtab': Section(dot_shstrtab, SectionType.SHT_STRTAB,
-                                 no_flags)
-        }
+            Section('none', none, SectionType.SHT_NULL, no_flags),
+            Section('.text', dot_text, SectionType.SHT_PROGBITS, ax_flags),
+            Section('.data', dot_data, SectionType.SHT_PROGBITS, wa_flags),
+            Section('.bss', dot_bss, SectionType.SHT_NOBITS, wa_flags),
+            Section('.comment', dot_comment, SectionType.SHT_PROGBITS,
+                    ms_flags),
+            Section('.note.GNU-stack', dot_note_gnu_stack,
+                    SectionType.SHT_PROGBITS, no_flags),
+            Section('.symtab', dot_symtab, SectionType.SHT_SYMTAB, no_flags),
+            Section('.strtab', dot_strtab, SectionType.SHT_STRTAB, no_flags),
+            Section('.shstrtab', dot_shstrtab, SectionType.SHT_STRTAB,
+                    no_flags)
+        ]
         # first section needs to be all 0's
-        self.sections['none'].clear()
+        self.get_section('none').clear()
 
         # the symbol table entry size is 0x18
-        self.sections['.symtab'].entry_size = 0x18
+        self.get_section('.symtab').entry_size = 0x18
         # temp hardcode the string table
-        self.sections['.symtab'].link = 7
-        self.sections['.symtab'].info = 7
-        self.sections['.symtab'].alignement = 8
+        self.get_section('.symtab').link = 7
+        self.get_section('.symtab').info = 7
+        self.get_section('.symtab').alignment = 8
 
-        self.sections['.comment'].entry_size = 1
+        self.get_section('.comment').entry_size = 1
 
         self.elf_header.set_section_string_index(8)
 
@@ -473,14 +475,14 @@ class ObjectFile:
         content.append(0)
         content.extend(map(ord, 'PCC: (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0'))
         content.append(0)
-        self.sections['.comment'].fill(content)
+        self.get_section('.comment').fill(content)
 
-        self.sections['.strtab'].fill(self.string_table)
+        self.get_section('.strtab').fill(self.string_table)
 
         self.program_headers = []
 
     def add_symbol(self, symbol):
-        """Add a compiled symbol to the object file
+        """Add a compiled symbol to the object file.
 
         Args:
             symbol (Symbol): the symbol to add
@@ -493,36 +495,49 @@ class ObjectFile:
         self.symbol_table.append(entry)
         self.dot_data_content += symbol.value
 
-    def to_binary_array(self):
+    def get_section(self, name):
+        """Get the section from the name.
+
+        Args:
+            name (str): the section name
+
+        Returns:
+            Section: the requested section if found, else None
         """
+        for section in self.sections:
+            if section.name == name:
+                return section
+        return None
+
+    def to_binary_array(self):
+        """Get the byte array representation.
 
         Returns:
             bytearray: the binary representation
         """
 
-        self.sections['.shstrtab'].fill(self.section_string_table)
-        self.sections['.data'].fill(self.dot_data_content)
+        self.get_section('.shstrtab').fill(self.section_string_table)
+        self.get_section('.data').fill(self.dot_data_content)
 
         byte_array = bytearray()
         for i in range(len(self.symbol_table)):
             byte_array += self.symbol_table[i].to_binary_array()
 
-        self.sections['.symtab'].fill(byte_array)
+        self.get_section('.symtab').fill(byte_array)
 
         offset = self.elf_header.elf_header_size
-        self.elf_header.set_number_of_sections(len(self.sections.keys()))
+        self.elf_header.set_number_of_sections(len(self.sections))
 
         section_content = bytearray()
-        for section_name in self.sections.keys():
-            section = self.sections[section_name]
-            if section.alignement:
-                padding = offset % section.alignement
+        for section in self.sections:
+            if section.alignment:
+                padding = offset % section.alignment
                 if padding != 0:
-                    additional = section.alignement - padding
+                    additional = section.alignment - padding
                     offset += additional
                     for _ in range(additional):
                         section_content.append(0)
-            if section_name != 'none':
+            if section.name != 'none':
                 section.set_offset(offset)
             offset += len(section.section_content)
             section_content += section.section_content
@@ -551,7 +566,7 @@ class ObjectFile:
 
         for i in range(len(keys)):
             section_name = keys[i]
-            section = self.sections[section_name]
+            section = self.get_section(section_name)
             tmp = section.to_binary_array()
             byte_array += tmp
         return byte_array
