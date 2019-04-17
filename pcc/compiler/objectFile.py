@@ -138,6 +138,11 @@ class ElfHeader:
         self.elf_header_size = 0x40
 
     def set_section_offset(self, offset):
+        """Specify the offset of the section table in bytes.
+
+        Args:
+            offset(int): the offset from the start of the file in bytes
+        """
         self.e_shoff[0] = offset & 0xff
         self.e_shoff[1] = (offset >> 8) & 0xff
         self.e_shoff[2] = (offset >> 16) & 0xff
@@ -182,6 +187,11 @@ class ElfHeader:
         self.e_ident[ElfHeader.EI_ABIVERSION] = 0
 
     def to_binary_array(self):
+        """Get the binary representation of the elf header
+
+        Returns:
+            bytearray: the binary representation
+        """
         self._fill_in_ident()
         self._fill_in_type(self.obj_type)
         self._fill_in_machine()
@@ -269,9 +279,17 @@ class Section:
         self.section_content = bytearray()
 
     def set_offset(self, offset):
+        """Specify the section offset from the start of the file.
+
+        Args:
+            offset (int): the offset in bytes from the start of the file
+        """
         self.offset = offset
 
     def clear(self):
+        """Clear the section contents.
+
+        """
         self.type = 0
         self.name_offset = 0
         self.flags = [SectionFlags.SHF_NONE]
@@ -284,7 +302,7 @@ class Section:
         self.entry_size = 0
 
     def to_binary_array(self):
-        """
+        """Get the binary representation of the section
 
         Returns:
             bytearray: the binary representation
@@ -354,8 +372,8 @@ class Symbol:
         """Create a compiled symbol object
 
         Args:
-            name (str):
-            value (bytearray):
+            name (str): the name of the symbol
+            value (bytearray): the value of the symbol
         """
         self.name = name
         self.value = value
@@ -372,7 +390,7 @@ class SymbolTableEntry:
         self.st_size = symbol_size
 
     def to_binary_array(self):
-        """
+        """Get the byte array representation of the symbol table entry
 
         Returns:
             bytearray: the binary representation
@@ -389,6 +407,15 @@ class SymbolTableEntry:
 
 
 def add_to_table(name, table):
+    """Add a string to the table
+
+    Args:
+        name (str): the same to add to the table
+        table (bytearray): the table to add to
+
+    Returns:
+        int: the start index of the name in the table
+    """
     start_point = len(table)
     for character in name:
         table.append(ord(character))
@@ -462,15 +489,18 @@ class ObjectFile:
 
         # the symbol table entry size is 0x18
         self.get_section('.symtab').entry_size = 0x18
-        # temp hardcode the string table
-        self.get_section('.symtab').link = 7
-        self.get_section('.symtab').info = 7
+        # make the link from the symbol table to the string table
+        self.get_section('.symtab').link = self.get_section_index('.strtab')
+        self.get_section('.symtab').info = self.get_section_index('.strtab')
+        # the symbol table needs to be 8 bytes aligned
         self.get_section('.symtab').alignment = 8
 
         self.get_section('.comment').entry_size = 1
 
-        self.elf_header.set_section_string_index(8)
+        str_index = self.get_section_index('.shstrtab')
+        self.elf_header.set_section_string_index(str_index)
 
+        # add custom information to the comment section
         content = bytearray()
         content.append(0)
         content.extend(map(ord, 'PCC: (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0'))
@@ -489,7 +519,7 @@ class ObjectFile:
         """
         name = add_to_table(symbol.name, self.string_table)
         size = len(symbol.value)
-        section_index = 2
+        section_index = self.get_section_index('.data')
         entry = SymbolTableEntry(name, SymbolType.STT_OBJECT,
                                  SymbolBindign.STB_GLOBAL, section_index, size)
         self.symbol_table.append(entry)
@@ -508,6 +538,20 @@ class ObjectFile:
             if section.name == name:
                 return section
         return None
+
+    def get_section_index(self, name):
+        """Get the section index from the name.
+
+        Args:
+            name (str): the section name
+
+        Returns:
+            int: the requested section index if found, else -1
+        """
+        for i in range(len(self.sections)):
+            if self.sections[i].name == name:
+                return i
+        return -1
 
     def to_binary_array(self):
         """Get the byte array representation.
@@ -542,7 +586,7 @@ class ObjectFile:
             offset += len(section.section_content)
             section_content += section.section_content
 
-        # allign the section headers on a 16 byte boundary
+        # allign the section headers on a 8 byte boundary
         padding = offset % 8
         padding = (8 - padding)
         offset += padding
