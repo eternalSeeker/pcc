@@ -471,7 +471,7 @@ class ObjectFile:
 
         content = bytearray()
         content.append(0)
-        content.extend(map(ord, 'GCC: (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0'))
+        content.extend(map(ord, 'PCC: (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0'))
         content.append(0)
         self.sections['.comment'].fill(content)
 
