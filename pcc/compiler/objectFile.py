@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import enum
+import os
 
 # https://www.uclibc.org/docs/elf-64-gen.pdf
 # https://0x00sec.org/t/dissecting-and-exploiting-elf-files/7267
@@ -426,14 +427,17 @@ def add_to_table(name, table):
 
 class ObjectFile:
 
-    def __init__(self):
+    def __init__(self, input_file_name):
 
+        self.input_file_name = input_file_name
         self.section_string_table = bytearray()
         self.string_table = bytearray()
         self.dot_data_content = bytearray()
 
         none = add_to_table('', self.string_table)
-        file_name = add_to_table('charOne.c', self.string_table)
+        # only add the base name of the file to the object file
+        name = os.path.basename(self.input_file_name)
+        file_name = add_to_table(name, self.string_table)
         self.symbol_table = [
             SymbolTableEntry(none, SymbolType.STT_NOTYPE,
                              SymbolBindign.STB_LOCAL, 0, 0),

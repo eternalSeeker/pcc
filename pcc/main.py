@@ -94,7 +94,7 @@ URL: <{url}>
     if arguments.fdump_tree:
         print(ast.to_string(), end='')
         return 0
-    compiler = Compiler(ast.root_node)
+    compiler = Compiler(inputFile, ast.root_node)
     compiler.compile()
     if arguments.c:
         compiler.write_object_file_to_file(output_file_name)

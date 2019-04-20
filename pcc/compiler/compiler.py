@@ -8,15 +8,17 @@ from pcc.compiler.objectFile import ObjectFile, Symbol
 
 class Compiler:
 
-    def __init__(self, ast_root_node):
+    def __init__(self, input_file_name, ast_root_node):
         """Create a compiler object.
 
         Args:
+            input_file_name (str): the file name as string
             ast (AstNode): the root node of the ast
         """
 
+        self.input_file_name = input_file_name
         self.ast_root_node = ast_root_node
-        self.object_file = ObjectFile()
+        self.object_file = ObjectFile(self.input_file_name)
 
     def compile(self):
         if not isinstance(self.ast_root_node, AstNode):
