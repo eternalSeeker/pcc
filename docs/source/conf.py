@@ -51,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = metadata.project
-copyright = metadata.copyright
+copyright = metadata.package_copyright
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

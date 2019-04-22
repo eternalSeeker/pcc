@@ -154,6 +154,11 @@ class ElfHeader:
                            (str_sections_index >> 8) & 0xff]
 
     def set_number_of_sections(self, num_sections):
+        """Specify the number of sections
+
+        Args:
+            num_sections (int): the number of sections
+        """
         self.e_shnum = [num_sections & 0xff,
                         (num_sections >> 8) & 0xff]
 
@@ -255,19 +260,19 @@ class SectionFlags(enum.IntEnum):
 
 
 class Section:
-    def __init__(self, name, name_offset, type, flags):
+    def __init__(self, name, name_offset, section_type, flags):
         """Create a section for an object file.
 
         Args:
             name (str): the canonical name of this section
             name_offset (int): the index of the name of the section
             in the section string table
-            type (SectionType): the type of the section
+            section_type (SectionType): the type of the section
             flags (list[SectionFlags]): the list off all flags of the section
         """
         self.name = name
         self.name_offset = name_offset
-        self.type = type
+        self.section_type = section_type
         self.flags = flags
         self.address = 0
         self.offset = 0
@@ -291,7 +296,7 @@ class Section:
         """Clear the section contents.
 
         """
-        self.type = 0
+        self.section_type = 0
         self.name_offset = 0
         self.flags = [SectionFlags.SHF_NONE]
         self.address = 0
@@ -315,7 +320,7 @@ class Section:
         if self.section_content:
             self.size = len(self.section_content)
         byte_array += number_to_bytearray(self.name_offset, 4)
-        byte_array += number_to_bytearray(self.type, 4)
+        byte_array += number_to_bytearray(self.section_type, 4)
         byte_array += number_to_bytearray(flags, 8)
         byte_array += number_to_bytearray(self.address, 8)
         byte_array += number_to_bytearray(self.offset, 8)
@@ -327,6 +332,11 @@ class Section:
         return byte_array
 
     def fill(self, data):
+        """Fill the section with the data.
+
+        Args:
+            data (bytearray): the data for the section
+        """
         self.section_content = data
         self.size = len(self.section_content)
 
@@ -345,7 +355,7 @@ class SymbolType(enum.IntEnum):
     STT_HIPROC = 15
 
 
-class SymbolBindign(enum.IntEnum):
+class SymbolBinding(enum.IntEnum):
     STB_LOCAL = 0
     STB_GLOBAL = 1
     STB_WEAK = 2
@@ -383,6 +393,15 @@ class Symbol:
 class SymbolTableEntry:
     def __init__(self, name_index, symbol_type, binding,
                  section_index, symbol_size):
+        """Create a symbol table entry
+
+        Args:
+            name_index (int): the start index of the name string
+            symbol_type (SymbolType): the type of the symbol
+            binding (SymbolBinding): the binding of the symbol
+            section_index (int): The index of the section of this symbol
+            symbol_size (int): the size of the symbol
+        """
         self.st_name = name_index
         self.st_info = symbol_type + (binding << 4)
         self.st_other = 0
@@ -428,7 +447,12 @@ def add_to_table(name, table):
 class ObjectFile:
 
     def __init__(self, input_file_name):
+        """Create an object file.
 
+        Args:
+            input_file_name (str): the name of the source file corresponding
+                                   to this object file
+        """
         self.input_file_name = input_file_name
         self.section_string_table = bytearray()
         self.string_table = bytearray()
@@ -440,20 +464,20 @@ class ObjectFile:
         file_name = add_to_table(name, self.string_table)
         self.symbol_table = [
             SymbolTableEntry(none, SymbolType.STT_NOTYPE,
-                             SymbolBindign.STB_LOCAL, 0, 0),
+                             SymbolBinding.STB_LOCAL, 0, 0),
             SymbolTableEntry(file_name, SymbolType.STT_FILE,
-                             SymbolBindign.STB_LOCAL,
+                             SymbolBinding.STB_LOCAL,
                              SpecialSymbolIndex.SHN_ABS, 0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBindign.STB_LOCAL, 1, 0),
+                             SymbolBinding.STB_LOCAL, 1, 0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBindign.STB_LOCAL, 2, 0),
+                             SymbolBinding.STB_LOCAL, 2, 0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBindign.STB_LOCAL, 3, 0),
+                             SymbolBinding.STB_LOCAL, 3, 0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBindign.STB_LOCAL, 5, 0),
+                             SymbolBinding.STB_LOCAL, 5, 0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBindign.STB_LOCAL, 4, 0),
+                             SymbolBinding.STB_LOCAL, 4, 0),
         ]
 
         self.elf_header = ElfHeader(ObjectFileType.RELOCATABLE_OBJECT_FILE)
@@ -525,7 +549,7 @@ class ObjectFile:
         size = len(symbol.value)
         section_index = self.get_section_index('.data')
         entry = SymbolTableEntry(name, SymbolType.STT_OBJECT,
-                                 SymbolBindign.STB_GLOBAL, section_index, size)
+                                 SymbolBinding.STB_GLOBAL, section_index, size)
         self.symbol_table.append(entry)
         self.dot_data_content += symbol.value
 

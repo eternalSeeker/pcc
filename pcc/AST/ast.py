@@ -1,4 +1,4 @@
-from pcc.utils.stringParsing import extractTextForEnclosedParenthesis
+from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 from pcc.utils.stringListParsing import extract_closing_char
 import pcc
 import copy
@@ -554,8 +554,8 @@ class Ast:
             if function_declaration:
                 function_name = part
                 start_index = statement.index('(')
-                arguments = extractTextForEnclosedParenthesis(statement,
-                                                              start_index)
+                arguments = extract_text_for_enclosed_parenthesis(statement,
+                                                                  start_index)
                 if arguments == '' or arguments.isspace():
                     depth = self.get_depth_in_tree()
                     function_call = FunctionCall(depth, function_name)
@@ -608,8 +608,8 @@ class Ast:
     def does_definition_and_declaration_match(self, statement,
                                               function_declaration):
         start_index = statement.index('(')
-        arguments = extractTextForEnclosedParenthesis(statement,
-                                                      start_index)
+        arguments = extract_text_for_enclosed_parenthesis(statement,
+                                                          start_index)
         args = self.extract_variable_declaration_from_string(arguments)
         if len(function_declaration.argument_list) != len(args):
             message = 'the number of arguments do not match the ' \
@@ -730,7 +730,8 @@ class Ast:
             arg_list_start = statement.index('(')
             function_name = statement[name_start: arg_list_start]
             argument_list = \
-                extractTextForEnclosedParenthesis(statement, arg_list_start)
+                extract_text_for_enclosed_parenthesis(statement,
+                                                      arg_list_start)
             list_of_args = argument_list.split(',')
             function_arguments = []
             for arg in list_of_args:

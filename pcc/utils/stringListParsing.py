@@ -5,7 +5,7 @@ from __future__ import print_function
 
 def extract_closing_char(list_to_process, open_char, start_line, start_index,
                          closing_char):
-    enclosedString = ''
+    enclosed_string = ''
     carret = start_index
     current_line = start_line
     number_of_opening_chars = 0
@@ -21,7 +21,7 @@ def extract_closing_char(list_to_process, open_char, start_line, start_index,
                 number_of_closing_chars += 1
             # add the character to the string being build
             if number_of_opening_chars > 0:
-                enclosedString += char
+                enclosed_string += char
 
             if char == open_char:
                 number_of_opening_chars += 1

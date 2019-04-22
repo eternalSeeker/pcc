@@ -69,32 +69,32 @@ URL: <{url}>
         action='store')
     # ignore the name of the program
     arguments = arg_parser.parse_args(args=argv[1:])
-    inputFile = arguments.filesToProcess
-    includeDirs = arguments.I
+    input_file = arguments.filesToProcess
+    include_dirs = arguments.I
 
-    output_file_name = os.path.basename(inputFile)
+    output_file_name = os.path.basename(input_file)
     output_file_name = os.path.splitext(output_file_name)[0] + '.o'
     if arguments.o:
         output_file_name = arguments.o
     if arguments.I:
-        includeDirs = arguments.I
-    with open(inputFile, 'r') as fileToRead:
-        inputFileAsString = fileToRead.read()
-    preprocessor = Preprocessor(inputFile, inputFileAsString, includeDirs)
+        include_dirs = arguments.I
+    with open(input_file, 'r') as fileToRead:
+        input_file_as_string = fileToRead.read()
+    preprocessor = Preprocessor(input_file, input_file_as_string, include_dirs)
     preprocessor.preprocess()
-    preprocessFileString = preprocessor.processedFile
+    preprocess_file_string = preprocessor.processed_file
     if arguments.E:
         # only perform the preprocessor step
-        print(preprocessFileString, end='')
+        print(preprocess_file_string, end='')
         return 0
-    ast = Ast(preprocessFileString, inputFile)
+    ast = Ast(preprocess_file_string, input_file)
     result = ast.run_ast()
     if result != 0:
         return result
     if arguments.fdump_tree:
         print(ast.to_string(), end='')
         return 0
-    compiler = Compiler(inputFile, ast.root_node)
+    compiler = Compiler(input_file, ast.root_node)
     compiler.compile()
     if arguments.c:
         compiler.write_object_file_to_file(output_file_name)

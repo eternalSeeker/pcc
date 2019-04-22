@@ -32,5 +32,5 @@ class TestStringParsing(object):
             inputLine = obj.inputString
             startIndex = obj.startIndex
             output = pcc.utils.stringParsing.\
-                extractTextForEnclosedParenthesis(inputLine, startIndex)
+                extract_text_for_enclosed_parenthesis(inputLine, startIndex)
             assert output == obj.outputString

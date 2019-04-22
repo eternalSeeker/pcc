@@ -13,7 +13,7 @@ class Compiler:
 
         Args:
             input_file_name (str): the file name as string
-            ast (AstNode): the root node of the ast
+            ast_root_node (AstNode): the root node of the ast
         """
 
         self.input_file_name = input_file_name
@@ -21,6 +21,9 @@ class Compiler:
         self.object_file = ObjectFile(self.input_file_name)
 
     def compile(self):
+        """Compile the AST.
+
+        """
         if not isinstance(self.ast_root_node, AstNode):
             return
         for statement in self.ast_root_node.statement_sequence:
@@ -29,5 +32,10 @@ class Compiler:
             self.object_file.add_symbol(symbol)
 
     def write_object_file_to_file(self, file_name):
+        """Write the object file to a binary file.
+
+        Args:
+            file_name (str): the file name with path for the object file
+        """
         with open(file_name, 'wb+') as file:
             file.write(self.object_file.to_binary_array())
