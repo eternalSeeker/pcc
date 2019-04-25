@@ -1,2 +1,2 @@
 
-char one = 1;
+char c = 1;
