@@ -16,7 +16,10 @@ files_to_test = [
     ('charOne.c', 'char_helper.c', 'charOne.out'),
     ('charMax.c', 'char_helper.c', 'charMax.out'),
     ('charMin.c', 'char_helper.c', 'charMin.out'),
-    ('intOne.c', 'intOne_helper.c', 'intOne.out')
+    ('intOne.c', 'int_helper.c', 'intOne.out'),
+    ('intMinOne.c', 'int_helper.c', 'intMinOne.out'),
+    ('intBig.c', 'int_helper.c', 'intBig.out'),
+    ('intBigNeg.c', 'int_helper.c', 'intBigNeg.out'),
 ]
 
 

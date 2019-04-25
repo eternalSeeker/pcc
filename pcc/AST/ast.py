@@ -90,7 +90,12 @@ class VariableDeclaration(Statement):
         """
         size = self.variable_type.size
         value = bytearray()
-        value.append(int(self.initializer))
+        # auto determine base of the string
+        initializer = int(self.initializer, base=0)
+        for i in range(size):
+            tmp = initializer >> (i*8)
+            tmp &= 0xff
+            value.append(tmp)
         compiled_object = CompiledObject(self.name, size, value)
 
         return compiled_object
