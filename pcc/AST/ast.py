@@ -92,6 +92,22 @@ class VariableDeclaration(Statement):
         size = self.variable_type.size
         value = bytearray()
         # auto determine base of the string
+        if self.initializer:
+            value = self.initializer_to_bytearray(size)
+        compiled_object = CompiledObject(self.name, size, value)
+
+        return compiled_object
+
+    def initializer_to_bytearray(self, size):
+        """Fill in the value of the initilizer.
+
+        Args:
+            size (int): the size of the initializer
+
+        Returns:
+            bytearray: the byte array representation of the initializer
+        """
+        value = bytearray()
         if '.' in self.initializer:
             initializer = float(self.initializer)
             if self.variable_type.name == 'double':
@@ -101,12 +117,10 @@ class VariableDeclaration(Statement):
         else:
             initializer = int(self.initializer, base=0)
             for i in range(size):
-                tmp = initializer >> (i*8)
+                tmp = initializer >> (i * 8)
                 tmp &= 0xff
                 value.append(tmp)
-        compiled_object = CompiledObject(self.name, size, value)
-
-        return compiled_object
+        return value
 
 
 class ArrayDeclaration(Statement):

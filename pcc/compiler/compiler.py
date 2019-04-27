@@ -28,7 +28,8 @@ class Compiler:
             return
         for statement in self.ast_root_node.statement_sequence:
             compiled_opject = statement.compile()
-            symbol = Symbol(compiled_opject.name, compiled_opject.value)
+            symbol = Symbol(compiled_opject.name, compiled_opject.value,
+                            compiled_opject.size)
             self.object_file.add_symbol(symbol)
 
     def write_object_file_to_file(self, file_name):

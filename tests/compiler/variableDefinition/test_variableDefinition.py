@@ -13,17 +13,21 @@ generate_outputs = tests.generateOutputsDecorator.generate_outputs
 parametrize = pytest.mark.parametrize
 
 files_to_test = [
+    ('charNoInit.c', 'charNoInit_helper.c', 'charNoInit.out'),
     ('charOne.c', 'char_helper.c', 'charOne.out'),
     ('charMax.c', 'char_helper.c', 'charMax.out'),
     ('charMin.c', 'char_helper.c', 'charMin.out'),
+    ('intNoInit.c', 'intNoInit_helper.c', 'intNoInit.out'),
     ('intOne.c', 'int_helper.c', 'intOne.out'),
     ('intMinOne.c', 'int_helper.c', 'intMinOne.out'),
     ('intBig.c', 'int_helper.c', 'intBig.out'),
     ('intBigNeg.c', 'int_helper.c', 'intBigNeg.out'),
+    ('floatNoInit.c', 'floatNoInit_helper.c', 'floatNoInit.out'),
     ('floatOne.c', 'float_helper.c', 'floatOne.out'),
     ('floatBig.c', 'float_helper.c', 'floatBig.out'),
     ('floatSmallPos.c', 'float_helper.c', 'floatSmallPos.out'),
     ('floatVeryNeg.c', 'float_helper.c', 'floatVeryNeg.out'),
+    ('doubleNoInit.c', 'doubleNoInit_helper.c', 'doubleNoInit.out'),
     ('doubleOne.c', 'double_helper.c', 'doubleOne.out'),
     ('doubleBig.c', 'double_helper.c', 'doubleBig.out'),
     ('doubleSmallPos.c', 'double_helper.c', 'doubleSmallPos.out'),

@@ -379,15 +379,18 @@ class SpecialSymbolIndex(enum.IntEnum):
 
 
 class Symbol:
-    def __init__(self, name, value):
+    def __init__(self, name, value, size):
         """Create a compiled symbol object
 
         Args:
             name (str): the name of the symbol
             value (bytearray): the value of the symbol
+            size (int): the size of the symbol, if value is empty,
+                        it represents the size of the actual symbol
         """
         self.name = name
         self.value = value
+        self.size = size
 
 
 class SymbolTableEntry:
@@ -547,11 +550,15 @@ class ObjectFile:
         """
         name = add_to_table(symbol.name, self.string_table)
         size = len(symbol.value)
-        section_index = self.get_section_index('.data')
+        if size == 0:
+            size = symbol.size
+            section_index = self.get_section_index('.bss')
+        else:
+            section_index = self.get_section_index('.data')
+            self.dot_data_content += symbol.value
         entry = SymbolTableEntry(name, SymbolType.STT_OBJECT,
                                  SymbolBinding.STB_GLOBAL, section_index, size)
         self.symbol_table.append(entry)
-        self.dot_data_content += symbol.value
 
     def get_section(self, name):
         """Get the section from the name.
