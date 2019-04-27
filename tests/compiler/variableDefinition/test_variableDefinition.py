@@ -24,6 +24,10 @@ files_to_test = [
     ('floatBig.c', 'float_helper.c', 'floatBig.out'),
     ('floatSmallPos.c', 'float_helper.c', 'floatSmallPos.out'),
     ('floatVeryNeg.c', 'float_helper.c', 'floatVeryNeg.out'),
+    ('doubleOne.c', 'double_helper.c', 'doubleOne.out'),
+    ('doubleBig.c', 'double_helper.c', 'doubleBig.out'),
+    ('doubleSmallPos.c', 'double_helper.c', 'doubleSmallPos.out'),
+    ('doubleVeryNeg.c', 'double_helper.c', 'doubleVeryNeg.out'),
 ]
 
 

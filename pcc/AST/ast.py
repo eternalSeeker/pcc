@@ -94,7 +94,10 @@ class VariableDeclaration(Statement):
         # auto determine base of the string
         if '.' in self.initializer:
             initializer = float(self.initializer)
-            value = bytearray(struct.pack("f", initializer))
+            if self.variable_type.name == 'double':
+                value = bytearray(struct.pack("d", initializer))
+            else:
+                value = bytearray(struct.pack("f", initializer))
         else:
             initializer = int(self.initializer, base=0)
             for i in range(size):
@@ -259,7 +262,7 @@ class VariableType:
 class Ast:
     c_types = [VariableType('int', 4),
                VariableType('char', 1),
-               VariableType('float', 8),
+               VariableType('float', 4),
                VariableType('double', 8),
                VariableType('void', 0)]
 
