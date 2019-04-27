@@ -2,6 +2,7 @@ from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 from pcc.utils.stringListParsing import extract_closing_char
 import pcc
 import copy
+import struct
 
 
 class CompiledObject:
@@ -91,11 +92,15 @@ class VariableDeclaration(Statement):
         size = self.variable_type.size
         value = bytearray()
         # auto determine base of the string
-        initializer = int(self.initializer, base=0)
-        for i in range(size):
-            tmp = initializer >> (i*8)
-            tmp &= 0xff
-            value.append(tmp)
+        if '.' in self.initializer:
+            initializer = float(self.initializer)
+            value = bytearray(struct.pack("f", initializer))
+        else:
+            initializer = int(self.initializer, base=0)
+            for i in range(size):
+                tmp = initializer >> (i*8)
+                tmp &= 0xff
+                value.append(tmp)
         compiled_object = CompiledObject(self.name, size, value)
 
         return compiled_object

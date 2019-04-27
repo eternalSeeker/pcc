@@ -20,6 +20,10 @@ files_to_test = [
     ('intMinOne.c', 'int_helper.c', 'intMinOne.out'),
     ('intBig.c', 'int_helper.c', 'intBig.out'),
     ('intBigNeg.c', 'int_helper.c', 'intBigNeg.out'),
+    ('floatOne.c', 'float_helper.c', 'floatOne.out'),
+    ('floatBig.c', 'float_helper.c', 'floatBig.out'),
+    ('floatSmallPos.c', 'float_helper.c', 'floatSmallPos.out'),
+    ('floatVeryNeg.c', 'float_helper.c', 'floatVeryNeg.out'),
 ]
 
 
