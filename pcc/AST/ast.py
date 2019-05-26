@@ -3,14 +3,30 @@ from pcc.utils.stringListParsing import extract_closing_char
 import pcc
 import copy
 import struct
+import enum
+
+
+class CompiledObjectType(enum.Enum):
+    data = 1,
+    code = 2,
 
 
 class CompiledObject:
 
-    def __init__(self, name, size, value):
+    def __init__(self, name, size, value, objectType):
+        """Create an compiled object.
+
+        Args:
+            name (str): the name of the object
+            size (int): the size of the object
+            value (bytearray): the content of the object
+            objectType (CompiledObjectType): the type of object
+
+        """
         self.name = name
         self.size = size
         self.value = value
+        self.type = objectType
 
 
 class AstNode:
@@ -94,7 +110,8 @@ class VariableDeclaration(Statement):
         # auto determine base of the string
         if self.initializer:
             value = self.initializer_to_bytearray(size)
-        compiled_object = CompiledObject(self.name, size, value)
+        compiled_object = CompiledObject(self.name, size, value,
+                                         CompiledObjectType.data)
 
         return compiled_object
 
@@ -203,6 +220,14 @@ class FunctionDeclaration(Statement):
         for argument in self.argument_list:
             argument.update_depth(depth+3)
 
+    def compile(self):
+        """Compile this statement
+
+        Returns:
+            CompiledObject: the compiled version of this statement
+        """
+        return None
+
 
 class FunctionDefinition(Statement):
 
@@ -214,6 +239,37 @@ class FunctionDefinition(Statement):
         for arg in self.statement_sequence:
             string += str(arg)
         return string
+
+    def compile(self):
+        """Compile this statement
+
+        Returns:
+            CompiledObject: the compiled version of this statement
+        """
+        # http://ref.x86asm.net/coder64.html
+        # https://www.amd.com/system/files/TechDocs/24594.pdf
+        # Table 1-10 for register encodings
+        value = bytearray()
+        value.append(0x55)  # push %rbp, push the frame pointer on stack
+        # 0x50 == push instruction, the register to push is encoded and added
+        value.extend([0x48, 0x89, 0xe5])
+        # 0x48 REX prefix with W flag set (64 bit operands)
+        # 0x89 MOV instruction
+        # 0xe5 encoded operands ( ModR/M Byte) MOD 11, RM 101 and REG 100
+        # resulting in a mov from the stack pointer(rsp) to the base pointer(
+        # rbp)
+        value.append(0x90)  # nop
+
+        value.append(0x5d)  # pop rbp from the stack
+        # 0x58 == pop + the register to pop to (5 == %rbp)
+
+        value.append(0xc3)  # ret instruction
+
+        size = len(value)
+        compiled_object = CompiledObject(self.statement_sequence[0].name, size,
+                                         value, CompiledObjectType.code)
+
+        return compiled_object
 
 
 class CompoundStatement(Statement):

@@ -379,7 +379,7 @@ class SpecialSymbolIndex(enum.IntEnum):
 
 
 class Symbol:
-    def __init__(self, name, value, size):
+    def __init__(self, name, value, size, is_text):
         """Create a compiled symbol object
 
         Args:
@@ -387,10 +387,12 @@ class Symbol:
             value (bytearray): the value of the symbol
             size (int): the size of the symbol, if value is empty,
                         it represents the size of the actual symbol
+            is_text (bool): is text
         """
         self.name = name
         self.value = value
         self.size = size
+        self.is_text = is_text
 
 
 class SymbolTableEntry:
@@ -550,7 +552,9 @@ class ObjectFile:
         """
         name = add_to_table(symbol.name, self.string_table)
         size = len(symbol.value)
-        if size == 0:
+        if symbol.is_text:
+            section_index = self.get_section_index('.text')
+        elif size == 0:
             size = symbol.size
             section_index = self.get_section_index('.bss')
         else:

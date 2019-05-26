@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from pcc.AST.ast import AstNode
+from pcc.AST.ast import AstNode, CompiledObjectType
 from pcc.compiler.objectFile import ObjectFile, Symbol
 
 
@@ -28,9 +28,13 @@ class Compiler:
             return
         for statement in self.ast_root_node.statement_sequence:
             compiled_opject = statement.compile()
-            symbol = Symbol(compiled_opject.name, compiled_opject.value,
-                            compiled_opject.size)
-            self.object_file.add_symbol(symbol)
+            if compiled_opject:
+                is_text = False
+                if compiled_opject.type == CompiledObjectType.code:
+                    is_text = True
+                symbol = Symbol(compiled_opject.name, compiled_opject.value,
+                                compiled_opject.size, is_text)
+                self.object_file.add_symbol(symbol)
 
     def write_object_file_to_file(self, file_name):
         """Write the object file to a binary file.
