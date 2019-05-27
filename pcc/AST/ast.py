@@ -1,5 +1,6 @@
 from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 from pcc.utils.stringListParsing import extract_closing_char
+from pcc.compiler.assembler import ProcessorRegister
 import pcc
 import copy
 import struct
@@ -99,9 +100,11 @@ class VariableDeclaration(Statement):
             return True
         return False
 
-    def compile(self):
+    def compile(self, assembler):
         """Compile this statement
 
+        Args:
+            assembler (Assembler)
         Returns:
             CompiledObject: the compiled version of this statement
         """
@@ -220,9 +223,11 @@ class FunctionDeclaration(Statement):
         for argument in self.argument_list:
             argument.update_depth(depth+3)
 
-    def compile(self):
+    def compile(self, assembler):
         """Compile this statement
 
+        Args:
+            assembler (Assembler)
         Returns:
             CompiledObject: the compiled version of this statement
         """
@@ -240,30 +245,36 @@ class FunctionDefinition(Statement):
             string += str(arg)
         return string
 
-    def compile(self):
+    def compile(self, assembler):
         """Compile this statement
 
+        Args:
+            assembler (Assembler)
         Returns:
             CompiledObject: the compiled version of this statement
         """
-        # http://ref.x86asm.net/coder64.html
-        # https://www.amd.com/system/files/TechDocs/24594.pdf
-        # Table 1-10 for register encodings
         value = bytearray()
-        value.append(0x55)  # push %rbp, push the frame pointer on stack
-        # 0x50 == push instruction, the register to push is encoded and added
-        value.extend([0x48, 0x89, 0xe5])
-        # 0x48 REX prefix with W flag set (64 bit operands)
-        # 0x89 MOV instruction
-        # 0xe5 encoded operands ( ModR/M Byte) MOD 11, RM 101 and REG 100
-        # resulting in a mov from the stack pointer(rsp) to the base pointer(
-        # rbp)
-        value.append(0x90)  # nop
 
-        value.append(0x5d)  # pop rbp from the stack
-        # 0x58 == pop + the register to pop to (5 == %rbp)
+        # save the frame pointer on stack
+        ret = assembler.push_to_stack(ProcessorRegister.base_pointer)
+        value.extend(ret)
 
-        value.append(0xc3)  # ret instruction
+        # set the stack pointer as the new base pointer
+        ret = assembler.copy_from_reg_to_reg(ProcessorRegister.base_pointer,
+                                             ProcessorRegister.frame_pointer)
+        value.extend(ret)
+
+        # add a nop
+        ret = assembler.nop()
+        value.extend(ret)
+
+        # restore the frame pointer from stack
+        ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)
+        value.extend(ret)
+
+        # return to the called function
+        ret = assembler.return_to_caller()
+        value.extend(ret)
 
         size = len(value)
         compiled_object = CompiledObject(self.statement_sequence[0].name, size,

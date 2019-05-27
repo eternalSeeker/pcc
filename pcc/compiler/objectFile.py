@@ -554,6 +554,7 @@ class ObjectFile:
         size = len(symbol.value)
         if symbol.is_text:
             section_index = self.get_section_index('.text')
+            self.get_section('.text').section_content += symbol.value
         elif size == 0:
             size = symbol.size
             section_index = self.get_section_index('.bss')

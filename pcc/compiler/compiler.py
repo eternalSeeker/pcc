@@ -4,6 +4,7 @@
 
 from pcc.AST.ast import AstNode, CompiledObjectType
 from pcc.compiler.objectFile import ObjectFile, Symbol
+from pcc.compiler.assembler_x64 import x64Assembler
 
 
 class Compiler:
@@ -19,6 +20,7 @@ class Compiler:
         self.input_file_name = input_file_name
         self.ast_root_node = ast_root_node
         self.object_file = ObjectFile(self.input_file_name)
+        self.assembler = x64Assembler()
 
     def compile(self):
         """Compile the AST.
@@ -27,7 +29,7 @@ class Compiler:
         if not isinstance(self.ast_root_node, AstNode):
             return
         for statement in self.ast_root_node.statement_sequence:
-            compiled_opject = statement.compile()
+            compiled_opject = statement.compile(self.assembler)
             if compiled_opject:
                 is_text = False
                 if compiled_opject.type == CompiledObjectType.code:
