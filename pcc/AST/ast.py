@@ -268,13 +268,10 @@ class FunctionDefinition(Statement):
         ret = assembler.nop()
         value.extend(ret)
 
-        # restore the frame pointer from stack
-        ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)
-        value.extend(ret)
-
-        # return to the called function
-        ret = assembler.return_to_caller()
-        value.extend(ret)
+        for statement in self.statement_sequence:
+            result = statement.compile(assembler)
+            if result:
+                value += result.value
 
         size = len(value)
         compiled_object = CompiledObject(self.statement_sequence[0].name, size,
@@ -294,6 +291,25 @@ class CompoundStatement(Statement):
             string += str(arg)
         return string
 
+    def compile(self, assembler):
+        """Compile this statement
+
+        Args:
+            assembler (Assembler)
+        Returns:
+            CompiledObject: the compiled version of this statement
+        """
+        value = bytearray()
+        for statement in self.statement_sequence:
+            result = statement.compile(assembler)
+            if result:
+                value += result.value
+
+        size = len(value)
+        compiled_object = CompiledObject('compoundStatement', size,
+                                         value, CompiledObjectType.code)
+        return compiled_object
+
 
 class FunctionCall(Statement):
 
@@ -312,16 +328,67 @@ class FunctionCall(Statement):
         return string
 
 
+class ConstantExpression:
+    def __init__(self, exp_type, expr_value):
+        self.exp_type = exp_type
+        self.exp_value = expr_value
+
+    def __str__(self):
+        string = '  Constant: %s, %s\n' % (self.exp_type, self.exp_value)
+        return string
+
+
 class ReturnStatement(Statement):
 
-    def __init__(self, depth, identifier):
+    def __init__(self, depth, identifier, constant):
+        """Create a return statement.
+
+        Args:
+            depth (int): depth in the ast tree
+            identifier (str): the identifier of the symbol to return if
+                              applicable
+            constant (ConstantExpression): the constant expression to return
+            i                              f applicable
+        """
         super(ReturnStatement, self).__init__(depth)
         self.id = identifier
+        self.constant = constant
 
     def __str__(self):
         string = self._depth * '  ' + 'Return: \n'
-        string += self._depth * '  ' + '  ID: %s\n' % self.id
+        if self.id:
+            string += self._depth * '  ' + '  ID: %s\n' % self.id
+        if self.constant:
+            string += self._depth * '  ' + '%s' % str(self.constant)
         return string
+
+    def compile(self, assembler):
+        """Compile this statement
+
+        Args:
+            assembler (Assembler)
+        Returns:
+            CompiledObject: the compiled version of this statement
+        """
+        value = bytearray()
+
+        if self.constant:
+            imm_value = int(self.constant.exp_value)
+            reg = ProcessorRegister.accumulator
+            value += assembler.copy_value_to_reg(imm_value, reg)
+
+        # restore the frame pointer from stack
+        ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)
+        value.extend(ret)
+
+        # return to the called function
+        ret = assembler.return_to_caller()
+        value.extend(ret)
+
+        size = len(value)
+        compiled_object = CompiledObject(self.id, size,
+                                         value, CompiledObjectType.code)
+        return compiled_object
 
 
 class Expression(AstNode):
@@ -747,11 +814,21 @@ class Ast:
             if len(splited_statement) == 2:
                 retval = splited_statement[1]
                 if self.get_variable_definition_from_id(retval):
-                    return_statement = ReturnStatement(depth, retval)
+                    return_statement = ReturnStatement(depth, retval, None)
                     self.current_node.add_statement(return_statement)
                 else:
                     # probably is a constant expression
+                    expression_type = 'int'
+                    expression_value = retval
+                    expression = ConstantExpression(expression_type,
+                                                    expression_value)
+                    return_statement = ReturnStatement(depth, None, expression)
+                    self.current_node.add_statement(return_statement)
                     pass
+            else:
+                retval = None
+                return_statement = ReturnStatement(depth, retval, None)
+                self.current_node.add_statement(return_statement)
         return line_number
 
     def read_function_definition(self, statements):

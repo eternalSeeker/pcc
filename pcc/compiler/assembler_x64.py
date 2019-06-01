@@ -3,15 +3,20 @@
 
 from pcc.compiler.assembler import Assembler, ProcessorRegister
 
+import struct
+
 
 # http://ref.x86asm.net/coder64.html
 # https://www.amd.com/system/files/TechDocs/24594.pdf
+# page 74 for
 
 def get_register_encoding(register):
     if register == ProcessorRegister.frame_pointer:
         return 4
     elif register == ProcessorRegister.base_pointer:
         return 5
+    elif register == ProcessorRegister.accumulator:
+        return 0
     else:
         raise NotImplementedError
 
@@ -75,6 +80,25 @@ class x64Assembler(Assembler):
         rm = get_register_encoding(source)
         modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
         value.extend([0x48, 0x89, modr_byte])
+
+        return value
+
+    def copy_value_to_reg(self, imm_value, destination):
+        """Copy the value to a register.
+
+        Args:
+            imm_value (int): the value to copy
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        register_encoding = get_register_encoding(destination)
+        value.append(0xb8 + register_encoding)
+        # (0xb8 == mov imm) + the register to move to
+        value += bytearray(struct.pack("i", imm_value))
 
         return value
 

@@ -7,6 +7,7 @@ import enum
 class ProcessorRegister(enum.Enum):
     frame_pointer = 0
     base_pointer = 1
+    accumulator = 2
 
 
 class Assembler:
@@ -41,6 +42,18 @@ class Assembler:
 
         Args:
             source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
+        """
+        raise NotImplementedError
+
+    def copy_value_to_reg(self, value, destination):
+        """Copy the value from one register to another one.
+
+        Args:
+            value (int): the value to copy
             destination (ProcessorRegister): the destination register
 
         Returns:
