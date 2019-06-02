@@ -15,6 +15,7 @@ parametrize = pytest.mark.parametrize
 files_to_test = [
     'returnVoid.c',
     'returnChar.c',
+    'returnInt.c',
 ]
 
 
