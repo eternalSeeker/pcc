@@ -43,6 +43,14 @@ class AstNode:
             string += str(arg)
         return string
 
+    def get_function_definition_node(self):
+        """Get the function definition if found.
+
+        Returns (FunctionDefinition): the definition if found else None
+
+        """
+        return None
+
     def add_statement(self, statement):
         statement.parent_node = self
         self.statement_sequence.append(statement)
@@ -60,6 +68,14 @@ class Statement(AstNode):
 
     def __str__(self):
         return 'Unknown'
+
+    def get_function_definition_node(self):
+        """Get the function definition if found.
+
+        Returns (FunctionDefinition): the definition if found else None
+
+        """
+        return self.parent_node.get_function_definition_node()
 
 
 class VariableDeclaration(Statement):
@@ -245,8 +261,24 @@ class FunctionDefinition(Statement):
             string += str(arg)
         return string
 
+    def get_function_definition_node(self):
+        """Get the  function  definition if found.
+
+        Returns(FunctionDefinition): self
+
+        """
+        return self
+
+    def get_return_type(self):
+        """Get the return type.
+
+        Returns:
+            str: the return type
+        """
+        return self.statement_sequence[0].return_type.name
+
     def compile(self, assembler):
-        """Compile this statement
+        """Compile this statement.
 
         Args:
             assembler (Assembler)
@@ -348,7 +380,7 @@ class ReturnStatement(Statement):
             identifier (str): the identifier of the symbol to return if
                               applicable
             constant (ConstantExpression): the constant expression to return
-            i                              f applicable
+                                           if applicable
         """
         super(ReturnStatement, self).__init__(depth)
         self.id = identifier
@@ -515,6 +547,12 @@ class Ast:
         ind = expression.find('\"')
         if ind > -1:
             type_string = 'string'
+            return type_string
+
+        ind = expression.find('.')
+        if ind > -1:
+            type_string = 'double'
+            return type_string
 
         return type_string
 
@@ -818,13 +856,22 @@ class Ast:
                     self.current_node.add_statement(return_statement)
                 else:
                     # probably is a constant expression
-                    expression_type = 'int'
-                    expression_value = retval
-                    expression = ConstantExpression(expression_type,
-                                                    expression_value)
-                    return_statement = ReturnStatement(depth, None, expression)
-                    self.current_node.add_statement(return_statement)
-                    pass
+                    func_def = self.current_node.get_function_definition_node()
+                    if func_def:
+                        expression_type = self.get_type_of_expression(retval)
+                        expression_value = retval
+                        expression = ConstantExpression(expression_type,
+                                                        expression_value)
+                        return_statement = ReturnStatement(depth, None,
+                                                           expression)
+                        self.current_node.add_statement(return_statement)
+                    else:
+                        message = 'Could not find the function definition ' \
+                                  'of the return statement'
+                        self.ast_error(message)
+                        line_number = -1
+                        return line_number
+
             else:
                 retval = None
                 return_statement = ReturnStatement(depth, retval, None)

@@ -16,6 +16,7 @@ files_to_test = [
     'returnVoid.c',
     'returnChar.c',
     'returnInt.c',
+    'returnFloat.c',
 ]
 
 
