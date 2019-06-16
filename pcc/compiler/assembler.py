@@ -8,6 +8,7 @@ class ProcessorRegister(enum.Enum):
     frame_pointer = 0
     base_pointer = 1
     accumulator = 2
+    single_scalar_0 = 3
 
 
 class Assembler:

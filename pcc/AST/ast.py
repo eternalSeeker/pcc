@@ -405,9 +405,14 @@ class ReturnStatement(Statement):
         value = bytearray()
 
         if self.constant:
-            imm_value = int(self.constant.exp_value)
-            reg = ProcessorRegister.accumulator
-            value += assembler.copy_value_to_reg(imm_value, reg)
+            try:
+                imm_value = int(self.constant.exp_value)
+                reg = ProcessorRegister.accumulator
+                value += assembler.copy_value_to_reg(imm_value, reg)
+            except ValueError:
+                imm_value = float(self.constant.exp_value)
+                reg = ProcessorRegister.single_scalar_0
+                value += assembler.copy_value_to_reg(imm_value, reg)
 
         # restore the frame pointer from stack
         ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)

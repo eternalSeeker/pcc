@@ -94,11 +94,18 @@ class x64Assembler(Assembler):
             bytearray: the machine code
         """
         value = bytearray()
-
-        register_encoding = get_register_encoding(destination)
-        value.append(0xb8 + register_encoding)
-        # (0xb8 == mov imm) + the register to move to
-        value += bytearray(struct.pack("i", imm_value))
+        if destination == ProcessorRegister.single_scalar_0:
+            # mov the single scalar to eax
+            value += bytearray([0xb8])
+            packed = struct.pack("f", imm_value)
+            value += packed
+            # movd eax to xmm0
+            value += bytearray([0x66, 0x0f, 0x6e, 0xc0])
+        else:
+            register_encoding = get_register_encoding(destination)
+            value.append(0xb8 + register_encoding)
+            # (0xb8 == mov imm) + the register to move to
+            value += bytearray(struct.pack("i", imm_value))
 
         return value
 
