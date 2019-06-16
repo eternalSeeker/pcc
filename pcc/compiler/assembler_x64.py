@@ -98,9 +98,16 @@ class x64Assembler(Assembler):
             # mov the single scalar to eax
             value += bytearray([0xb8])
             packed = struct.pack("f", imm_value)
-            value += packed
+            value += bytearray(packed)
             # movd eax to xmm0
             value += bytearray([0x66, 0x0f, 0x6e, 0xc0])
+        elif destination == ProcessorRegister.double_scalar_0:
+            # mov the double scalar to rax
+            value += bytearray([0x48, 0xb8])
+            packed = struct.pack("d", imm_value)
+            value += bytearray(packed)
+            # movq   rax to xmm0
+            value += bytearray([0x66, 0x48, 0x0f, 0x6e, 0xc0])
         else:
             register_encoding = get_register_encoding(destination)
             value.append(0xb8 + register_encoding)

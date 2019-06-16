@@ -323,6 +323,14 @@ class CompoundStatement(Statement):
             string += str(arg)
         return string
 
+    def get_return_type(self):
+        """Get the return type.
+
+        Returns:
+            str: the return type
+        """
+        return self.parent_node.get_return_type()
+
     def compile(self, assembler):
         """Compile this statement
 
@@ -394,6 +402,14 @@ class ReturnStatement(Statement):
             string += self._depth * '  ' + '%s' % str(self.constant)
         return string
 
+    def get_return_type(self):
+        """Get the return type.
+
+        Returns:
+            str: the return type
+        """
+        return self.parent_node.get_return_type()
+
     def compile(self, assembler):
         """Compile this statement
 
@@ -411,7 +427,11 @@ class ReturnStatement(Statement):
                 value += assembler.copy_value_to_reg(imm_value, reg)
             except ValueError:
                 imm_value = float(self.constant.exp_value)
-                reg = ProcessorRegister.single_scalar_0
+                return_type = self.get_return_type()
+                if return_type == 'double':
+                    reg = ProcessorRegister.double_scalar_0
+                else:
+                    reg = ProcessorRegister.single_scalar_0
                 value += assembler.copy_value_to_reg(imm_value, reg)
 
         # restore the frame pointer from stack
