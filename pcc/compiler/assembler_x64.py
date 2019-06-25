@@ -135,3 +135,29 @@ class x64Assembler(Assembler):
         value = bytearray()
         value.append(0x90)  # nop
         return value
+
+    def push_value_to_stack(self, value_array, stack_offset):
+        """Pushes a value on stack
+        Attributes:
+            value_array (bytearray): the value to push on stack
+            stack_offset (int): the offset from the stack pointer
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+        value.append(0xc7)  # mov
+        # Table 2-2.  32-Bit Addressing Forms with the ModR/M Byte
+        # indirect adressing with byte displacement
+        mod = 0b01
+        destination = ProcessorRegister.base_pointer
+        rm = get_register_encoding(destination)
+        reg = 0  # don't care
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        encoded_offset = struct.pack("b", stack_offset)
+        value += encoded_offset
+
+        value.extend(value_array)
+
+        return value

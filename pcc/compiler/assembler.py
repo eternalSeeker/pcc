@@ -78,3 +78,13 @@ class Assembler:
             bytearray: the machine code
         """
         raise NotImplementedError
+
+    def push_value_to_stack(self, value, stack_offset):
+        """Pushes a value on stack
+        Attributes:
+            value (bytearray): the value to push on stack
+            stack_offset (int): the offset from the stack pointer
+        Returns:
+            bytearray: the machine code
+        """
+        raise NotImplementedError

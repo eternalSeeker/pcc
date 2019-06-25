@@ -7,6 +7,13 @@ import struct
 import enum
 
 
+class StackVariable:
+    def __init__(self, name, size, initializer_byte_array):
+        self.name = name
+        self.size = size
+        self.initializer_byte_array = initializer_byte_array
+
+
 class CompiledObjectType(enum.Enum):
     data = 1,
     code = 2,
@@ -50,6 +57,14 @@ class AstNode:
 
         """
         return None
+
+    def add_stack_variable(self, current_list):
+        """Add all stack variable to the list
+
+        Args:
+            current_list(list[StackVariable]): the current list
+        """
+        pass
 
     def add_statement(self, statement):
         statement.parent_node = self
@@ -126,16 +141,21 @@ class VariableDeclaration(Statement):
         """
         size = self.variable_type.size
         value = bytearray()
-        # auto determine base of the string
-        if self.initializer:
-            value = self.initializer_to_bytearray(size)
-        compiled_object = CompiledObject(self.name, size, value,
-                                         CompiledObjectType.data)
+        # not for stack variables (global variables have the root node as
+        # parent who does not have a parent)
+        if self.parent_node.parent_node:
+            compiled_object = None
+        else:
+            # auto determine base of the string
+            if self.initializer:
+                value = self.initializer_to_bytearray(size)
+            compiled_object = CompiledObject(self.name, size, value,
+                                             CompiledObjectType.data)
 
         return compiled_object
 
     def initializer_to_bytearray(self, size):
-        """Fill in the value of the initilizer.
+        """Fill in the value of the initializer.
 
         Args:
             size (int): the size of the initializer
@@ -157,6 +177,24 @@ class VariableDeclaration(Statement):
                 tmp &= 0xff
                 value.append(tmp)
         return value
+
+    def add_stack_variable(self, current_list):
+        """Add all stack variable to the list
+
+        Args:
+            current_list(list[StackVariable]): the current list
+        """
+        # not for global variables (global variables have the root node as
+        # parent who does not have a parent)
+        if self.parent_node.parent_node:
+            if self.initializer:
+                size = self.variable_type.size
+                initializer = self.initializer_to_bytearray(size)
+            else:
+                initializer = 0
+            stack_var = StackVariable(self.name, self.variable_type.size,
+                                      initializer)
+            current_list.append(stack_var)
 
 
 class ArrayDeclaration(Statement):
@@ -234,6 +272,15 @@ class FunctionDeclaration(Statement):
         new_copy = type(self)(return_type, name, argument_list, depth)
         return new_copy
 
+    def add_stack_variable(self, current_list):
+        """Add all stack variable to the list
+
+        Args:
+            current_list(list[StackVariable]): the current list
+        """
+        if len(self.statement_sequence) > 1:
+            self.statement_sequence[1].add_stack_variable(current_list)
+
     def update_depth(self, depth):
         super(FunctionDeclaration, self).update_depth(depth)
         for argument in self.argument_list:
@@ -269,6 +316,14 @@ class FunctionDefinition(Statement):
         """
         return self
 
+    def add_stack_variable(self, current_list):
+        """Add all stack variable to the list
+
+        Args:
+            current_list(list[StackVariable]): the current list
+        """
+        self.statement_sequence[1].add_stack_variable(current_list)
+
     def get_return_type(self):
         """Get the return type.
 
@@ -295,6 +350,17 @@ class FunctionDefinition(Statement):
         ret = assembler.copy_from_reg_to_reg(ProcessorRegister.base_pointer,
                                              ProcessorRegister.frame_pointer)
         value.extend(ret)
+
+        current_list = []
+        self.add_stack_variable(current_list)
+        # first the frame pointer has been saved to stack
+        stack_offset = -4
+        for stack_var in current_list:
+            value_array = stack_var.initializer_byte_array
+            size = stack_var.size
+            stack_var.stack_offset = stack_offset
+            value += assembler.push_value_to_stack(value_array, stack_offset)
+            stack_offset -= size
 
         # add a nop
         ret = assembler.nop()
@@ -349,6 +415,15 @@ class CompoundStatement(Statement):
         compiled_object = CompiledObject('compoundStatement', size,
                                          value, CompiledObjectType.code)
         return compiled_object
+
+    def add_stack_variable(self, current_list):
+        """Add all stack variable to the list
+
+        Args:
+            current_list(list[StackVariable]): the current list
+        """
+        if len(self.statement_sequence) > 0:
+            self.statement_sequence[0].add_stack_variable(current_list)
 
 
 class FunctionCall(Statement):
