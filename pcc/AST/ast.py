@@ -356,11 +356,8 @@ class FunctionDefinition(Statement):
         # first the frame pointer has been saved to stack
         stack_offset = -4
         for stack_var in current_list:
-            value_array = stack_var.initializer_byte_array
-            size = stack_var.size
-            stack_var.stack_offset = stack_offset
-            value += assembler.push_value_to_stack(value_array, stack_offset)
-            stack_offset -= size
+            value = self.push_variable_on_stack(assembler, stack_offset,
+                                                stack_var, value)
 
         # add a nop
         ret = assembler.nop()
@@ -376,6 +373,18 @@ class FunctionDefinition(Statement):
                                          value, CompiledObjectType.code)
 
         return compiled_object
+
+    def push_variable_on_stack(self, assembler, stack_offset,
+                               stack_var, value):
+        value_array = stack_var.initializer_byte_array
+        size = stack_var.size
+        stack_var.stack_offset = stack_offset
+        number_of_words = int(len(value_array) / 4)
+        for i in range(number_of_words):
+            part_of_array = value_array[i*4:(i+1)*4]
+            value += assembler.push_value_to_stack(part_of_array, stack_offset)
+        stack_offset -= size
+        return value
 
 
 class CompoundStatement(Statement):

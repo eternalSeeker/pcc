@@ -144,6 +144,10 @@ class x64Assembler(Assembler):
         Returns:
             bytearray: the machine code
         """
+
+        if len(value_array) > 4:
+            raise ValueError("array too long")
+
         value = bytearray()
         value.append(0xc7)  # mov
         # Table 2-2.  32-Bit Addressing Forms with the ModR/M Byte
@@ -159,5 +163,9 @@ class x64Assembler(Assembler):
         value += encoded_offset
 
         value.extend(value_array)
+        if len(value_array) < 4:
+            padding = 4 - len(value_array)
+            for _ in range(padding):
+                value.append(0)
 
         return value
