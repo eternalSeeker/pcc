@@ -3,5 +3,5 @@ void foo(void);
 
 void foo(void)
 {
-    int i = 0;
+    double d = 0.0;
 }

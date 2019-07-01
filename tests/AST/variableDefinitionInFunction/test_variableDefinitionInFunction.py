@@ -14,6 +14,9 @@ parametrize = pytest.mark.parametrize
 
 files_to_test = [
     'int.c',
+    'char.c',
+    'float.c',
+    'double.c',
 ]
 
 
