@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from pcc.AST.ast import AstNode, CompiledObjectType
+from pcc.AST.ast_node import AstNode, CompiledObjectType
 from pcc.compiler.objectFile import ObjectFile, Symbol
 from pcc.compiler.assembler_x64 import x64Assembler
 
