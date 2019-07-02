@@ -295,11 +295,23 @@ class FunctionDeclaration(Statement):
         """
         return None
 
+    def get_stack_offset_of_variable(self, variable_name):
+        """Get the stack offset for the variable.
+
+        Args:
+            variable_name (str): the name of the variable
+
+        Returns:
+            int: the stack offset if found, else 1
+        """
+        return self.parent_node.get_stack_offset_of_variable(variable_name)
+
 
 class FunctionDefinition(Statement):
 
     def __init__(self, depth):
         super(FunctionDefinition, self).__init__(depth)
+        self.stack_variable_list = []
 
     def __str__(self):
         string = self._depth * '  ' + 'FuncDef: \n'
@@ -331,6 +343,23 @@ class FunctionDefinition(Statement):
         """
         return self.statement_sequence[0].return_type.name
 
+    def get_stack_offset_of_variable(self, variable_name):
+        """Get the stack offset for the variable.
+
+        Args:
+            variable_name (str): the name of the variable
+
+        Returns:
+            int: the stack offset if found, else 1
+        """
+        offset = 1
+
+        for var in self.stack_variable_list:
+            if var.name == variable_name:
+                offset = var.offset
+
+        return offset
+
     def compile(self, assembler):
         """Compile this statement.
 
@@ -355,9 +384,13 @@ class FunctionDefinition(Statement):
         # first the frame pointer has been saved to stack
         stack_offset = -4
         for stack_var in current_list:
-            value = self.push_variable_on_stack(assembler, stack_offset,
-                                                stack_var, value)
+            stack_var.offset = stack_offset
+            value, stack_offset = self.push_variable_on_stack(assembler,
+                                                              stack_offset,
+                                                              stack_var,
+                                                              value)
 
+        self.stack_variable_list = current_list
         # add a nop
         ret = assembler.nop()
         value.extend(ret)
@@ -383,7 +416,7 @@ class FunctionDefinition(Statement):
             part_of_array = value_array[i*4:(i+1)*4]
             value += assembler.push_value_to_stack(part_of_array, stack_offset)
         stack_offset -= size
-        return value
+        return value, stack_offset
 
 
 class CompoundStatement(Statement):
@@ -432,6 +465,17 @@ class CompoundStatement(Statement):
         """
         if len(self.statement_sequence) > 0:
             self.statement_sequence[0].add_stack_variable(current_list)
+
+    def get_stack_offset_of_variable(self, variable_name):
+        """Get the stack offset for the variable.
+
+        Args:
+            variable_name (str): the name of the variable
+
+        Returns:
+            int: the stack offset if found, else 1
+        """
+        return self.parent_node.get_stack_offset_of_variable(variable_name)
 
 
 class FunctionCall(Statement):
@@ -516,6 +560,20 @@ class ReturnStatement(Statement):
                 else:
                     reg = ProcessorRegister.single_scalar_0
                 value += assembler.copy_value_to_reg(imm_value, reg)
+        elif self.id:
+            return_type = self.get_return_type()
+            if return_type == 'double':
+                reg = ProcessorRegister.double_scalar_0
+            elif return_type == 'float':
+                reg = ProcessorRegister.single_scalar_0
+            else:
+                reg = ProcessorRegister.accumulator
+
+            parent = self.parent_node
+            id = self.id
+            stack_offset = parent.get_stack_offset_of_variable(id)
+
+            value += assembler.copy_stack_to_reg(stack_offset, reg)
 
         # restore the frame pointer from stack
         ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)

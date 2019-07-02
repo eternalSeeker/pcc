@@ -18,6 +18,7 @@ files_to_test = [
     ('returnInt.c', 'intHelper.c', 'returnInt.out'),
     ('returnFloat.c', 'floatHelper.c', 'returnFloat.out'),
     ('returnDouble.c', 'doubleHelper.c', 'returnDouble.out'),
+    ('returnVarInt.c', 'intHelper.c', 'returnVarInt.out'),
 ]
 
 

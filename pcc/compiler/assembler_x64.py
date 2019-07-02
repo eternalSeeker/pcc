@@ -169,3 +169,29 @@ class x64Assembler(Assembler):
                 value.append(0)
 
         return value
+
+    def copy_stack_to_reg(self, stack_offset, register):
+        """Copy the contents of the stack to the register
+
+        Args:
+            stack_offset (int): the stack offset
+            register (ProcessorRegister): the register to copy to
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        value.append(0x8b)  # mov
+        # Table 2-2.  32-Bit Addressing Forms with the ModR/M Byte
+        # indirect adressing with byte displacement
+        mod = 0b01
+        destination = ProcessorRegister.base_pointer
+        rm = get_register_encoding(destination)
+        reg = get_register_encoding(register)
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        encoded_offset = struct.pack("b", stack_offset)
+        value += encoded_offset
+
+        return value

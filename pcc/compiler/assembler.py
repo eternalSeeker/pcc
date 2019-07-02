@@ -88,3 +88,12 @@ class Assembler:
             bytearray: the machine code
         """
         raise NotImplementedError
+
+    def copy_stack_to_reg(self, stack_offset, reg):
+        """Copy the contents of the stack to the register
+
+        Args:
+            stack_offset (int): the stack offset
+            reg (ProcessorRegister): the register to copy to
+        """
+        raise NotImplementedError
