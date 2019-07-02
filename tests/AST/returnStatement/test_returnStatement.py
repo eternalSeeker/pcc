@@ -18,6 +18,10 @@ files_to_test = [
     'returnInt.c',
     'returnFloat.c',
     'returnDouble.c',
+    'returnVarInt.c',
+    'returnVarChar.c',
+    'returnVarFloat.c',
+    'returnVarDouble.c',
 ]
 
 
