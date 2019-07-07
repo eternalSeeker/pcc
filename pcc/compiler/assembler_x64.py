@@ -17,6 +17,10 @@ def get_register_encoding(register):
         return 5
     elif register == ProcessorRegister.accumulator:
         return 0
+    elif register == ProcessorRegister.single_scalar_0:
+        return 0
+    elif register == ProcessorRegister.double_scalar_0:
+        return 0
     else:
         raise NotImplementedError
 
@@ -170,18 +174,21 @@ class x64Assembler(Assembler):
 
         return value
 
-    def copy_stack_to_reg(self, stack_offset, register):
+    def copy_stack_to_reg(self, stack_offset, register, size):
         """Copy the contents of the stack to the register
 
         Args:
             stack_offset (int): the stack offset
             register (ProcessorRegister): the register to copy to
-        Returns:
-            bytearray: the machine code
+            size (int): size in bytes
         """
         value = bytearray()
-
-        value.append(0x8b)  # mov
+        if register == ProcessorRegister.single_scalar_0:
+            value.extend([0xF3, 0x0F, 0x10])  # movss
+        elif register == ProcessorRegister.double_scalar_0:
+            value.extend([0xF2, 0x0F, 0x10])  # movsd
+        else:
+            value.append(0x8b)  # mov
         # Table 2-2.  32-Bit Addressing Forms with the ModR/M Byte
         # indirect adressing with byte displacement
         mod = 0b01

@@ -295,16 +295,16 @@ class FunctionDeclaration(Statement):
         """
         return None
 
-    def get_stack_offset_of_variable(self, variable_name):
-        """Get the stack offset for the variable.
+    def get_stack_variable(self, variable_name):
+        """Get the stack variable by name.
 
         Args:
             variable_name (str): the name of the variable
 
         Returns:
-            int: the stack offset if found, else 1
+            StackVariable: the stack offset if found, else None
         """
-        return self.parent_node.get_stack_offset_of_variable(variable_name)
+        return self.parent_node.get_stack_variable(variable_name)
 
 
 class FunctionDefinition(Statement):
@@ -343,22 +343,22 @@ class FunctionDefinition(Statement):
         """
         return self.statement_sequence[0].return_type.name
 
-    def get_stack_offset_of_variable(self, variable_name):
-        """Get the stack offset for the variable.
+    def get_stack_variable(self, variable_name):
+        """Get the stack variable by name.
 
         Args:
             variable_name (str): the name of the variable
 
         Returns:
-            int: the stack offset if found, else 1
+            StackVariable: the stack offset if found, else None
         """
-        offset = 1
+        stack_variable = None
 
         for var in self.stack_variable_list:
             if var.name == variable_name:
-                offset = var.offset
+                stack_variable = var
 
-        return offset
+        return stack_variable
 
     def compile(self, assembler):
         """Compile this statement.
@@ -389,6 +389,10 @@ class FunctionDefinition(Statement):
                                                               stack_offset,
                                                               stack_var,
                                                               value)
+            # if the variable uses more than 4 bytes, use the offset further
+            # in the stack
+            if stack_var.size > 4:
+                stack_var.offset = stack_offset
 
         self.stack_variable_list = current_list
         # add a nop
@@ -409,13 +413,12 @@ class FunctionDefinition(Statement):
     def push_variable_on_stack(self, assembler, stack_offset,
                                stack_var, value):
         value_array = stack_var.initializer_byte_array
-        size = stack_var.size
         stack_var.stack_offset = stack_offset
-        number_of_words = int(len(value_array) / 4)
+        number_of_words = int((len(value_array) - 1) / 4) + 1
         for i in range(number_of_words):
             part_of_array = value_array[i*4:(i+1)*4]
             value += assembler.push_value_to_stack(part_of_array, stack_offset)
-        stack_offset -= size
+            stack_offset -= 4
         return value, stack_offset
 
 
@@ -466,16 +469,16 @@ class CompoundStatement(Statement):
         if len(self.statement_sequence) > 0:
             self.statement_sequence[0].add_stack_variable(current_list)
 
-    def get_stack_offset_of_variable(self, variable_name):
-        """Get the stack offset for the variable.
+    def get_stack_variable(self, variable_name):
+        """Get the stack variable by name.
 
         Args:
             variable_name (str): the name of the variable
 
         Returns:
-            int: the stack offset if found, else 1
+            StackVariable: the stack offset if found, else None
         """
-        return self.parent_node.get_stack_offset_of_variable(variable_name)
+        return self.parent_node.get_stack_variable(variable_name)
 
 
 class FunctionCall(Statement):
@@ -571,9 +574,12 @@ class ReturnStatement(Statement):
 
             parent = self.parent_node
             id = self.id
-            stack_offset = parent.get_stack_offset_of_variable(id)
+            stack_variable = parent.get_stack_variable(id)
+            stack_offset = stack_variable.offset
+            variable_size = stack_variable.size
 
-            value += assembler.copy_stack_to_reg(stack_offset, reg)
+            value += assembler.copy_stack_to_reg(stack_offset, reg,
+                                                 variable_size)
 
         # restore the frame pointer from stack
         ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)

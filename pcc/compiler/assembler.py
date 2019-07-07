@@ -89,11 +89,12 @@ class Assembler:
         """
         raise NotImplementedError
 
-    def copy_stack_to_reg(self, stack_offset, reg):
+    def copy_stack_to_reg(self, stack_offset, reg, size):
         """Copy the contents of the stack to the register
 
         Args:
             stack_offset (int): the stack offset
             reg (ProcessorRegister): the register to copy to
+            size (int): size in bytes
         """
         raise NotImplementedError

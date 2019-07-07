@@ -6,5 +6,5 @@ double foo(void);
 int main(void)
 {
     double d = foo();
-    printf("done %f\n", d);
+    printf("done %4.3f\n", d);
 }
