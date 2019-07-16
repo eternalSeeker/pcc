@@ -1,10 +1,10 @@
-
 import copy
 import pcc
 
-from pcc.AST.ast_node import AstNode, ArrayDeclaration, CompoundStatement, \
-    ConstantExpression, Expression, FunctionArgument, FunctionDeclaration, \
-    FunctionDefinition, FunctionCall, ReturnStatement, VariableDeclaration
+from pcc.AST.ast_node import Assignment, AstNode, ArrayDeclaration, \
+    CompoundStatement, ConstantExpression, Expression, FunctionArgument, \
+    FunctionDeclaration, FunctionDefinition, FunctionCall, ReturnStatement, \
+    VariableDeclaration
 from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 from pcc.utils.stringListParsing import extract_closing_char
 
@@ -237,7 +237,7 @@ class Ast:
         self.current_node = function_definition
         decl = copy.deepcopy(function_declaration)
         # todo access to protected member
-        decl.update_depth(decl._depth+1)
+        decl.update_depth(decl._depth + 1)
         self.current_node.add_statement(decl)
 
         line_number = self.parse_line(statements)
@@ -266,10 +266,10 @@ class Ast:
             compound_statement = CompoundStatement(depth)
             self.current_node.add_statement(compound_statement)
             self.current_node = compound_statement
-            next_statements = code_list[start_line+1:returned_line]
+            next_statements = code_list[start_line + 1:returned_line]
             while len(next_statements) > 0:
                 new_index = self.parse_line(next_statements)
-                next_statements = next_statements[new_index+1:]
+                next_statements = next_statements[new_index + 1:]
             compound_statement.update_depth(depth)
             line_number = returned_line
 
@@ -351,7 +351,7 @@ class Ast:
                         message = 'the arguments for function %s are not ' \
                                   'compatible to the function ' \
                                   'declaration\nGot %s but expected %s' % (
-                                   function_name, variables, argument_list)
+                                      function_name, variables, argument_list)
                         self.ast_error(message)
 
         return line_number
@@ -452,6 +452,8 @@ class Ast:
                 retval = None
                 return_statement = ReturnStatement(depth, retval, None)
                 self.current_node.add_statement(return_statement)
+        else:
+            line_number = -1
         return line_number
 
     def read_function_definition(self, statements):
@@ -472,12 +474,12 @@ class Ast:
                     # if the first part does not match the return type,
                     # it is not a function definition
                     return -1
-                result = self.\
+                result = self. \
                     does_definition_and_declaration_match(statement,
                                                           function_declaration)
                 if result == -1:
                     return -1
-                next_statements = statements[line_number+1:]
+                next_statements = statements[line_number + 1:]
                 line_number += 1
                 line_number += self.parse_function_definition_statement(
                     function_declaration, next_statements)
@@ -485,6 +487,41 @@ class Ast:
                 break
         if found is False:
             # this was not a function definition
+            line_number = -1
+        return line_number
+
+    def read_assignment(self, statements):
+        found = False
+
+        line_number, statement = self.join_lines_until_next_non_empty_line(
+            statements)
+        if line_number == -1:
+            return line_number
+        list_of_tokens = statement.split()
+
+        var_to_update = list_of_tokens[0]
+        initializer = ' '.join(list_of_tokens[2:])
+        if list_of_tokens[1] == '=':
+            found = True
+        if '=' in var_to_update:
+            tmp = var_to_update.split('=')
+            var_to_update = tmp[0]
+            initializer = ' '.join(tmp[1:]) + initializer
+            found = True
+
+        if found:
+            depth = self.get_depth_in_tree()
+            # remove all whitespace chars from initializer
+            initializer = ''.join(initializer.split())
+            initializer = initializer.split(';')[0]
+            initializer_type = self.get_type_of_expression(initializer)
+
+            assingment = Assignment(depth, var_to_update, initializer,
+                                    initializer_type)
+            self.current_node.add_statement(assingment)
+
+        if found is False:
+            # this was not an assignment
             line_number = -1
         return line_number
 
@@ -501,7 +538,7 @@ class Ast:
         line_number = self.find_first_non_empty_in_list(statements)
         if line_number == -1:
             return line_number, None
-        statement = statements[:line_number+1]
+        statement = statements[:line_number + 1]
         statement = ''.join(statement)
         return line_number, statement
 
@@ -543,7 +580,7 @@ class Ast:
                     if len(res) == 1:
                         depth = self.get_depth_in_tree()
                         variable_declaration = res[0]
-                        variable_declaration.update_depth(depth+3)
+                        variable_declaration.update_depth(depth + 3)
                         function_arguments.append(variable_declaration)
 
             depth = self.get_depth_in_tree()
@@ -596,6 +633,11 @@ class Ast:
             return processed_line_count
 
         processed_line_count = self.read_return_statement(list(lines))
+        if processed_line_count > -1:
+            # it is a function call
+            return processed_line_count
+
+        processed_line_count = self.read_assignment(list(lines))
         if processed_line_count > -1:
             # it is a function call
             return processed_line_count

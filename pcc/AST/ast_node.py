@@ -603,3 +603,19 @@ class Expression(AstNode):
     def __str__(self):
         string = self._depth * '  ' + 'ID: %s\n' % self.name
         return string
+
+
+class Assignment(Statement):
+
+    def __init__(self, depth, identifier, initializer, initializer_type):
+        super(Statement, self).__init__(depth)
+        self.id = identifier
+        self.initializer = initializer
+        self.initializer_type = initializer_type
+
+    def __str__(self):
+        string = self._depth * '  ' + 'Assignment: =\n'
+        string += self._depth * '  ' + '  ID: %s\n' % self.id
+        string += self._depth * '  ' + '  Constant: '
+        string += self.initializer_type + ', ' + self.initializer + '\n'
+        return string
