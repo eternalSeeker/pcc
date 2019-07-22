@@ -6,6 +6,34 @@ import struct
 from pcc.compiler.assembler import ProcessorRegister
 
 
+def push_variable_on_stack(assembler, stack_offset,
+                           stack_var, value, value_array):
+    """Push a value on a specified location on stack
+
+    Args:
+        assembler (Assembler): the assembler to use
+        stack_offset (int): the offset relative to the current stack pointer
+        stack_var (StackVariable): the stack variable
+        value (bytearray): the byte array to append the machine code to
+        value_array (bytearray): the bytearray to push to stack
+
+    Returns:
+        bytearray: the array with the added machine code
+        int: the stackoffset
+    """
+
+    number_of_words = int((len(value_array) - 1) / 4) + 1
+    for i in range(number_of_words):
+        part_of_array = value_array[i * 4:(i + 1) * 4]
+        stack_offset -= 4
+        value += assembler.push_value_to_stack(part_of_array, stack_offset)
+
+    # if multiple words are used, move the offset a word further
+    if number_of_words > 1:
+        stack_offset -= 4
+    return value, stack_offset
+
+
 class CompiledObjectType(enum.Enum):
     data = 1,
     code = 2,
@@ -30,10 +58,13 @@ class CompiledObject:
 
 
 class StackVariable:
-    def __init__(self, name, size, initializer_byte_array):
+    def __init__(self, name, size, initializer_byte_array, type_name):
         self.name = name
         self.size = size
         self.initializer_byte_array = initializer_byte_array
+        self.stack_offset = 0
+        self.stack_start = 0
+        self.type_name = type_name
 
 
 class AstNode:
@@ -192,7 +223,7 @@ class VariableDeclaration(Statement):
             else:
                 initializer = 0
             stack_var = StackVariable(self.name, self.variable_type.size,
-                                      initializer)
+                                      initializer, self.variable_type.name)
             current_list.append(stack_var)
 
 
@@ -302,7 +333,7 @@ class FunctionDeclaration(Statement):
             variable_name (str): the name of the variable
 
         Returns:
-            StackVariable: the stack offset if found, else None
+            StackVariable: the stack variable if found, else None
         """
         return self.parent_node.get_stack_variable(variable_name)
 
@@ -350,7 +381,7 @@ class FunctionDefinition(Statement):
             variable_name (str): the name of the variable
 
         Returns:
-            StackVariable: the stack offset if found, else None
+            StackVariable: the stack variable if found, else None
         """
         stack_variable = None
 
@@ -382,17 +413,16 @@ class FunctionDefinition(Statement):
         current_list = []
         self.add_stack_variable(current_list)
         # first the frame pointer has been saved to stack
-        stack_offset = -4
+        stack_offset = 0
         for stack_var in current_list:
-            stack_var.offset = stack_offset
-            value, stack_offset = self.push_variable_on_stack(assembler,
-                                                              stack_offset,
-                                                              stack_var,
-                                                              value)
-            # if the variable uses more than 4 bytes, use the offset further
-            # in the stack
-            if stack_var.size > 4:
-                stack_var.offset = stack_offset
+            stack_var.stack_start = stack_offset
+            value_array = stack_var.initializer_byte_array
+            value, stack_offset = push_variable_on_stack(assembler,
+                                                         stack_offset,
+                                                         stack_var,
+                                                         value,
+                                                         value_array)
+            stack_var.stack_offset = stack_offset
 
         self.stack_variable_list = current_list
         # add a nop
@@ -409,17 +439,6 @@ class FunctionDefinition(Statement):
                                          value, CompiledObjectType.code)
 
         return compiled_object
-
-    def push_variable_on_stack(self, assembler, stack_offset,
-                               stack_var, value):
-        value_array = stack_var.initializer_byte_array
-        stack_var.stack_offset = stack_offset
-        number_of_words = int((len(value_array) - 1) / 4) + 1
-        for i in range(number_of_words):
-            part_of_array = value_array[i*4:(i+1)*4]
-            value += assembler.push_value_to_stack(part_of_array, stack_offset)
-            stack_offset -= 4
-        return value, stack_offset
 
 
 class CompoundStatement(Statement):
@@ -476,7 +495,7 @@ class CompoundStatement(Statement):
             variable_name (str): the name of the variable
 
         Returns:
-            StackVariable: the stack offset if found, else None
+            StackVariable: the stack variable if found, else None
         """
         return self.parent_node.get_stack_variable(variable_name)
 
@@ -575,7 +594,8 @@ class ReturnStatement(Statement):
             parent = self.parent_node
             id = self.id
             stack_variable = parent.get_stack_variable(id)
-            stack_offset = stack_variable.offset
+            stack_offset = stack_variable.stack_offset
+
             variable_size = stack_variable.size
 
             value += assembler.copy_stack_to_reg(stack_offset, reg,
@@ -619,3 +639,42 @@ class Assignment(Statement):
         string += self._depth * '  ' + '  Constant: '
         string += self.initializer_type + ', ' + self.initializer + '\n'
         return string
+
+    def compile(self, assembler):
+        """Compile this statement
+
+        Args:
+            assembler (Assembler)
+        Returns:
+            CompiledObject: the compiled version of this statement
+        """
+        value = bytearray()
+
+        if self.initializer_type in ['double', 'float']:
+            imm_value = float(self.initializer)
+        else:
+            imm_value = int(self.initializer)
+
+        parent = self.parent_node
+        id = self.id
+        stack_variable = parent.get_stack_variable(id)
+        stack_offset = stack_variable.stack_start
+        size = stack_variable.size
+
+        if stack_variable.type_name == 'double':
+            imm_value_array = bytearray(struct.pack("d", imm_value))
+        elif stack_variable.type_name == 'float':
+            imm_value_array = bytearray(struct.pack("f", imm_value))
+        elif stack_variable.type_name == 'int':
+            imm_value_array = bytearray(struct.pack("i", imm_value))
+        else:
+            # all other types interpreted as int
+            imm_value_array = bytearray(struct.pack("i", imm_value))
+
+        # ignoring the stack offset update
+        value, _ = push_variable_on_stack(assembler, stack_offset,
+                                          stack_variable, value,
+                                          imm_value_array)
+        compiled_object = CompiledObject(self.id, size,
+                                         value, CompiledObjectType.code)
+        return compiled_object
