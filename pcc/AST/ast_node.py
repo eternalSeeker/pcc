@@ -641,17 +641,23 @@ class ConstantExpression():
 
 class Assignment(Statement):
 
-    def __init__(self, depth, identifier, initializer, initializer_type):
+    def __init__(self, depth, identifier, initializer_exp):
+        """Create an assignment.
+
+        Args:
+            depth (int): the depth in the tree
+            identifier (str): the variable to assign to
+            initializer_exp (Expression): the expression as right hand value
+        """
         super(Statement, self).__init__(depth)
         self.id = identifier
-        self.initializer = initializer
-        self.initializer_type = initializer_type
+        self.initializer_exp = initializer_exp
 
     def __str__(self):
         string = self._depth * '  ' + 'Assignment: =\n'
         string += self._depth * '  ' + '  ID: %s\n' % self.id
-        string += self._depth * '  ' + '  Constant: '
-        string += self.initializer_type + ', ' + self.initializer + '\n'
+        string += self._depth * '  ' + str(self.initializer_exp)
+        string += '\n'
         return string
 
     def compile(self, assembler):
@@ -664,10 +670,11 @@ class Assignment(Statement):
         """
         value = bytearray()
 
-        if self.initializer_type in ['double', 'float']:
-            imm_value = float(self.initializer)
+        initializer = self.initializer_exp.exp_value
+        if self.initializer_exp.exp_type in ['double', 'float']:
+            imm_value = float(initializer)
         else:
-            imm_value = int(self.initializer)
+            imm_value = int(initializer)
 
         parent = self.parent_node
         id = self.id

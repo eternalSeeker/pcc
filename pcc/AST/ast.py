@@ -547,10 +547,9 @@ class Ast:
             # remove all whitespace chars from initializer
             initializer = ''.join(initializer.split())
             initializer = initializer.split(';')[0]
-            initializer_type = self.get_type_of_expression(initializer)
 
-            assingment = Assignment(depth, var_to_update, initializer,
-                                    initializer_type)
+            expression = self.get_right_hand_value(initializer, depth)
+            assingment = Assignment(depth, var_to_update, expression)
             self.current_node.add_statement(assingment)
 
         if found is False:
