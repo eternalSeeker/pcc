@@ -125,13 +125,19 @@ class Statement(AstNode):
 
 class VariableDeclaration(Statement):
 
-    def __init__(self, variable_type, name, initializer, initializer_type,
-                 depth):
+    def __init__(self, variable_type, name, initializer, depth):
+        """Create a variable declaration.
+
+        Args:
+            variable_type (str): the type
+            name (str): the name of the variable
+            initializer (Expression): the expression to initialize
+            depth (int): the depth in the tree
+        """
         super(VariableDeclaration, self).__init__(depth)
         self.variable_type = variable_type
         self.name = name
         self.initializer = initializer
-        self.initializer_type = initializer_type
 
     def __str__(self):
         string = self._depth * '  ' + 'Decl: ' + self.name + ', [], [], []\n'
@@ -139,9 +145,7 @@ class VariableDeclaration(Statement):
         string += self._depth * '  ' + '    IdentifierType: [\'' \
             + self.variable_type.name + '\']\n'
         if self.initializer:
-            string += self._depth * '  ' + '  Constant: ' + \
-                      self.initializer_type + ', ' + \
-                      self.initializer + '\n'
+            string += self._depth * '  ' + str(self.initializer) + '\n'
         return string
 
     def is_compatible_to(self, variable_declaration):
@@ -194,14 +198,15 @@ class VariableDeclaration(Statement):
             bytearray: the byte array representation of the initializer
         """
         value = bytearray()
-        if '.' in self.initializer:
-            initializer = float(self.initializer)
+        initializer = self.initializer.exp_value
+        if '.' in initializer:
+            initializer = float(initializer)
             if self.variable_type.name == 'double':
                 value = bytearray(struct.pack("d", initializer))
             else:
                 value = bytearray(struct.pack("f", initializer))
         else:
-            initializer = int(self.initializer, base=0)
+            initializer = int(initializer, base=0)
             for i in range(size):
                 tmp = initializer >> (i * 8)
                 tmp &= 0xff
@@ -517,16 +522,6 @@ class FunctionCall(Statement):
         return string
 
 
-class ConstantExpression:
-    def __init__(self, exp_type, expr_value):
-        self.exp_type = exp_type
-        self.exp_value = expr_value
-
-    def __str__(self):
-        string = '  Constant: %s, %s\n' % (self.exp_type, self.exp_value)
-        return string
-
-
 class ReturnStatement(Statement):
 
     def __init__(self, depth, identifier, constant):
@@ -548,7 +543,7 @@ class ReturnStatement(Statement):
         if self.id:
             string += self._depth * '  ' + '  ID: %s\n' % self.id
         if self.constant:
-            string += self._depth * '  ' + '%s' % str(self.constant)
+            string += self._depth * '  ' + '%s\n' % str(self.constant)
         return string
 
     def get_return_type(self):
@@ -616,12 +611,31 @@ class ReturnStatement(Statement):
 
 
 class Expression(AstNode):
-    def __init__(self, depth, name):
+    def __init__(self, depth):
         super(Expression, self).__init__(depth)
+
+    def __str__(self):
+        string = self._depth * '  ' + 'This is an expression\n'
+        return string
+
+
+class VariableReference(Expression):
+    def __init__(self, depth, name):
+        super(VariableReference, self).__init__(depth)
         self.name = name
 
     def __str__(self):
         string = self._depth * '  ' + 'ID: %s\n' % self.name
+        return string
+
+
+class ConstantExpression():
+    def __init__(self, exp_type, expr_value):
+        self.exp_type = exp_type
+        self.exp_value = expr_value
+
+    def __str__(self):
+        string = '  Constant: %s, %s' % (self.exp_type, self.exp_value)
         return string
 
 
@@ -678,3 +692,41 @@ class Assignment(Statement):
         compiled_object = CompiledObject(self.id, size,
                                          value, CompiledObjectType.code)
         return compiled_object
+
+
+class Operator:
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return ''
+
+
+class Addition(Operator):
+    def __init__(self):
+        super(Addition, self).__init__()
+
+    def __str__(self):
+        return '+'
+
+
+class BinaryOp(Expression):
+    def __init__(self, depth, operator, operand_1, operand_2):
+        """Create a binary operator
+
+        Args:
+            depth (int): the depth in the tree
+            operator (Operator): the operator
+            operand_1 (Expression): the first operand
+            operand_2 (Expression): the second operand
+        """
+        super(BinaryOp, self).__init__(depth)
+        self.operator = operator
+        self.operand_1 = operand_1
+        self.operand_2 = operand_2
+
+    def __str__(self):
+        string = (self._depth - 2) * '  ' + 'BinaryOp: %s\n' % self.operator
+        string += (self._depth + 1) * '  ' + '%s\n' % self.operand_1
+        string += (self._depth + 1) * '  ' + '%s' % self.operand_2
+        return string

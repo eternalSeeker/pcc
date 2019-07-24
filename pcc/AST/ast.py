@@ -1,10 +1,10 @@
 import copy
 import pcc
 
-from pcc.AST.ast_node import Assignment, AstNode, ArrayDeclaration, \
-    CompoundStatement, ConstantExpression, Expression, FunctionArgument, \
-    FunctionDeclaration, FunctionDefinition, FunctionCall, ReturnStatement, \
-    VariableDeclaration
+from pcc.AST.ast_node import Addition, Assignment, AstNode, ArrayDeclaration, \
+    BinaryOp, CompoundStatement, ConstantExpression, \
+    FunctionArgument, FunctionDeclaration, FunctionDefinition, FunctionCall, \
+    ReturnStatement, VariableDeclaration, VariableReference
 from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 from pcc.utils.stringListParsing import extract_closing_char
 
@@ -132,6 +132,40 @@ class Ast:
 
         return type_string
 
+    def get_right_hand_value(self, right_hand_value, depth):
+        """Extract the right hand value out the string
+
+        Args:
+            right_hand_value (str): the string representation
+            depth (int): depth in the tree
+        Returns:
+            Expression: the expression if correctly parsed else None
+        """
+        if not right_hand_value:
+            initializer_exp = None
+        else:
+            initializer_type = self.get_type_of_expression(right_hand_value)
+            # the initializer of a big double might use scientific notation
+            # e.g. 1e+3
+            if '+' in right_hand_value and 'e+' not in right_hand_value:
+                tmp = right_hand_value.split('+')
+                operand_1_str = tmp[0]
+                initializer_type = self.get_type_of_expression(operand_1_str)
+                operand_1 = ConstantExpression(initializer_type, operand_1_str)
+
+                operand_2_str = tmp[1]
+                initializer_type = self.get_type_of_expression(operand_2_str)
+                operand_2 = ConstantExpression(initializer_type, operand_2_str)
+
+                operator = Addition()
+                initializer_exp = BinaryOp(depth, operator, operand_1,
+                                           operand_2)
+            else:
+                initializer_exp = ConstantExpression(initializer_type,
+                                                     right_hand_value)
+
+        return initializer_exp
+
     def extract_variable_declaration_from_string(self, statement):
         list_of_tokens = statement.split()
         variable_type = None
@@ -147,11 +181,9 @@ class Ast:
                     initializer = parts[1]
                     # remove all whitespace chars from initializer
                     initializer = ''.join(initializer.split())
-                    initializer_type = self.get_type_of_expression(initializer)
                 else:
                     identifier = declaration
                     initializer = None
-                    initializer_type = None
                 # remove all whitespace chars from identifier
                 identifier = ''.join(identifier.split())
                 if '(' in identifier:
@@ -163,12 +195,12 @@ class Ast:
                     statement = self.parse_array_declaration(depth, identifier,
                                                              initializer,
                                                              variable_type)
-
                 else:
+                    initializer_exp = self.get_right_hand_value(initializer,
+                                                                depth)
                     statement = VariableDeclaration(variable_type,
                                                     identifier,
-                                                    initializer,
-                                                    initializer_type,
+                                                    initializer_exp,
                                                     depth)
                 result_list.append(statement)
         return result_list
@@ -342,7 +374,8 @@ class Ast:
                         expression_list = []
                         depth = self.get_depth_in_tree() + 2
                         for variable in variables:
-                            expression = Expression(depth, variable.name)
+                            expression = VariableReference(depth,
+                                                           variable.name)
                             expression_list.append(expression)
                         function_call = FunctionCall(depth, function_name,
                                                      expression_list)
