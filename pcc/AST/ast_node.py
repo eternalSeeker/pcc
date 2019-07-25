@@ -138,6 +138,7 @@ class VariableDeclaration(Statement):
         self.variable_type = variable_type
         self.name = name
         self.initializer = initializer
+        self.stack_var = None
 
     def __str__(self):
         string = self._depth * '  ' + 'Decl: ' + self.name + ', [], [], []\n'
@@ -175,12 +176,25 @@ class VariableDeclaration(Statement):
         """
         size = self.variable_type.size
         value = bytearray()
-        # not for stack variables (global variables have the root node as
-        # parent who does not have a parent)
+        compiled_object = None
         if self.parent_node.parent_node:
-            compiled_object = None
+            if self.initializer:
+                stack_variable = self.stack_var
+                stack_offset = stack_variable.stack_offset
+                if stack_variable.type_name == 'double':
+                    register = ProcessorRegister.double_scalar_0
+                elif stack_variable.type_name == 'float':
+                    register = ProcessorRegister.single_scalar_0
+                else:
+                    register = ProcessorRegister.accumulator
+
+                value += self.initializer.load_result_to_reg(register,
+                                                             assembler)
+
+                value += assembler.copy_reg_to_stack(stack_offset, register)
+                compiled_object = CompiledObject(self.name, size, value,
+                                                 CompiledObjectType.data)
         else:
-            # auto determine base of the string
             if self.initializer:
                 value = self.initializer_to_bytearray(size)
             compiled_object = CompiledObject(self.name, size, value,
@@ -224,11 +238,12 @@ class VariableDeclaration(Statement):
         if self.parent_node.parent_node:
             if self.initializer:
                 size = self.variable_type.size
-                initializer = self.initializer_to_bytearray(size)
+                initializer = bytearray([0x0] * size)
             else:
                 initializer = 0
             stack_var = StackVariable(self.name, self.variable_type.size,
                                       initializer, self.variable_type.name)
+            self.stack_var = stack_var
             current_list.append(stack_var)
 
 
