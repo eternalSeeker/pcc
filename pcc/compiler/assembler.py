@@ -10,6 +10,9 @@ class ProcessorRegister(enum.Enum):
     accumulator = 2
     single_scalar_0 = 3
     double_scalar_0 = 4
+    counter = 5
+    single_scalar_1 = 6
+    double_scalar_1 = 7
 
 
 class Assembler:
@@ -89,12 +92,32 @@ class Assembler:
         """
         raise NotImplementedError
 
-    def copy_stack_to_reg(self, stack_offset, reg, size):
+    def copy_stack_to_reg(self, stack_offset, reg):
         """Copy the contents of the stack to the register
 
         Args:
             stack_offset (int): the stack offset
             reg (ProcessorRegister): the register to copy to
-            size (int): size in bytes
+        """
+        raise NotImplementedError
+
+    def copy_reg_to_stack(self, stack_offset, reg):
+        """Copy the contents of the register to the stack
+
+        Args:
+            stack_offset (int): the stack offset
+            reg (ProcessorRegister): the register to copy
+        """
+        raise NotImplementedError
+
+    def add(self, source, destination):
+        """Add the value of the source to the destination.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
         """
         raise NotImplementedError

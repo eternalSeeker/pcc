@@ -19,8 +19,14 @@ def get_register_encoding(register):
         return 0
     elif register == ProcessorRegister.single_scalar_0:
         return 0
+    elif register == ProcessorRegister.single_scalar_1:
+        return 1
     elif register == ProcessorRegister.double_scalar_0:
         return 0
+    elif register == ProcessorRegister.double_scalar_1:
+        return 1
+    elif register == ProcessorRegister.counter:
+        return 1
     else:
         raise NotImplementedError
 
@@ -98,20 +104,26 @@ class x64Assembler(Assembler):
             bytearray: the machine code
         """
         value = bytearray()
-        if destination == ProcessorRegister.single_scalar_0:
+        if destination == ProcessorRegister.single_scalar_0 or \
+                destination == ProcessorRegister.single_scalar_1:
             # mov the single scalar to eax
             value += bytearray([0xb8])
             packed = struct.pack("f", imm_value)
             value += bytearray(packed)
             # movd eax to xmm0
-            value += bytearray([0x66, 0x0f, 0x6e, 0xc0])
-        elif destination == ProcessorRegister.double_scalar_0:
+            value += bytearray([0x66, 0x0f, 0x6e])
+            register_encoding = get_register_encoding(destination)
+            value += bytearray([0xc0 + (register_encoding << 3)])
+        elif destination == ProcessorRegister.double_scalar_0 or \
+                destination == ProcessorRegister.double_scalar_1:
             # mov the double scalar to rax
             value += bytearray([0x48, 0xb8])
             packed = struct.pack("d", imm_value)
             value += bytearray(packed)
             # movq   rax to xmm0
-            value += bytearray([0x66, 0x48, 0x0f, 0x6e, 0xc0])
+            value += bytearray([0x66, 0x48, 0x0f, 0x6e])
+            register_encoding = get_register_encoding(destination)
+            value += bytearray([0xc0 + (register_encoding << 3)])
         else:
             register_encoding = get_register_encoding(destination)
             value.append(0xb8 + register_encoding)
@@ -174,13 +186,12 @@ class x64Assembler(Assembler):
 
         return value
 
-    def copy_stack_to_reg(self, stack_offset, register, size):
+    def copy_stack_to_reg(self, stack_offset, register):
         """Copy the contents of the stack to the register
 
         Args:
             stack_offset (int): the stack offset
             register (ProcessorRegister): the register to copy to
-            size (int): size in bytes
         """
         value = bytearray()
         if register == ProcessorRegister.single_scalar_0:
@@ -200,5 +211,70 @@ class x64Assembler(Assembler):
 
         encoded_offset = struct.pack("b", stack_offset)
         value += encoded_offset
+
+        return value
+
+    def copy_reg_to_stack(self, stack_offset, register):
+        """Copy the contents of the register to the stack
+
+        Args:
+            stack_offset (int): the stack offset
+            register (ProcessorRegister): the register to copy from
+        """
+        value = bytearray()
+        if register == ProcessorRegister.single_scalar_0:
+            value.extend([0xF3, 0x0F, 0x11])  # movss
+        elif register == ProcessorRegister.double_scalar_0:
+            value.extend([0xF2, 0x0F, 0x11])  # movsd
+        else:
+            value.append(0x89)  # mov
+        # Table 2-2.  32-Bit Addressing Forms with the ModR/M Byte
+        # indirect adressing with byte displacement
+        mod = 0b01
+        destination = ProcessorRegister.base_pointer
+        rm = get_register_encoding(destination)
+        reg = get_register_encoding(register)
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        encoded_offset = struct.pack("b", stack_offset)
+        value += encoded_offset
+
+        return value
+
+    def add(self, source, destination):
+        """Add the value of the source to the destination.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+        if source == ProcessorRegister.single_scalar_0:
+            value.extend([0xF3, 0x0F, 0x58])  # addss
+            # swap the source and destination, as it has a different order
+            # wrt the int add encoding
+            tmp = source
+            source = destination
+            destination = tmp
+        elif source == ProcessorRegister.double_scalar_0:
+            value.extend([0xF2, 0x0F, 0x58])  # addsd
+            # swap the source and destination, as it has a different order
+            # wrt the int add encoding
+            tmp = source
+            source = destination
+            destination = tmp
+        else:
+            value.append(0x01)  # ADD
+        # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
+        # REG destination
+        mod = 0b11
+        rm = get_register_encoding(source)
+        reg = get_register_encoding(destination)
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
 
         return value

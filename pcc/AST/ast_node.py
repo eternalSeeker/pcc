@@ -591,10 +591,7 @@ class ReturnStatement(Statement):
             stack_variable = parent.get_stack_variable(id)
             stack_offset = stack_variable.stack_offset
 
-            variable_size = stack_variable.size
-
-            value += assembler.copy_stack_to_reg(stack_offset, reg,
-                                                 variable_size)
+            value += assembler.copy_stack_to_reg(stack_offset, reg)
 
         # restore the frame pointer from stack
         ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)
@@ -618,9 +615,27 @@ class Expression(AstNode):
         string = self._depth * '  ' + 'This is an expression\n'
         return string
 
+    def load_result_to_reg(self, register, assembler):
+        """Load the result of the expression to the specified register
+
+        Args:
+            register (ProcessorRegister): the register to load the result
+            assembler (Assembler): the assembler to use
+        Returns:
+            bytearray: the compiled code to evaluate the expression
+        """
+        raise NotImplementedError
+
 
 class VariableReference(Expression):
+
     def __init__(self, depth, name):
+        """Create a expression that references a variable
+
+        Args:
+            depth (int): the depth in the tree
+            name (str): the name of the variable
+        """
         super(VariableReference, self).__init__(depth)
         self.name = name
 
@@ -628,8 +643,19 @@ class VariableReference(Expression):
         string = self._depth * '  ' + 'ID: %s\n' % self.name
         return string
 
+    def load_result_to_reg(self, register, assembler):
+        """Load the result of the expression to the specified register
 
-class ConstantExpression():
+        Args:
+            register (ProcessorRegister): the register to load the result
+            assembler (Assembler): the assembler to use
+        Returns:
+            bytearray: the compiled code to evaluate the expression
+        """
+        pass
+
+
+class ConstantExpression(Expression):
     def __init__(self, exp_type, expr_value):
         self.exp_type = exp_type
         self.exp_value = expr_value
@@ -637,6 +663,31 @@ class ConstantExpression():
     def __str__(self):
         string = '  Constant: %s, %s' % (self.exp_type, self.exp_value)
         return string
+
+    def load_result_to_reg(self, register, assembler):
+        """Load the result of the expression to the specified register
+
+        Args:
+            register (ProcessorRegister): the register to load the result
+            assembler (Assembler): the assembler to use
+        Returns:
+            bytearray: the compiled code to evaluate the expression
+        """
+        if register == ProcessorRegister.double_scalar_0 or \
+                register == ProcessorRegister.double_scalar_1:
+            val = float(self.exp_value)
+        elif register == ProcessorRegister.single_scalar_0 or \
+                register == ProcessorRegister.single_scalar_1:
+            val = float(self.exp_value)
+        elif register == ProcessorRegister.accumulator:
+            val = int(self.exp_value)
+        else:
+            # all other types interpreted as int
+            val = int(self.exp_value)
+
+        value = assembler.copy_value_to_reg(val, register)
+
+        return value
 
 
 class Assignment(Statement):
@@ -670,32 +721,22 @@ class Assignment(Statement):
         """
         value = bytearray()
 
-        initializer = self.initializer_exp.exp_value
-        if self.initializer_exp.exp_type in ['double', 'float']:
-            imm_value = float(initializer)
-        else:
-            imm_value = int(initializer)
-
         parent = self.parent_node
         id = self.id
         stack_variable = parent.get_stack_variable(id)
-        stack_offset = stack_variable.stack_start
+        stack_offset = stack_variable.stack_offset
         size = stack_variable.size
 
         if stack_variable.type_name == 'double':
-            imm_value_array = bytearray(struct.pack("d", imm_value))
+            register = ProcessorRegister.double_scalar_0
         elif stack_variable.type_name == 'float':
-            imm_value_array = bytearray(struct.pack("f", imm_value))
-        elif stack_variable.type_name == 'int':
-            imm_value_array = bytearray(struct.pack("i", imm_value))
+            register = ProcessorRegister.single_scalar_0
         else:
-            # all other types interpreted as int
-            imm_value_array = bytearray(struct.pack("i", imm_value))
+            register = ProcessorRegister.accumulator
 
-        # ignoring the stack offset update
-        value, _ = push_variable_on_stack(assembler, stack_offset,
-                                          stack_variable, value,
-                                          imm_value_array)
+        value += self.initializer_exp.load_result_to_reg(register, assembler)
+
+        value += assembler.copy_reg_to_stack(stack_offset, register)
         compiled_object = CompiledObject(self.id, size,
                                          value, CompiledObjectType.code)
         return compiled_object
@@ -709,21 +750,56 @@ class Operator:
         return ''
 
 
-class Addition(Operator):
+class BinaryOperator(Operator):
+    def __init__(self):
+        super(BinaryOperator, self).__init__()
+
+    def __str__(self):
+        return ''
+
+    def evaluate(self, source, destination, assembler):
+        """Evaluate the operator, leaving the result in the destination reg.
+
+        Args:
+            source (ProcessorRegister): the source operand
+            destination (ProcessorRegister): the destination operand
+            assembler (Assembler): the assembler to use
+        Returns:
+            bytearray: the byte code
+        """
+        raise NotImplementedError
+
+
+class Addition(BinaryOperator):
     def __init__(self):
         super(Addition, self).__init__()
 
     def __str__(self):
         return '+'
 
+    def evaluate(self, source, destination, assembler):
+        """Evaluate the operator, leaving the result in the destination reg.
+
+        Args:
+            source (ProcessorRegister): the source operand
+            destination (ProcessorRegister): the destination operand
+            assembler (Assembler): the assembler to use
+        Returns:
+            bytearray: the byte code
+        """
+        value = bytearray()
+        value += assembler.add(source, destination)
+        return value
+
 
 class BinaryOp(Expression):
+
     def __init__(self, depth, operator, operand_1, operand_2):
         """Create a binary operator
 
         Args:
             depth (int): the depth in the tree
-            operator (Operator): the operator
+            operator (BinaryOperator): the operator
             operand_1 (Expression): the first operand
             operand_2 (Expression): the second operand
         """
@@ -737,3 +813,26 @@ class BinaryOp(Expression):
         string += (self._depth + 1) * '  ' + '%s\n' % self.operand_1
         string += (self._depth + 1) * '  ' + '%s' % self.operand_2
         return string
+
+    def load_result_to_reg(self, register, assembler):
+        if register == ProcessorRegister.single_scalar_0:
+            register_1 = ProcessorRegister.single_scalar_0
+            register_2 = ProcessorRegister.single_scalar_1
+        elif register == ProcessorRegister.double_scalar_0:
+            register_1 = ProcessorRegister.double_scalar_0
+            register_2 = ProcessorRegister.double_scalar_1
+        else:
+            register_1 = ProcessorRegister.accumulator
+            register_2 = ProcessorRegister.counter
+        value = self.operand_1.load_result_to_reg(register_1, assembler)
+
+        value += self.operand_2.load_result_to_reg(register_2, assembler)
+
+        value += self.operator.evaluate(register_1, register_2, assembler)
+
+        # the result is in register_1, make sure
+        # that is the specified register
+        if register != register_1:
+            value += assembler.copy_from_reg_to_reg(register_1, register)
+
+        return value
