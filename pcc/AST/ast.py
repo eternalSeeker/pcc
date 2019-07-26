@@ -1,10 +1,20 @@
 import copy
 import pcc
 
-from pcc.AST.ast_node import Addition, Assignment, AstNode, ArrayDeclaration, \
-    BinaryOp, CompoundStatement, ConstantExpression, \
-    FunctionArgument, FunctionDeclaration, FunctionDefinition, FunctionCall, \
-    ReturnStatement, VariableDeclaration, VariableReference
+from pcc.AST.ast_node import AstNode
+from pcc.AST.variable_declaration import VariableDeclaration
+from pcc.AST.array_declaration import ArrayDeclaration
+from pcc.AST.function_argument import FunctionArgument
+from pcc.AST.function_declaration import FunctionDeclaration
+from pcc.AST.function_definition import FunctionDefinition
+from pcc.AST.compound_statement import CompoundStatement
+from pcc.AST.function_call import FunctionCall
+from pcc.AST.return_statement import ReturnStatement
+from pcc.AST.variable_reference import VariableReference
+from pcc.AST.constant_expression import ConstantExpression
+from pcc.AST.assignment import Assignment
+from pcc.AST.addition import Addition
+from pcc.AST.binary_op import BinaryOp
 from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 from pcc.utils.stringListParsing import extract_closing_char
 
@@ -253,8 +263,9 @@ class Ast:
             function_name (str): the identifier to check
 
         Returns:
-            pcc.AST.ast_node.FunctionDeclaration: the declared function
-            that corresponds to the function_name or None if not found
+            pcc.AST.function_declaration.FunctionDeclaration: the
+            declared function that corresponds to the function_name or None
+            if not found
         """
         for function_declaration in self.declared_functions:
             if function_declaration.name == function_name:
