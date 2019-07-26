@@ -13,7 +13,7 @@ class VariableDeclaration(Statement):
         """Create a variable declaration.
 
         Args:
-            variable_type (str): the type
+            variable_type (pcc.AST.ast.VariableType): the type
             name (str): the name of the variable
             initializer (pcc.AST.expression.Expression):
                 the expression to initialize
@@ -43,7 +43,10 @@ class VariableDeclaration(Statement):
             bool: if the object is compatible
         """
         if isinstance(variable_declaration, FunctionArgument):
-            if self.variable_type == variable_declaration.identifier:
+            if self.variable_type.name == variable_declaration.type_name:
+                return True
+            elif self.variable_type.name == 'void' and \
+                    variable_declaration.type_name is None:
                 return True
             else:
                 return False

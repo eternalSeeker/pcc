@@ -17,12 +17,17 @@ from pcc.AST.addition import Addition
 from pcc.AST.binary_op import BinaryOp
 from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 from pcc.utils.stringListParsing import extract_closing_char
+import pcc.utils.warning
 
 
 class VariableType:
     def __init__(self, name, size):
         self.name = name
         self.size = size
+
+    def __str__(self):
+        string = f'Variable type; name: {self.name}, size:{self.size}'
+        return string
 
 
 class Ast:
@@ -92,7 +97,7 @@ class Ast:
     def get_depth_in_tree(self):
         depth = 1
         node = self.current_node
-        self.tree_string = self.to_string()
+        self.tree_string = self.__str__()
         while node != self.root_node and node is not None:
             node = node.parent_node
             depth += 1
@@ -181,13 +186,18 @@ class Ast:
 
     def extract_variable_declaration_from_string(self, statement):
         list_of_tokens = statement.split()
-        variable_type = None
         result_list = []
         variable_type = self.get_type_from_name(list_of_tokens[0])
         if variable_type:
             declarations = statement.replace(variable_type.name + ' ', '')
             list_of_declarations = declarations.split(',')
             for declaration in list_of_declarations:
+                tmp_decl = declaration.split()
+                if len(tmp_decl) > 1:
+                    variable_type_tmp = self.get_type_from_name(tmp_decl[0])
+                    if variable_type_tmp and variable_type_tmp.name != 'void':
+                        variable_type = variable_type_tmp
+                        declaration = ''.join(tmp_decl[1:])
                 if '=' in declaration:
                     parts = declaration.split('=')
                     identifier = parts[0]
@@ -410,10 +420,14 @@ class Ast:
             name_a = argument_a.type_name
         elif hasattr(argument_a, 'name'):
             name_a = argument_a.name
+        else:
+            name_a = None
         if hasattr(argument_b, 'type_name'):
             name_b = argument_b.type_name
         elif hasattr(argument_b, 'name'):
             name_b = argument_b.name
+        else:
+            name_b = None
         if name_a is None or name_a == 'void':
             if name_b is None or name_b == 'void':
                 return message
@@ -453,14 +467,14 @@ class Ast:
                     type_name = argument_b.identifier
                 elif hasattr(argument_b, 'variable_type'):
                     type_name = argument_b.variable_type
+                else:
+                    type_name = None
                 message = 'the argument type does not match the ' \
                           'expected type, Expected %s, got %s' % (
                               type_name,
                               argument_a.variable_type)
-                if False:
-                    # todo fix
-                    self.ast_error(message)
-                    return -1
+                self.ast_error(message)
+                return -1
 
         return 0
 
@@ -475,7 +489,9 @@ class Ast:
             if len(splited_statement) == 2:
                 retval = splited_statement[1]
                 if self.get_variable_definition_from_id(retval):
-                    return_statement = ReturnStatement(depth, retval, None)
+                    constant_expression = None
+                    return_statement = ReturnStatement(depth, retval,
+                                                       constant_expression)
                     self.current_node.add_statement(return_statement)
                 else:
                     # probably is a constant expression
@@ -487,7 +503,8 @@ class Ast:
                         expression = ConstantExpression(expression_type,
                                                         expression_value,
                                                         depth)
-                        return_statement = ReturnStatement(depth, None,
+                        identifier = None
+                        return_statement = ReturnStatement(depth, identifier,
                                                            expression)
                         self.current_node.add_statement(return_statement)
                     else:
@@ -498,8 +515,9 @@ class Ast:
                         return line_number
 
             else:
-                retval = None
-                return_statement = ReturnStatement(depth, retval, None)
+                identifier = None
+                constant = None
+                return_statement = ReturnStatement(depth, identifier, constant)
                 self.current_node.add_statement(return_statement)
         else:
             line_number = -1
@@ -565,8 +583,8 @@ class Ast:
             initializer = initializer.split(';')[0]
 
             expression = self.get_right_hand_value(initializer, depth)
-            assingment = Assignment(depth, var_to_update, expression)
-            self.current_node.add_statement(assingment)
+            assignment = Assignment(depth, var_to_update, expression)
+            self.current_node.add_statement(assignment)
 
         if found is False:
             # this was not an assignment
@@ -696,7 +714,7 @@ class Ast:
                 message += 'following line not recognized:\"%s\"\n' % line
         return processed_line_count
 
-    def to_string(self):
+    def __str__(self):
         string = 'FileAST: \n'
         for element in self.root_node.statement_sequence:
             string += str(element)

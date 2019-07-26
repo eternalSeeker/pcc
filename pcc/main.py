@@ -92,7 +92,7 @@ URL: <{url}>
     if result != 0:
         return result
     if arguments.fdump_tree:
-        print(ast.to_string(), end='')
+        print(ast.__str__(), end='')
         return 0
     compiler = Compiler(input_file, ast.root_node)
     compiler.compile()

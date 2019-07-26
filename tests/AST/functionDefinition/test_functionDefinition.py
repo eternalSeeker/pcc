@@ -34,7 +34,7 @@ def generate_ast_outputs():
         output_buffer.close()
 
 
-class TestVariableDefinition(object):
+class TestFunctionDefinition(object):
 
     @parametrize('file_to_test', files_to_test)
     def test_variableDeclaration(self, file_to_test, capsys):
