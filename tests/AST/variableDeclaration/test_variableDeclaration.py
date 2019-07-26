@@ -22,8 +22,8 @@ files_to_test = [
     'charArray.c',
     'charArraySize.c',
     'charArrayInitialization.c',
-    'charArraySizeInitialization.c'
-    # 'variableComplexInitialisation.c' not yet implemented
+    'charArraySizeInitialization.c',
+    'variableComplexInitialisation.c',
 ]
 
 

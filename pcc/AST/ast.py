@@ -161,18 +161,21 @@ class Ast:
                 tmp = right_hand_value.split('+')
                 operand_1_str = tmp[0]
                 initializer_type = self.get_type_of_expression(operand_1_str)
-                operand_1 = ConstantExpression(initializer_type, operand_1_str)
+                operand_1 = ConstantExpression(initializer_type,
+                                               operand_1_str, depth)
 
                 operand_2_str = tmp[1]
                 initializer_type = self.get_type_of_expression(operand_2_str)
-                operand_2 = ConstantExpression(initializer_type, operand_2_str)
+                operand_2 = ConstantExpression(initializer_type,
+                                               operand_2_str, depth)
 
                 operator = Addition()
                 initializer_exp = BinaryOp(depth, operator, operand_1,
                                            operand_2)
             else:
                 initializer_exp = ConstantExpression(initializer_type,
-                                                     right_hand_value)
+                                                     right_hand_value,
+                                                     depth)
 
         return initializer_exp
 
@@ -480,8 +483,10 @@ class Ast:
                     if func_def:
                         expression_type = self.get_type_of_expression(retval)
                         expression_value = retval
+                        depth = self.get_depth_in_tree()
                         expression = ConstantExpression(expression_type,
-                                                        expression_value)
+                                                        expression_value,
+                                                        depth)
                         return_statement = ReturnStatement(depth, None,
                                                            expression)
                         self.current_node.add_statement(return_statement)

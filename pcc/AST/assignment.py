@@ -20,7 +20,7 @@ class Assignment(Statement):
     def __str__(self):
         string = self._depth * '  ' + 'Assignment: =\n'
         string += self._depth * '  ' + '  ID: %s\n' % self.id
-        string += self._depth * '  ' + str(self.initializer_exp)
+        string += str(self.initializer_exp)
         string += '\n'
         return string
 

@@ -24,7 +24,7 @@ class ReturnStatement(Statement):
         if self.id:
             string += self._depth * '  ' + '  ID: %s\n' % self.id
         if self.constant:
-            string += self._depth * '  ' + '%s\n' % str(self.constant)
+            string += '%s\n' % str(self.constant)
         return string
 
     def get_return_type(self):

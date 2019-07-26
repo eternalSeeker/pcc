@@ -3,12 +3,14 @@ from pcc.compiler.assembler import ProcessorRegister
 
 
 class ConstantExpression(Expression):
-    def __init__(self, exp_type, expr_value):
+    def __init__(self, exp_type, expr_value, depth):
+        super(ConstantExpression, self).__init__(depth)
         self.exp_type = exp_type
         self.exp_value = expr_value
 
     def __str__(self):
-        string = '  Constant: %s, %s' % (self.exp_type, self.exp_value)
+        string = (self._depth + 1) * '  ' + \
+                 'Constant: %s, %s' % (self.exp_type, self.exp_value)
         return string
 
     def load_result_to_reg(self, register, assembler):

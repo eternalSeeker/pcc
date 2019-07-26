@@ -9,7 +9,7 @@ class BinaryOp(Expression):
 
         Args:
             depth (int): the depth in the tree
-            operator (BinaryOperator): the operator
+            operator (pcc.AST.binary_operator.BinaryOperator): the operator
             operand_1 (Expression): the first operand
             operand_2 (Expression): the second operand
         """
@@ -19,9 +19,9 @@ class BinaryOp(Expression):
         self.operand_2 = operand_2
 
     def __str__(self):
-        string = (self._depth - 2) * '  ' + 'BinaryOp: %s\n' % self.operator
-        string += (self._depth + 1) * '  ' + '%s\n' % self.operand_1
-        string += (self._depth + 1) * '  ' + '%s' % self.operand_2
+        string = (self._depth + 1) * '  ' + 'BinaryOp: %s\n' % self.operator
+        string += '  ' + '%s\n' % self.operand_1
+        string += '  ' + '%s' % self.operand_2
         return string
 
     def load_result_to_reg(self, register, assembler):

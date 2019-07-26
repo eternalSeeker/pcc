@@ -31,7 +31,7 @@ class VariableDeclaration(Statement):
         string += self._depth * '  ' + '    IdentifierType: [\'' \
             + self.variable_type.name + '\']\n'
         if self.initializer:
-            string += self._depth * '  ' + str(self.initializer) + '\n'
+            string += str(self.initializer) + '\n'
         return string
 
     def is_compatible_to(self, variable_declaration):
