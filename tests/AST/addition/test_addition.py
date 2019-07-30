@@ -21,6 +21,10 @@ files_to_test = [
     'charConstant.c',
     'floatConstant.c',
     'doubleConstant.c',
+    'intConstantAndVar.c',
+    'charConstantAndVar.c',
+    'floatConstantAndVar.c',
+    'doubleConstantAndVar.c',
 ]
 
 

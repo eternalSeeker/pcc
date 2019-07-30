@@ -46,8 +46,8 @@ class CompoundStatement(Statement):
         Args:
             current_list(list[StackVariable]): the current list
         """
-        if len(self.statement_sequence) > 0:
-            self.statement_sequence[0].add_stack_variable(current_list)
+        for statement in self.statement_sequence:
+            statement.add_stack_variable(current_list)
 
     def get_stack_variable(self, variable_name):
         """Get the stack variable by name.

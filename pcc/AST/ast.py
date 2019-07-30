@@ -1,5 +1,6 @@
 import copy
 import pcc
+from re import compile
 
 from pcc.AST.ast_node import AstNode
 from pcc.AST.variable_declaration import VariableDeclaration
@@ -157,32 +158,36 @@ class Ast:
             Expression: the expression if correctly parsed else None
         """
         if not right_hand_value:
-            initializer_exp = None
+            expression = None
         else:
             initializer_type = self.get_type_of_expression(right_hand_value)
             # the initializer of a big double might use scientific notation
             # e.g. 1e+3
-            if '+' in right_hand_value and 'e+' not in right_hand_value:
+            # must match optional number and optional fraction with e or E
+            # and +- an
+            # exponent
+            exp_regex = compile(r"((-)?\d+(\.\d+)?)[Ee](\+|-)(\d+)")
+            regex_result = exp_regex.match(right_hand_value)
+            if '+' in right_hand_value and not regex_result:
                 tmp = right_hand_value.split('+')
                 operand_1_str = tmp[0]
-                initializer_type = self.get_type_of_expression(operand_1_str)
-                operand_1 = ConstantExpression(initializer_type,
-                                               operand_1_str, depth)
+                operand_1 = self.get_right_hand_value(operand_1_str, depth)
 
                 operand_2_str = tmp[1]
-                initializer_type = self.get_type_of_expression(operand_2_str)
-                operand_2 = ConstantExpression(initializer_type,
-                                               operand_2_str, depth)
+                operand_2 = self.get_right_hand_value(operand_2_str, depth)
 
                 operator = Addition()
-                initializer_exp = BinaryOp(depth, operator, operand_1,
-                                           operand_2)
-            else:
-                initializer_exp = ConstantExpression(initializer_type,
-                                                     right_hand_value,
-                                                     depth)
+                expression = BinaryOp(depth, operator, operand_1, operand_2)
+            elif self.get_variable_definition_from_id(right_hand_value):
+                expression = VariableReference(depth, right_hand_value)
+                expression.parent_node = self.current_node
 
-        return initializer_exp
+            else:
+                expression = ConstantExpression(initializer_type,
+                                                right_hand_value,
+                                                depth)
+
+        return expression
 
     def extract_variable_declaration_from_string(self, statement):
         list_of_tokens = statement.split()

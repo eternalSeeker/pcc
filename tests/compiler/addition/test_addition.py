@@ -21,6 +21,10 @@ files_to_test = [
     ('intInit.c', 'intHelper.c', 'intInit.out'),
     ('floatInit.c', 'floatHelper.c', 'floatInit.out'),
     ('doubleInit.c', 'doubleHelper.c', 'doubleInit.out'),
+    ('charVarAndConstant.c', 'charHelper.c', 'charVarAndConstant.out'),
+    ('intVarAndConstant.c', 'intHelper.c', 'intVarAndConstant.out'),
+    ('floatVarAndConstant.c', 'floatHelper.c', 'floatVarAndConstant.out'),
+    ('doubleVarAndConstant.c', 'doubleHelper.c', 'doubleVarAndConstant.out'),
 ]
 
 
