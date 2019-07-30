@@ -14,5 +14,5 @@ class FunctionCall(Statement):
         if self.expression_list:
             string += self._depth * '  ' + '  ExprList: \n'
             for expression in self.expression_list:
-                string += str(expression)
+                string += "%s\n" % str(expression)
         return string

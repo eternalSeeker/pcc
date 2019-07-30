@@ -5,26 +5,21 @@ from pcc.compiler.assembler import ProcessorRegister
 
 class ReturnStatement(Statement):
 
-    def __init__(self, depth, identifier, constant):
+    def __init__(self, depth, expression):
         """Create a return statement.
 
         Args:
             depth (int): depth in the ast tree
-            identifier (str): the identifier of the symbol to return if
-                              applicable
-            constant (pcc.AST.constant_expression.ConstantExpression):
-                the constant expression to return if applicable
+            expression (pcc.AST.expression.Expression): the
+                expression to return if applicable
         """
         super(ReturnStatement, self).__init__(depth)
-        self.id = identifier
-        self.constant = constant
+        self.expression = expression
 
     def __str__(self):
         string = self._depth * '  ' + 'Return: \n'
-        if self.id:
-            string += self._depth * '  ' + '  ID: %s\n' % self.id
-        if self.constant:
-            string += '%s\n' % str(self.constant)
+        if self.expression:
+            string += '%s\n' % str(self.expression)
         return string
 
     def get_return_type(self):
@@ -45,20 +40,7 @@ class ReturnStatement(Statement):
         """
         value = bytearray()
 
-        if self.constant:
-            try:
-                imm_value = int(self.constant.exp_value)
-                reg = ProcessorRegister.accumulator
-                value += assembler.copy_value_to_reg(imm_value, reg)
-            except ValueError:
-                imm_value = float(self.constant.exp_value)
-                return_type = self.get_return_type()
-                if return_type == 'double':
-                    reg = ProcessorRegister.double_scalar_0
-                else:
-                    reg = ProcessorRegister.single_scalar_0
-                value += assembler.copy_value_to_reg(imm_value, reg)
-        elif self.id:
+        if self.expression:
             return_type = self.get_return_type()
             if return_type == 'double':
                 reg = ProcessorRegister.double_scalar_0
@@ -67,12 +49,7 @@ class ReturnStatement(Statement):
             else:
                 reg = ProcessorRegister.accumulator
 
-            parent = self.parent_node
-            id = self.id
-            stack_variable = parent.get_stack_variable(id)
-            stack_offset = stack_variable.stack_offset
-
-            value += assembler.copy_stack_to_reg(stack_offset, reg)
+            value += self.expression.load_result_to_reg(reg, assembler)
 
         # restore the frame pointer from stack
         ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)
@@ -83,6 +60,6 @@ class ReturnStatement(Statement):
         value.extend(ret)
 
         size = len(value)
-        compiled_object = CompiledObject(self.id, size,
+        compiled_object = CompiledObject(self.expression, size,
                                          value, CompiledObjectType.code)
         return compiled_object

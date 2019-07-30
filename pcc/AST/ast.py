@@ -396,7 +396,7 @@ class Ast:
                     argument_list = function_declaration.argument_list
                     if self.are_arguments_compatible(variables, argument_list):
                         expression_list = []
-                        depth = self.get_depth_in_tree() + 2
+                        depth = self.get_depth_in_tree() + 1
                         for variable in variables:
                             expression = VariableReference(depth,
                                                            variable.name)
@@ -489,9 +489,9 @@ class Ast:
             if len(splited_statement) == 2:
                 retval = splited_statement[1]
                 if self.get_variable_definition_from_id(retval):
-                    constant_expression = None
-                    return_statement = ReturnStatement(depth, retval,
-                                                       constant_expression)
+                    expression = VariableReference(depth, retval)
+                    return_statement = ReturnStatement(depth, expression)
+                    expression.parent_node = self.current_node
                     self.current_node.add_statement(return_statement)
                 else:
                     # probably is a constant expression
@@ -503,9 +503,7 @@ class Ast:
                         expression = ConstantExpression(expression_type,
                                                         expression_value,
                                                         depth)
-                        identifier = None
-                        return_statement = ReturnStatement(depth, identifier,
-                                                           expression)
+                        return_statement = ReturnStatement(depth, expression)
                         self.current_node.add_statement(return_statement)
                     else:
                         message = 'Could not find the function definition ' \
@@ -515,9 +513,8 @@ class Ast:
                         return line_number
 
             else:
-                identifier = None
-                constant = None
-                return_statement = ReturnStatement(depth, identifier, constant)
+                expression = None
+                return_statement = ReturnStatement(depth, expression)
                 self.current_node.add_statement(return_statement)
         else:
             line_number = -1

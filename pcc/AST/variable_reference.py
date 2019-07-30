@@ -14,7 +14,7 @@ class VariableReference(Expression):
         self.name = name
 
     def __str__(self):
-        string = self._depth * '  ' + 'ID: %s\n' % self.name
+        string = (self._depth + 1) * '  ' + 'ID: %s' % self.name
         return string
 
     def load_result_to_reg(self, register, assembler):
@@ -26,4 +26,12 @@ class VariableReference(Expression):
         Returns:
             bytearray: the compiled code to evaluate the expression
         """
-        pass
+        value = bytearray()
+        parent = self.parent_node
+        id = self.name
+        stack_variable = parent.get_stack_variable(id)
+        stack_offset = stack_variable.stack_offset
+
+        value += assembler.copy_stack_to_reg(stack_offset, register)
+
+        return value
