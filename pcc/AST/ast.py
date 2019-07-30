@@ -1,6 +1,6 @@
 import copy
 import pcc
-from re import compile
+import re
 
 from pcc.AST.ast_node import AstNode
 from pcc.AST.variable_declaration import VariableDeclaration
@@ -16,6 +16,7 @@ from pcc.AST.constant_expression import ConstantExpression
 from pcc.AST.assignment import Assignment
 from pcc.AST.addition import Addition
 from pcc.AST.binary_op import BinaryOp
+from pcc.AST.subtraction import Subtraction
 from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 from pcc.utils.stringListParsing import extract_closing_char
 import pcc.utils.warning
@@ -166,17 +167,31 @@ class Ast:
             # must match optional number and optional fraction with e or E
             # and +- an
             # exponent
-            exp_regex = compile(r"((-)?\d+(\.\d+)?)[Ee](\+|-)(\d+)")
-            regex_result = exp_regex.match(right_hand_value)
-            if '+' in right_hand_value and not regex_result:
-                tmp = right_hand_value.split('+')
-                operand_1_str = tmp[0]
+            exp_regex = re.compile(r"((-)?\d+(\.\d+)?)[Ee](\+|-)(\d+)")
+            regex_number_result = exp_regex.match(right_hand_value)
+
+            res_addition = re.match(r"(\S+)\+(\S+)", right_hand_value)
+            res_subtraction = re.match(r"(\S+)-(\S+)", right_hand_value)
+
+            if res_addition and not regex_number_result:
+
+                operand_1_str = res_addition.group(1)
                 operand_1 = self.get_right_hand_value(operand_1_str, depth)
 
-                operand_2_str = tmp[1]
+                operand_2_str = res_addition.group(2)
                 operand_2 = self.get_right_hand_value(operand_2_str, depth)
 
                 operator = Addition()
+                expression = BinaryOp(depth, operator, operand_1, operand_2)
+            elif res_subtraction and not regex_number_result:
+
+                operand_1_str = res_subtraction.group(1)
+                operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+                operand_2_str = res_subtraction.group(2)
+                operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+                operator = Subtraction()
                 expression = BinaryOp(depth, operator, operand_1, operand_2)
             elif self.get_variable_definition_from_id(right_hand_value):
                 expression = VariableReference(depth, right_hand_value)
