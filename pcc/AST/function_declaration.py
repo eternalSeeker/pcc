@@ -22,7 +22,7 @@ class FunctionDeclaration(Statement):
             + self.return_type.name + '\']\n'
         return string
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict=None):
         return_type = self.return_type
         name = self.name
         argument_list = copy.deepcopy(self.argument_list)
@@ -44,7 +44,8 @@ class FunctionDeclaration(Statement):
         for argument in self.argument_list:
             argument.update_depth(depth+3)
 
-    def compile(self, assembler):
+    @staticmethod
+    def compile(assembler):
         """Compile this statement
 
         Args:

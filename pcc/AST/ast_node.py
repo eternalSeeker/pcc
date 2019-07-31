@@ -1,11 +1,10 @@
 def push_variable_on_stack(assembler, stack_offset,
-                           stack_var, value, value_array):
+                           value, value_array):
     """Push a value on a specified location on stack
 
     Args:
         assembler (Assembler): the assembler to use
         stack_offset (int): the offset relative to the current stack pointer
-        stack_var (pcc.AST.stack_variable.StackVariable): the stack variable
         value (bytearray): the byte array to append the machine code to
         value_array (bytearray): the bytearray to push to stack
 

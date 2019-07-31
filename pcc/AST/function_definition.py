@@ -85,7 +85,6 @@ class FunctionDefinition(Statement):
             value_array = stack_var.initializer_byte_array
             value, stack_offset = push_variable_on_stack(assembler,
                                                          stack_offset,
-                                                         stack_var,
                                                          value,
                                                          value_array)
             stack_var.stack_offset = stack_offset

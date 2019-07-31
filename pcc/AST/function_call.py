@@ -3,8 +3,10 @@ from pcc.AST.statement import Statement
 
 class FunctionCall(Statement):
 
-    def __init__(self, depth, identifier, expression_list=[]):
+    def __init__(self, depth, identifier, expression_list=None):
         super(FunctionCall, self).__init__(depth)
+        if expression_list is None:
+            expression_list = []
         self.id = identifier
         self.expression_list = expression_list
 

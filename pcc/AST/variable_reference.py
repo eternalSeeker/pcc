@@ -28,8 +28,8 @@ class VariableReference(Expression):
         """
         value = bytearray()
         parent = self.parent_node
-        id = self.name
-        stack_variable = parent.get_stack_variable(id)
+        identifier = self.name
+        stack_variable = parent.get_stack_variable(identifier)
         stack_offset = stack_variable.stack_offset
 
         value += assembler.copy_stack_to_reg(stack_offset, register)

@@ -10,7 +10,7 @@ class ReturnStatement(Statement):
 
         Args:
             depth (int): depth in the ast tree
-            expression (pcc.AST.expression.Expression): the
+            expression (Union[pcc.AST.expression.Expression, None]): the
                 expression to return if applicable
         """
         super(ReturnStatement, self).__init__(depth)

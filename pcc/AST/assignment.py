@@ -35,8 +35,8 @@ class Assignment(Statement):
         value = bytearray()
 
         parent = self.parent_node
-        id = self.id
-        stack_variable = parent.get_stack_variable(id)
+        identifier = self.id
+        stack_variable = parent.get_stack_variable(identifier)
         stack_offset = stack_variable.stack_offset
         size = stack_variable.size
 

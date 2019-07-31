@@ -34,7 +34,7 @@ def get_register_encoding(register):
 class x64Assembler(Assembler):
 
     def __init__(self):
-        pass
+        super(x64Assembler).__init__()
 
     def push_to_stack(self, register):
         """Push a register on stack.

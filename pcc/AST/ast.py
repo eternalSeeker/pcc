@@ -167,7 +167,7 @@ class Ast:
             # must match optional number and optional fraction with e or E
             # and +- an
             # exponent
-            exp_regex = re.compile(r"((-)?\d+(\.\d+)?)[Ee](\+|-)(\d+)")
+            exp_regex = re.compile(r"((-)?\d+(\.\d+)?)[Ee]([+\-])(\d+)")
             regex_number_result = exp_regex.match(right_hand_value)
 
             res_addition = re.match(r"(\S+)\+(\S+)", right_hand_value)
@@ -312,8 +312,7 @@ class Ast:
         self.current_node.add_statement(function_definition)
         self.current_node = function_definition
         decl = copy.deepcopy(function_declaration)
-        # todo access to protected member
-        decl.update_depth(decl._depth + 1)
+        decl.update_depth(depth + 1)
         self.current_node.add_statement(decl)
 
         line_number = self.parse_line(statements)
@@ -433,7 +432,8 @@ class Ast:
 
         return line_number
 
-    def check_function_argument(self, argument_a, argument_b,
+    @staticmethod
+    def check_function_argument(argument_a, argument_b,
                                 function_declaration):
         message = None
         if hasattr(argument_a, 'type_name'):
