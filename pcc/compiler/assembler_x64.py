@@ -305,7 +305,7 @@ class x64Assembler(Assembler):
             source = destination
             destination = tmp
         else:
-            value.append(0x29)  # ADD
+            value.append(0x29)  # sub
         # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
         # REG destination
         mod = 0b11
