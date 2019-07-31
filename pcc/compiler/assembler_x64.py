@@ -278,3 +278,40 @@ class x64Assembler(Assembler):
         value.append(modr_byte)
 
         return value
+
+    def sub(self, source, destination):
+        """Subtract the value of the source from the destination.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+        if source == ProcessorRegister.single_scalar_0:
+            value.extend([0xF3, 0x0F, 0x5c])  # subss
+            # swap the source and destination, as it has a different order
+            # wrt the int add encoding
+            tmp = source
+            source = destination
+            destination = tmp
+        elif source == ProcessorRegister.double_scalar_0:
+            value.extend([0xF2, 0x0F, 0x5c])  # subsd
+            # swap the source and destination, as it has a different order
+            # wrt the int add encoding
+            tmp = source
+            source = destination
+            destination = tmp
+        else:
+            value.append(0x29)  # ADD
+        # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
+        # REG destination
+        mod = 0b11
+        rm = get_register_encoding(source)
+        reg = get_register_encoding(destination)
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        return value

@@ -121,3 +121,15 @@ class Assembler:
             bytearray: the machine code
         """
         raise NotImplementedError
+
+    def sub(self, source, destination):
+        """Subtract the value of the source from the destination.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
+        """
+        raise NotImplementedError
