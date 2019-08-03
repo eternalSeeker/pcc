@@ -13,6 +13,12 @@ class ProcessorRegister(enum.Enum):
     counter = 5
     single_scalar_1 = 6
     double_scalar_1 = 7
+    data = 8
+
+
+class ShiftMode(enum.Enum):
+    right_arithmetic = 0
+    left_arithmetic = 1
 
 
 class Assembler:
@@ -128,6 +134,31 @@ class Assembler:
         Args:
             source (ProcessorRegister): the source register
             destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
+        """
+        raise NotImplementedError
+
+    def div(self, source, destination):
+        """Divide the value of the source by the destination.
+
+        Args:
+            source (ProcessorRegister): the dividend register
+            destination (ProcessorRegister): the divider register
+
+        Returns:
+            bytearray: the machine code
+        """
+        raise NotImplementedError
+
+    def shift(self, register, mode, amount):
+        """Shift the register.
+
+        Args:
+            register (ProcessorRegister): the register to shift
+            mode (ShiftMode): the mode to shift
+            amount (int): the shift amount
 
         Returns:
             bytearray: the machine code

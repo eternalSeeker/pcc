@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from pcc.compiler.assembler import Assembler, ProcessorRegister
+from pcc.compiler.assembler import Assembler, ProcessorRegister, ShiftMode
 
 import struct
 
@@ -27,8 +27,42 @@ def get_register_encoding(register):
         return 1
     elif register == ProcessorRegister.counter:
         return 1
+    elif register == ProcessorRegister.data:
+        return 2
     else:
         raise NotImplementedError
+
+
+def is_single_scalar_reg(register):
+    """Check if the register is a single scalar register
+
+    Args:
+        register (ProcessorRegister): The register to check
+
+    Returns:
+        bool: True if the register is a single scalar register, else False
+    """
+    if register in [ProcessorRegister.single_scalar_0,
+                    ProcessorRegister.single_scalar_1]:
+        return True
+    else:
+        return False
+
+
+def is_double_scalar_reg(register):
+    """Check if the register is a double scalar register
+
+    Args:
+        register (ProcessorRegister): The register to check
+
+    Returns:
+        bool: True if the register is a double scalar register, else False
+    """
+    if register in [ProcessorRegister.double_scalar_0,
+                    ProcessorRegister.double_scalar_1]:
+        return True
+    else:
+        return False
 
 
 class x64Assembler(Assembler):
@@ -313,5 +347,108 @@ class x64Assembler(Assembler):
         reg = get_register_encoding(destination)
         modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
         value.append(modr_byte)
+
+        return value
+
+    def div(self, dividend, divider):
+        """Divide the value of the source by the destination.
+
+        Store the result in the  dividend register.
+
+        Args:
+            dividend (ProcessorRegister): the dividend register
+            divider (ProcessorRegister): the divider register
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        if is_single_scalar_reg(divider):
+            value.extend([0xF3, 0x0F, 0x5E])  # divss
+            mod = 0b11
+            rm = get_register_encoding(divider)
+            reg = get_register_encoding(dividend)
+            modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+            value.append(modr_byte)
+        elif is_double_scalar_reg(divider):
+            value.extend([0xF2, 0x0F, 0x5E])  # divsd
+            mod = 0b11
+            rm = get_register_encoding(divider)
+            reg = get_register_encoding(dividend)
+            modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+            value.append(modr_byte)
+        else:
+            # idiv eax = edx:eax / src
+            if divider in [ProcessorRegister.accumulator,
+                           ProcessorRegister.data]:
+                tmp_reg = ProcessorRegister.counter
+                value += self.copy_from_reg_to_reg(divider, tmp_reg)
+
+            if dividend != ProcessorRegister.accumulator:
+                tmp_reg = ProcessorRegister.accumulator
+                value += self.copy_from_reg_to_reg(dividend, tmp_reg)
+
+            # mov edx -> eax
+            value += self.copy_from_reg_to_reg(ProcessorRegister.data,
+                                               ProcessorRegister.accumulator)
+            # shift edx by 31 -> contains the highest bits of the dividend,
+            # eax the lowest 31 bits
+            value += self.shift(ProcessorRegister.data,
+                                ShiftMode.right_arithmetic,
+                                amount=31)
+            value.append(0xf7)  # idiv
+
+            mod = 0b11
+            rm = get_register_encoding(divider)
+            reg = 7  # F7 /7 -> 7 in the reg field
+            modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+            value.append(modr_byte)
+
+            # the result is stored in the acc register, so copy it to the
+            # correct result register if needed
+            if dividend != ProcessorRegister.accumulator:
+                register = ProcessorRegister.accumulator
+                value += self.copy_from_reg_to_reg(register, dividend)
+
+        return value
+
+    def shift(self, register, mode, amount):
+        """Shift the register.
+
+        Args:
+            register (ProcessorRegister): the register to shift
+            mode (ShiftMode): the mode to shift
+            amount (int): the shift amount
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        if mode == ShiftMode.right_arithmetic:
+            # SAR r/m32, imm8
+            value.append(0xC1)
+            mod = 0b11
+            rm = get_register_encoding(register)
+            reg = 7  # C1 /7 ib -> 7 in reg field
+            modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+            value.append(modr_byte)
+
+            encoded_amount = struct.pack("b", amount)
+            value += encoded_amount
+        elif mode == ShiftMode.left_arithmetic:
+            # SAL r/m32, imm8
+            value.append(0xC1)
+            mod = 0b11
+            rm = get_register_encoding(register)
+            reg = 4  # C1 /4 ib -> 4 in reg field
+            modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+            value.append(modr_byte)
+
+            encoded_amount = struct.pack("b", amount)
+            value += encoded_amount
+        else:
+            raise NotImplementedError
 
         return value

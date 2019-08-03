@@ -17,6 +17,7 @@ from pcc.AST.assignment import Assignment
 from pcc.AST.addition import Addition
 from pcc.AST.binary_op import BinaryOp
 from pcc.AST.subtraction import Subtraction
+from pcc.AST.division import Division
 from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 from pcc.utils.stringListParsing import extract_closing_char
 import pcc.utils.warning
@@ -173,6 +174,8 @@ class Ast:
             res_addition = re.match(r"(\S+)\+(\S+)", right_hand_value)
             res_subtraction = re.match(r"(\S+)-(\S+)", right_hand_value)
 
+            res_division = re.match(r"(\S+)/(\S+)", right_hand_value)
+
             if res_addition and not regex_number_result:
 
                 operand_1_str = res_addition.group(1)
@@ -192,6 +195,16 @@ class Ast:
                 operand_2 = self.get_right_hand_value(operand_2_str, depth)
 
                 operator = Subtraction()
+                expression = BinaryOp(depth, operator, operand_1, operand_2)
+
+            elif res_division:
+                operand_1_str = res_division.group(1)
+                operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+                operand_2_str = res_division.group(2)
+                operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+                operator = Division()
                 expression = BinaryOp(depth, operator, operand_1, operand_2)
             elif self.get_variable_definition_from_id(right_hand_value):
                 expression = VariableReference(depth, right_hand_value)
