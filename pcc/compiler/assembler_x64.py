@@ -138,8 +138,7 @@ class x64Assembler(Assembler):
             bytearray: the machine code
         """
         value = bytearray()
-        if destination == ProcessorRegister.single_scalar_0 or \
-                destination == ProcessorRegister.single_scalar_1:
+        if is_single_scalar_reg(destination):
             # mov the single scalar to eax
             value += bytearray([0xb8])
             packed = struct.pack("f", imm_value)
@@ -148,8 +147,7 @@ class x64Assembler(Assembler):
             value += bytearray([0x66, 0x0f, 0x6e])
             register_encoding = get_register_encoding(destination)
             value += bytearray([0xc0 + (register_encoding << 3)])
-        elif destination == ProcessorRegister.double_scalar_0 or \
-                destination == ProcessorRegister.double_scalar_1:
+        elif is_double_scalar_reg(destination):
             # mov the double scalar to rax
             value += bytearray([0x48, 0xb8])
             packed = struct.pack("d", imm_value)
@@ -228,9 +226,9 @@ class x64Assembler(Assembler):
             register (ProcessorRegister): the register to copy to
         """
         value = bytearray()
-        if register == ProcessorRegister.single_scalar_0:
+        if is_single_scalar_reg(register):
             value.extend([0xF3, 0x0F, 0x10])  # movss
-        elif register == ProcessorRegister.double_scalar_0:
+        elif is_double_scalar_reg(register):
             value.extend([0xF2, 0x0F, 0x10])  # movsd
         else:
             value.append(0x8b)  # mov
@@ -256,9 +254,9 @@ class x64Assembler(Assembler):
             register (ProcessorRegister): the register to copy from
         """
         value = bytearray()
-        if register == ProcessorRegister.single_scalar_0:
+        if is_single_scalar_reg(register):
             value.extend([0xF3, 0x0F, 0x11])  # movss
-        elif register == ProcessorRegister.double_scalar_0:
+        elif is_double_scalar_reg(register):
             value.extend([0xF2, 0x0F, 0x11])  # movsd
         else:
             value.append(0x89)  # mov
@@ -287,14 +285,14 @@ class x64Assembler(Assembler):
             bytearray: the machine code
         """
         value = bytearray()
-        if source == ProcessorRegister.single_scalar_0:
+        if is_single_scalar_reg(source):
             value.extend([0xF3, 0x0F, 0x58])  # addss
             # swap the source and destination, as it has a different order
             # wrt the int add encoding
             tmp = source
             source = destination
             destination = tmp
-        elif source == ProcessorRegister.double_scalar_0:
+        elif is_double_scalar_reg(source):
             value.extend([0xF2, 0x0F, 0x58])  # addsd
             # swap the source and destination, as it has a different order
             # wrt the int add encoding
@@ -324,14 +322,14 @@ class x64Assembler(Assembler):
             bytearray: the machine code
         """
         value = bytearray()
-        if source == ProcessorRegister.single_scalar_0:
+        if is_single_scalar_reg(source):
             value.extend([0xF3, 0x0F, 0x5c])  # subss
             # swap the source and destination, as it has a different order
             # wrt the int add encoding
             tmp = source
             source = destination
             destination = tmp
-        elif source == ProcessorRegister.double_scalar_0:
+        elif is_double_scalar_reg(source):
             value.extend([0xF2, 0x0F, 0x5c])  # subsd
             # swap the source and destination, as it has a different order
             # wrt the int add encoding
