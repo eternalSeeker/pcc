@@ -411,6 +411,61 @@ class x64Assembler(Assembler):
 
         return value
 
+    def mul(self, destination, source):
+        """Multiply the value of the source by the destination.
+
+        destination = source * destination
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the source register
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        if is_single_scalar_reg(destination):
+            value.extend([0xF3, 0x0F, 0x59])  # mulss
+            mod = 0b11
+            rm = get_register_encoding(source)
+            reg = get_register_encoding(destination)
+            modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+            value.append(modr_byte)
+        elif is_double_scalar_reg(destination):
+            value.extend([0xF2, 0x0F, 0x59])  # mulsd
+            mod = 0b11
+            rm = get_register_encoding(source)
+            reg = get_register_encoding(destination)
+            modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+            value.append(modr_byte)
+        else:
+            # imul EDX:EAX ← EAX ∗ r/m32
+            if source in [ProcessorRegister.accumulator,
+                          ProcessorRegister.data]:
+                tmp_reg = ProcessorRegister.counter
+                value += self.copy_from_reg_to_reg(source, tmp_reg)
+                source = tmp_reg
+
+            if destination != ProcessorRegister.accumulator:
+                tmp_reg = ProcessorRegister.accumulator
+                value += self.copy_from_reg_to_reg(destination, tmp_reg)
+
+            value.append(0xf7)  # imul
+
+            mod = 0b11
+            rm = get_register_encoding(source)
+            reg = 5  # F7 /5 -> 5 in the reg field
+            modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+            value.append(modr_byte)
+
+            # the result is stored in the acc register, so copy it to the
+            # correct result register if needed
+            if destination != ProcessorRegister.accumulator:
+                register = ProcessorRegister.accumulator
+                value += self.copy_from_reg_to_reg(register, destination)
+
+        return value
+
     def shift(self, register, mode, amount):
         """Shift the register.
 

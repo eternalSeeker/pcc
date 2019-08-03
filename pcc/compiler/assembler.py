@@ -152,6 +152,19 @@ class Assembler:
         """
         raise NotImplementedError
 
+    def mul(self, destination, source):
+        """Multiply the value of the source by the destination.
+
+        destination = source * destination
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the source register
+
+        Returns:
+            bytearray: the machine code
+        """
+        raise NotImplementedError
+
     def shift(self, register, mode, amount):
         """Shift the register.
 
