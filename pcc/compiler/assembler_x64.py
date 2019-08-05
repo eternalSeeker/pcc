@@ -287,25 +287,19 @@ class x64Assembler(Assembler):
         value = bytearray()
         if is_single_scalar_reg(source):
             value.extend([0xF3, 0x0F, 0x58])  # addss
-            # swap the source and destination, as it has a different order
-            # wrt the int add encoding
-            tmp = source
-            source = destination
-            destination = tmp
+            rm = get_register_encoding(source)
+            reg = get_register_encoding(destination)
         elif is_double_scalar_reg(source):
             value.extend([0xF2, 0x0F, 0x58])  # addsd
-            # swap the source and destination, as it has a different order
-            # wrt the int add encoding
-            tmp = source
-            source = destination
-            destination = tmp
+            rm = get_register_encoding(source)
+            reg = get_register_encoding(destination)
         else:
             value.append(0x01)  # ADD
+            rm = get_register_encoding(destination)
+            reg = get_register_encoding(source)
         # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
         # REG destination
         mod = 0b11
-        rm = get_register_encoding(source)
-        reg = get_register_encoding(destination)
         modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
         value.append(modr_byte)
 
@@ -324,43 +318,41 @@ class x64Assembler(Assembler):
         value = bytearray()
         if is_single_scalar_reg(source):
             value.extend([0xF3, 0x0F, 0x5c])  # subss
-            # swap the source and destination, as it has a different order
-            # wrt the int add encoding
-            tmp = source
-            source = destination
-            destination = tmp
+            rm = get_register_encoding(source)
+            reg = get_register_encoding(destination)
         elif is_double_scalar_reg(source):
             value.extend([0xF2, 0x0F, 0x5c])  # subsd
-            # swap the source and destination, as it has a different order
-            # wrt the int add encoding
-            tmp = source
-            source = destination
-            destination = tmp
+            rm = get_register_encoding(source)
+            reg = get_register_encoding(destination)
         else:
             value.append(0x29)  # sub
+            rm = get_register_encoding(destination)
+            reg = get_register_encoding(source)
         # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
         # REG destination
         mod = 0b11
-        rm = get_register_encoding(source)
-        reg = get_register_encoding(destination)
+
         modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
         value.append(modr_byte)
 
         return value
 
-    def div(self, dividend, divider):
+    def div(self, source, destination):
         """Divide the value of the source by the destination.
 
         Store the result in the  dividend register.
 
         Args:
-            dividend (ProcessorRegister): the dividend register
-            divider (ProcessorRegister): the divider register
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
 
         Returns:
             bytearray: the machine code
         """
         value = bytearray()
+
+        dividend = destination
+        divider = source
 
         if is_single_scalar_reg(divider):
             value.extend([0xF3, 0x0F, 0x5E])  # divss
@@ -377,24 +369,32 @@ class x64Assembler(Assembler):
             modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
             value.append(modr_byte)
         else:
-            # idiv eax = edx:eax / src
-            if divider in [ProcessorRegister.accumulator,
-                           ProcessorRegister.data]:
-                tmp_reg = ProcessorRegister.counter
+            # idiv eax = edx:eax / divider
+            if divider == ProcessorRegister.accumulator:
+                tmp_reg = ProcessorRegister.data
                 value += self.copy_from_reg_to_reg(divider, tmp_reg)
-
-            if dividend != ProcessorRegister.accumulator:
+                divider = tmp_reg
+                # so dividend is no accumulator
                 tmp_reg = ProcessorRegister.accumulator
                 value += self.copy_from_reg_to_reg(dividend, tmp_reg)
+
+                tmp_reg = ProcessorRegister.counter
+                value += self.copy_from_reg_to_reg(divider, tmp_reg)
+                divider = tmp_reg
+
+            value += self.copy_from_reg_to_reg(dividend,
+                                               ProcessorRegister.accumulator)
 
             # mov edx -> eax
             value += self.copy_from_reg_to_reg(ProcessorRegister.data,
                                                ProcessorRegister.accumulator)
+
             # shift edx by 31 -> contains the highest bits of the dividend,
             # eax the lowest 31 bits
             value += self.shift(ProcessorRegister.data,
                                 ShiftMode.right_arithmetic,
                                 amount=31)
+
             value.append(0xf7)  # idiv
 
             mod = 0b11
@@ -405,7 +405,7 @@ class x64Assembler(Assembler):
 
             # the result is stored in the acc register, so copy it to the
             # correct result register if needed
-            if dividend != ProcessorRegister.accumulator:
+            if destination != ProcessorRegister.accumulator:
                 register = ProcessorRegister.accumulator
                 value += self.copy_from_reg_to_reg(register, dividend)
 
@@ -427,42 +427,25 @@ class x64Assembler(Assembler):
         if is_single_scalar_reg(destination):
             value.extend([0xF3, 0x0F, 0x59])  # mulss
             mod = 0b11
-            rm = get_register_encoding(source)
-            reg = get_register_encoding(destination)
+            rm = get_register_encoding(destination)
+            reg = get_register_encoding(source)
             modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
             value.append(modr_byte)
         elif is_double_scalar_reg(destination):
             value.extend([0xF2, 0x0F, 0x59])  # mulsd
             mod = 0b11
-            rm = get_register_encoding(source)
-            reg = get_register_encoding(destination)
+            rm = get_register_encoding(destination)
+            reg = get_register_encoding(source)
             modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
             value.append(modr_byte)
         else:
-            # imul EDX:EAX ← EAX ∗ r/m32
-            if source in [ProcessorRegister.accumulator,
-                          ProcessorRegister.data]:
-                tmp_reg = ProcessorRegister.counter
-                value += self.copy_from_reg_to_reg(source, tmp_reg)
-                source = tmp_reg
-
-            if destination != ProcessorRegister.accumulator:
-                tmp_reg = ProcessorRegister.accumulator
-                value += self.copy_from_reg_to_reg(destination, tmp_reg)
-
-            value.append(0xf7)  # imul
+            value.extend([0x0F, 0xAF])  # imul
 
             mod = 0b11
-            rm = get_register_encoding(source)
-            reg = 5  # F7 /5 -> 5 in the reg field
+            rm = get_register_encoding(destination)
+            reg = get_register_encoding(source)
             modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
             value.append(modr_byte)
-
-            # the result is stored in the acc register, so copy it to the
-            # correct result register if needed
-            if destination != ProcessorRegister.accumulator:
-                register = ProcessorRegister.accumulator
-                value += self.copy_from_reg_to_reg(register, destination)
 
         return value
 

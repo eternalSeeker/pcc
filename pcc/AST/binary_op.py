@@ -38,7 +38,9 @@ class BinaryOp(Expression):
 
         value += self.operand_2.load_result_to_reg(register_2, assembler)
 
-        value += self.operator.evaluate(register_1, register_2, assembler)
+        value += self.operator.evaluate(source=register_2,
+                                        destination=register_1,
+                                        assembler=assembler)
 
         # the result is in register_1, make sure
         # that is the specified register
