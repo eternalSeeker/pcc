@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from pcc.main import main
+import subprocess
 from os.path import join, abspath, dirname
 
 # The parametrize function is generated, so it does not work to import
 import pytest
-import subprocess
+
 import tests.generateOutputsDecorator
+from pcc.main import main
+
 parametrize = pytest.mark.parametrize
 generate_outputs = tests.generateOutputsDecorator.generate_outputs
 
@@ -80,7 +82,7 @@ class TestConditionalCompilation(object):
              out, outputFileAsString)
         for i in range(outputFileAsListSize):
             assert outputList[i] == outputFileAsList[i], \
-                'for file %s line %d, <%s> != <%s>' %\
+                'for file %s line %d, <%s> != <%s>' % \
                 (fileToPreprocess, i, outputList, outputFileAsList)
         # there should be no error
         assert err == ''

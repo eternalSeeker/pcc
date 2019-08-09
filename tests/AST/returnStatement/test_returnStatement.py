@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from pcc.main import main
 from os.path import join, abspath, dirname
+
 import pycparser
-import tests.generateOutputsDecorator
 import pytest
 
+import tests.generateOutputsDecorator
+from pcc.main import main
 
 generate_outputs = tests.generateOutputsDecorator.generate_outputs
 
@@ -73,7 +74,7 @@ class TestConditionalCompilation(object):
              out)
         for i in range(outputFileAsListSize):
             assert outputList[i] == outputFileAsList[i], \
-                'for file %s line %d, <%s> != <%s>' %\
+                'for file %s line %d, <%s> != <%s>' % \
                 (fileToPreprocess, i, outputList[i], outputFileAsList[i])
         # there should be no error
         assert err == ''

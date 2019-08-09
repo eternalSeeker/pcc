@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from pcc.main import main
+import subprocess
 from os.path import join, abspath, dirname
 
 # The parametrize function is generated, so it does not work to import
 import pytest
-import subprocess
+
 import tests.generateOutputsDecorator
+from pcc.main import main
+
 parametrize = pytest.mark.parametrize
 generate_outputs = tests.generateOutputsDecorator.generate_outputs
 

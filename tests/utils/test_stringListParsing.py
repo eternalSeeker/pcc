@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from pcc.utils.stringListParsing import extract_closing_char
 import pytest
+
+from pcc.utils.stringListParsing import extract_closing_char
+
 parametrize = pytest.mark.parametrize
 
 case1 = (['[', 'this', ']'],
@@ -18,7 +20,6 @@ case2 = (['[', 'this', ']'],
          '}',
          -1,
          -1)
-
 
 test_cases = [
     case1,

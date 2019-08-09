@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from pcc.main import main
-from os.path import join, abspath, dirname
-
-
 # The parametrize function is generated, so it does not work to import
 import re
-import pytest
 import subprocess
+from os.path import join, abspath, dirname
+
+import pytest
+
 import tests.generateOutputsDecorator
+from pcc.main import main
+
 parametrize = pytest.mark.parametrize
 generate_outputs = tests.generateOutputsDecorator.generate_outputs
 
@@ -85,8 +86,8 @@ class TestTrigraphs(object):
             % (fileToPreprocess, outputListSize, outputFileAsListSize,
                out, outputFileAsString)
         for i in range(outputFileAsListSize):
-            assert outputList[i] == outputFileAsList[i],  \
+            assert outputList[i] == outputFileAsList[i], \
                 'for file %s, line %d  <%s> != <%s> ' % \
-                (fileToPreprocess, i,  outputFileAsList[i], outputList[i])
+                (fileToPreprocess, i, outputFileAsList[i], outputList[i])
         # there should be no error
         assert err == ''

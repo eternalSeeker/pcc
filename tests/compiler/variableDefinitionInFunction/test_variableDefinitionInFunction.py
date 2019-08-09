@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from pcc.main import main
-from os.path import join, abspath, dirname
-import tests.generateOutputsDecorator
-import pytest
-import subprocess
 import os
+import subprocess
+from os.path import join, abspath, dirname
+
+import pytest
+
+import tests.generateOutputsDecorator
+from pcc.main import main
 
 generate_outputs = tests.generateOutputsDecorator.generate_outputs
 
@@ -121,7 +123,7 @@ class TestReturnStatement(object):
              out)
         for i in range(outputFileAsListSize):
             assert outputList[i] == outputFileAsList[i], \
-                'for file %s line %d, <%s> != <%s>' %\
+                'for file %s line %d, <%s> != <%s>' % \
                 (output_file, i, outputList[i], outputFileAsList[i])
 
         os.remove(pcc_output_file_path)

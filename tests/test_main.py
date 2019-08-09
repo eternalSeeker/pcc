@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
+# The parametrize function is generated, so it does not work to import
+import pytest
 from pytest import raises
-
 
 from pcc import metadata
 from pcc.main import main
 
-# The parametrize function is generated, so it does not work to import
-import pytest
 parametrize = pytest.mark.parametrize
 
 

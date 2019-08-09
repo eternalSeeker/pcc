@@ -1,5 +1,3 @@
-
-
 class FunDecorator:
     def __init__(self):
         self.registry = []
