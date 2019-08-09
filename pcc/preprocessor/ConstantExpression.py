@@ -1,4 +1,3 @@
-
 from enum import Enum, unique
 
 
@@ -34,7 +33,6 @@ def or_function(first_member):
 
 @unique
 class Logic(Enum):
-
     OR = (1, or_function)
     AND = (2, and_function)
     XOR = (3, or_function)

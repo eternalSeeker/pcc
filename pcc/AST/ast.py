@@ -1,27 +1,27 @@
 import copy
-import pcc
 import re
 
-from pcc.AST.ast_node import AstNode
-from pcc.AST.variable_declaration import VariableDeclaration
+import pcc
+import pcc.utils.warning
+from pcc.AST.addition import Addition
 from pcc.AST.array_declaration import ArrayDeclaration
+from pcc.AST.assignment import Assignment
+from pcc.AST.ast_node import AstNode
+from pcc.AST.binary_op import BinaryOp
+from pcc.AST.compound_statement import CompoundStatement
+from pcc.AST.constant_expression import ConstantExpression
+from pcc.AST.division import Division
 from pcc.AST.function_argument import FunctionArgument
+from pcc.AST.function_call import FunctionCall
 from pcc.AST.function_declaration import FunctionDeclaration
 from pcc.AST.function_definition import FunctionDefinition
-from pcc.AST.compound_statement import CompoundStatement
-from pcc.AST.function_call import FunctionCall
-from pcc.AST.return_statement import ReturnStatement
-from pcc.AST.variable_reference import VariableReference
-from pcc.AST.constant_expression import ConstantExpression
-from pcc.AST.assignment import Assignment
-from pcc.AST.addition import Addition
-from pcc.AST.binary_op import BinaryOp
-from pcc.AST.subtraction import Subtraction
-from pcc.AST.division import Division
 from pcc.AST.multiplication import Multiplication
-from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
+from pcc.AST.return_statement import ReturnStatement
+from pcc.AST.subtraction import Subtraction
+from pcc.AST.variable_declaration import VariableDeclaration
+from pcc.AST.variable_reference import VariableReference
 from pcc.utils.stringListParsing import extract_closing_char
-import pcc.utils.warning
+from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 
 
 class VariableType:

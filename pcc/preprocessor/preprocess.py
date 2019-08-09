@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import copy
-import re
 import os.path
-import pcc.utils.warning
+import re
+
 import pcc.utils.stringParsing
+import pcc.utils.warning
 from .ConstantExpression import ConstantExpression
 
 
@@ -126,15 +127,15 @@ class Preprocessor:
         self.line_count = 0
         self.source_line_count = 1
         self.trigraphs = {
-            '??=':  '#',
-            '??/':  '\\',
+            '??=': '#',
+            '??/': '\\',
             '??\'': '^',
-            '??(':  '[',
-            '??)':  ']',
-            '??!':  '|',
-            '??<':  '{',
-            '??>':  '}',
-            '??-':  '~'
+            '??(': '[',
+            '??)': ']',
+            '??!': '|',
+            '??<': '{',
+            '??>': '}',
+            '??-': '~'
         }
 
     def run_trigraph_replacement(self):
@@ -151,8 +152,7 @@ class Preprocessor:
         backslash_and_newline = '\\\n'
         current_line = self.list_of_code_lines[self.line_count]
         while backslash_and_newline in current_line:
-
-            tmp = self.list_of_code_lines[self.line_count].\
+            tmp = self.list_of_code_lines[self.line_count]. \
                 replace(backslash_and_newline, '')
 
             self.list_of_code_lines[self.line_count] = \
@@ -311,7 +311,7 @@ class Preprocessor:
             else:
                 current_line = self.list_of_code_lines[self.line_count]
                 start_index = current_line.find(token)
-                argument_string = pcc.utils.stringParsing.\
+                argument_string = pcc.utils.stringParsing. \
                     extract_text_for_enclosed_parenthesis(current_line,
                                                           start_index)
                 if argument_string.count(',') > 0:
@@ -341,7 +341,7 @@ class Preprocessor:
                 token = list_of_tokens[0]
                 if '(' in token:
                     start_index = 0
-                    extracted_string = pcc.utils.stringParsing.\
+                    extracted_string = pcc.utils.stringParsing. \
                         extract_text_for_enclosed_parenthesis(token,
                                                               start_index)
                     number_of_arguments = extracted_string.count(',') + 1

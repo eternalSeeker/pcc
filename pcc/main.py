@@ -5,13 +5,13 @@
 from __future__ import print_function
 
 import argparse
-import sys
 import os
+import sys
 
 from pcc import metadata
-from pcc.preprocessor.preprocess import Preprocessor
 from pcc.AST.ast import Ast
 from pcc.compiler.compiler import Compiler
+from pcc.preprocessor.preprocess import Preprocessor
 
 
 def main(argv):

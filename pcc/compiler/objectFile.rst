@@ -1,4 +1,3 @@
-
 The Elf file format
 ++++++++++++++++++++
 This guide is aimed to explain the ELF format using a simple example.

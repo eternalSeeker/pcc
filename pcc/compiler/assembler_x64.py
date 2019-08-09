@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from pcc.compiler.assembler import Assembler, ProcessorRegister, ShiftMode
-
 import struct
+
+from pcc.compiler.assembler import Assembler, ProcessorRegister, ShiftMode
 
 
 # http://ref.x86asm.net/coder64.html

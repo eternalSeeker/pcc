@@ -1,4 +1,3 @@
-
 class StackVariable:
     def __init__(self, name, size, initializer_byte_array, type_name):
         self.name = name

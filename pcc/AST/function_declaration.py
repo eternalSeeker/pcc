@@ -42,7 +42,7 @@ class FunctionDeclaration(Statement):
     def update_depth(self, depth):
         super(FunctionDeclaration, self).update_depth(depth)
         for argument in self.argument_list:
-            argument.update_depth(depth+3)
+            argument.update_depth(depth + 3)
 
     @staticmethod
     def compile(assembler):

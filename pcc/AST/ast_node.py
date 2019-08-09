@@ -62,4 +62,4 @@ class AstNode:
     def update_depth(self, depth):
         self._depth = depth
         for statement in self.statement_sequence:
-            statement.update_depth(depth+1)
+            statement.update_depth(depth + 1)

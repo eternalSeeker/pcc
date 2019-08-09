@@ -93,7 +93,7 @@ class ElfHeader:
         # e_ident: identify the file as an ELF object file, and provide
         # information about the data representation
         # of the object file structures.
-        self.e_ident = [0]*ElfHeader.EI_NIDEN
+        self.e_ident = [0] * ElfHeader.EI_NIDEN
 
         # e_type: identifies the object file type.
         self.e_type = [0] * Elf64_Half

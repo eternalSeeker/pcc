@@ -4,8 +4,8 @@
 
 from pcc.AST.ast_node import AstNode
 from pcc.AST.compiled_object import CompiledObjectType
-from pcc.compiler.objectFile import ObjectFile, Symbol
 from pcc.compiler.assembler_x64 import x64Assembler
+from pcc.compiler.objectFile import ObjectFile, Symbol
 
 
 class Compiler:
