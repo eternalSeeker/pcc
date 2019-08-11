@@ -15,6 +15,7 @@ from pcc.AST.function_argument import FunctionArgument
 from pcc.AST.function_call import FunctionCall
 from pcc.AST.function_declaration import FunctionDeclaration
 from pcc.AST.function_definition import FunctionDefinition
+from pcc.AST.if_statement import IfStatement
 from pcc.AST.multiplication import Multiplication
 from pcc.AST.return_statement import ReturnStatement
 from pcc.AST.subtraction import Subtraction
@@ -222,9 +223,13 @@ class Ast:
                 expression.parent_node = self.current_node
 
             else:
-                expression = ConstantExpression(initializer_type,
-                                                right_hand_value,
-                                                depth)
+                function_call = self.parse_function_call(right_hand_value)
+                if function_call:
+                    expression = function_call
+                else:
+                    expression = ConstantExpression(initializer_type,
+                                                    right_hand_value,
+                                                    depth)
 
         return expression
 
@@ -356,6 +361,11 @@ class Ast:
         start_line = 0
         start_index = 0
         closing_char = '}'
+
+        text = ''.join(code_list).lstrip()
+        if len(text) > 0 and text[0] != open_char:
+            return line_number
+
         returned_line, returned_index = \
             extract_closing_char(list_to_process, open_char, start_line,
                                  start_index, closing_char)
@@ -371,6 +381,7 @@ class Ast:
                 next_statements = next_statements[new_index + 1:]
             compound_statement.update_depth(depth)
             line_number = returned_line
+            self.current_node = compound_statement.parent_node
 
         return line_number
 
@@ -413,6 +424,32 @@ class Ast:
                 variable_list.append(var_def)
         return variable_list
 
+    def parse_function_call(self, expression):
+        function_call = None
+        part = expression.split('(')[0].lstrip().rstrip()
+        function_declaration = self.is_function_declared(part)
+        if function_declaration:
+            function_name = part
+            start_index = expression.index('(')
+            arguments = extract_text_for_enclosed_parenthesis(expression,
+                                                              start_index)
+            if arguments == '' or arguments.isspace():
+                depth = self.get_depth_in_tree()
+                function_call = FunctionCall(depth, function_name)
+            else:
+                variables = self.get_variables_from_ids(arguments)
+                argument_list = function_declaration.argument_list
+                if self.are_arguments_compatible(variables, argument_list):
+                    expression_list = []
+                    depth = self.get_depth_in_tree() + 1
+                    for variable in variables:
+                        expression = VariableReference(depth,
+                                                       variable.name)
+                        expression_list.append(expression)
+                    function_call = FunctionCall(depth, function_name,
+                                                 expression_list)
+        return function_call
+
     def read_function_call(self, code_list):
         line_number, statement = self.join_lines_until_next_semicolon(
             code_list)
@@ -423,36 +460,12 @@ class Ast:
             return -1
         splitted_statement = statement.split('(')[0]
         splitted_statement = splitted_statement.split()
-        for part in splitted_statement:
-            function_declaration = self.is_function_declared(part)
-            if function_declaration:
-                function_name = part
-                start_index = statement.index('(')
-                arguments = extract_text_for_enclosed_parenthesis(statement,
-                                                                  start_index)
-                if arguments == '' or arguments.isspace():
-                    depth = self.get_depth_in_tree()
-                    function_call = FunctionCall(depth, function_name)
-                    self.current_node.add_statement(function_call)
-                else:
-                    variables = self.get_variables_from_ids(arguments)
-                    argument_list = function_declaration.argument_list
-                    if self.are_arguments_compatible(variables, argument_list):
-                        expression_list = []
-                        depth = self.get_depth_in_tree() + 1
-                        for variable in variables:
-                            expression = VariableReference(depth,
-                                                           variable.name)
-                            expression_list.append(expression)
-                        function_call = FunctionCall(depth, function_name,
-                                                     expression_list)
-                        self.current_node.add_statement(function_call)
-                    else:
-                        message = 'the arguments for function %s are not ' \
-                                  'compatible to the function ' \
-                                  'declaration\nGot %s but expected %s' % (
-                                      function_name, variables, argument_list)
-                        self.ast_error(message)
+
+        function_call = self.parse_function_call(statement)
+        if function_call:
+            self.current_node.add_statement(function_call)
+        else:
+            line_number = -1
 
         return line_number
 
@@ -539,6 +552,7 @@ class Ast:
                     self.current_node.add_statement(return_statement)
                 else:
                     # probably is a constant expression
+                    func_def = None
                     func_def = self.current_node.get_function_definition_node()
                     if func_def:
                         expression_type = self.get_type_of_expression(retval)
@@ -608,6 +622,8 @@ class Ast:
         list_of_tokens = statement.split()
 
         var_to_update = list_of_tokens[0]
+        if len(list_of_tokens) < 2:
+            return -1
         initializer = ' '.join(list_of_tokens[2:])
         if list_of_tokens[1] == '=':
             found = True
@@ -629,6 +645,83 @@ class Ast:
 
         if found is False:
             # this was not an assignment
+            line_number = -1
+        return line_number
+
+    def read_if_statement(self, statements):
+
+        line_number, statement = self.join_lines_until_next_non_empty_line(
+            statements)
+        if line_number == -1:
+            return line_number
+
+        if_stat = re.match(r"\s+if\((\S+)\)", statement)
+
+        if if_stat:
+            depth = self.get_depth_in_tree()
+            condition_str = if_stat.group(1)
+            # the condition is one deeper than the if condition
+            condition = None
+            if_branch = None
+            else_branch = None
+            if_statement = IfStatement(depth, condition,
+                                       if_branch, else_branch)
+            self.current_node.add_statement(if_statement)
+            self.current_node = if_statement
+            condition = self.get_right_hand_value(condition_str, depth)
+            if_statement.condition = condition
+            # found a correct if line
+            line_number += 1
+            next_statements = statements[line_number:]
+            processed_lines = self.parse_line(next_statements)
+            if processed_lines == -1:
+                self.ast_error("could not process the if branch %s" %
+                               ''.join(next_statements))
+                return -1
+            if len(if_statement.statement_sequence) != 1:
+                self.ast_error("could not recognise the statements %s" %
+                               ''.join(next_statements))
+                return -1
+            # move the if statement inside the object instead of the list
+            if_statement.if_statement = if_statement.statement_sequence[0]
+            if_statement.statement_sequence.pop()
+
+            next_statements = next_statements[processed_lines + 1:]
+            # update the number of processed lines
+            line_number += processed_lines
+
+            # check if there is an else branch
+            line_number_else, statement = \
+                self.join_lines_until_next_non_empty_line(
+                    next_statements)
+            match_obj = re.match(r"\s+else(\S?)", statement)
+            if match_obj:
+                else_str = match_obj.group(1)
+                next_statements = next_statements[line_number_else + 1:]
+                if else_str:
+                    next_statements.insert(else_str, 0)
+                processed_lines = self.parse_line(next_statements)
+                if processed_lines == -1:
+                    self.ast_error("could not process the else branch %s" %
+                                   ''.join(next_statements))
+                    return -1
+                if len(if_statement.statement_sequence) != 1:
+                    self.ast_error("could not recognise the statements %s" %
+                                   ''.join(next_statements))
+                    return -1
+                # move the else statement inside the object instead of the list
+                if_statement.else_statement = \
+                    if_statement.statement_sequence[0]
+                if_statement.statement_sequence.pop()
+
+                line_number += (line_number_else + 1)
+                line_number += (processed_lines + 1)
+
+            # set the current node back tot he partent of the if statement
+            self.current_node = if_statement.parent_node
+
+        else:
+            # this was not an if statement
             line_number = -1
         return line_number
 
@@ -713,41 +806,30 @@ class Ast:
             self.index += processed_line_count + 1
 
     def parse_line(self, lines):
+        """Parse the lines of code.
 
-        processed_line_count = self.read_variable(list(lines))
-        if processed_line_count > -1:
-            # the statement is a variable declaration
-            return processed_line_count
+        Args:
+            lines ([str]): the lines of code
 
-        processed_line_count = self.read_function_declaration(list(lines))
-        if processed_line_count > -1:
-            # the statement is a function declaration
-            return processed_line_count
-
-        processed_line_count = self.read_function_definition(list(lines))
-        if processed_line_count > -1:
-            # the statement is a function definition
-            return processed_line_count
-
-        processed_line_count = self.read_compound_statement(list(lines))
-        if processed_line_count > -1:
-            # it is a compound statement
-            return processed_line_count
-
-        processed_line_count = self.read_function_call(list(lines))
-        if processed_line_count > -1:
-            # it is a function call
-            return processed_line_count
-
-        processed_line_count = self.read_return_statement(list(lines))
-        if processed_line_count > -1:
-            # it is a function call
-            return processed_line_count
-
-        processed_line_count = self.read_assignment(list(lines))
-        if processed_line_count > -1:
-            # it is a function call
-            return processed_line_count
+        Returns:
+            int: the number of processed lines or -1 in case of error
+        """
+        processed_line_count = -1
+        list_of_parsing_methods = [
+            self.read_variable,
+            self.read_function_declaration,
+            self.read_function_definition,
+            self.read_compound_statement,
+            self.read_function_call,
+            self.read_return_statement,
+            self.read_assignment,
+            self.read_if_statement,
+        ]
+        for method in list_of_parsing_methods:
+            processed_line_count = method(list(lines))
+            if processed_line_count > -1:
+                # the lines have been parsed correctly
+                return processed_line_count
 
         message = ''
         for line in lines:

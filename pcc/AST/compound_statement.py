@@ -1,5 +1,6 @@
 from pcc.AST.compiled_object import CompiledObjectType, CompiledObject
 from pcc.AST.statement import Statement
+from pcc.AST.expression import Expression
 
 
 class CompoundStatement(Statement):
@@ -11,6 +12,8 @@ class CompoundStatement(Statement):
         string = self._depth * '  ' + 'Compound: \n'
         for arg in self.statement_sequence:
             string += str(arg)
+            if isinstance(arg, Expression):
+                string += '\n'
         return string
 
     def get_return_type(self):

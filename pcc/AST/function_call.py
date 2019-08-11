@@ -1,7 +1,7 @@
-from pcc.AST.statement import Statement
+from pcc.AST.expression import Expression
 
 
-class FunctionCall(Statement):
+class FunctionCall(Expression):
 
     def __init__(self, depth, identifier, expression_list=None):
         super(FunctionCall, self).__init__(depth)
@@ -17,4 +17,9 @@ class FunctionCall(Statement):
             string += self._depth * '  ' + '  ExprList: \n'
             for expression in self.expression_list:
                 string += "%s\n" % str(expression)
+        index = string.rfind('\n')
+        string = string[:index] + string[index+1:]
         return string
+
+    def load_result_to_reg(self, register, assembler):
+        pass
