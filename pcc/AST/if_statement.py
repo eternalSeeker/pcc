@@ -1,5 +1,6 @@
 from pcc.AST.compiled_object import CompiledObjectType, CompiledObject
 from pcc.AST.statement import Statement
+from pcc.compiler.assembler import ProcessorRegister
 
 
 class IfStatement(Statement):
@@ -37,7 +38,34 @@ class IfStatement(Statement):
         """
         value = bytearray()
 
+        if_part = self.if_statement.compile(assembler)
+
+        condition_reg = ProcessorRegister.accumulator
+        condition = self.condition.load_result_to_reg(condition_reg, assembler)
+        value += condition
+        compare_register = ProcessorRegister.counter
+        value_to_load = 0
+        value += assembler.copy_value_to_reg(value_to_load, compare_register)
+
+        value += assembler.cmp(condition_reg, compare_register)
+
+        jump_distance = len(if_part.value)
+        value += assembler.je(jump_distance)
+
+        value += if_part.value
+
         size = len(value)
         compiled_object = CompiledObject('if', size,
                                          value, CompiledObjectType.code)
         return compiled_object
+
+    def get_stack_variable(self, variable_name):
+        """Get the stack variable by name.
+
+        Args:
+            variable_name (str): the name of the variable
+
+        Returns:
+            StackVariable: the stack variable if found, else None
+        """
+        return self.parent_node.get_stack_variable(variable_name)

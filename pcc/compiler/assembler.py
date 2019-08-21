@@ -177,3 +177,26 @@ class Assembler:
             bytearray: the machine code
         """
         raise NotImplementedError
+
+    def cmp(self, register_1, register_2):
+        """Compare the 2 registers.
+
+        Args:
+            register_1 (ProcessorRegister): the first register
+            register_2 (ProcessorRegister): the second register
+
+        Returns:
+            bytearray: the machine code
+        """
+        raise NotImplementedError
+
+    def je(self, jump_distance):
+        """Jump if the equals flag is set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code
+        """
+        raise NotImplementedError

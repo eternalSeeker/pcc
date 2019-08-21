@@ -488,3 +488,43 @@ class x64Assembler(Assembler):
             raise NotImplementedError
 
         return value
+
+    def cmp(self, register_1, register_2):
+        """Compare the 2 registers.
+
+        Args:
+            register_1 (ProcessorRegister): the first register
+            register_2 (ProcessorRegister): the second register
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        # CMP r/m32, r32
+        value.append(0x39)
+        mod = 0b11
+        rm = get_register_encoding(register_1)
+        reg = get_register_encoding(register_2)
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        return value
+
+    def je(self, jump_distance):
+        """Jump if the equals flag is set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        # JE rel8
+        value.append(0x74)
+        encoded_amount = struct.pack("b", jump_distance)
+        value += encoded_amount
+
+        return value
