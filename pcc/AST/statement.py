@@ -12,7 +12,8 @@ class Statement(AstNode):
     def get_function_definition_node(self):
         """Get the function definition if found.
 
-        Returns (FunctionDefinition): the definition if found else None
+        Returns:
+             FunctionDefinition: the definition if found else None
 
         """
         return self.parent_node.get_function_definition_node()

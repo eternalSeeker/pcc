@@ -161,17 +161,25 @@ def read(filename):
 
 def _lint():
     """Run lint and return an exit code."""
-    # Flake8 doesn't have an easy way to run checks using a Python function, so
-    # just fork off another process to do it.
 
     # Python 3 compat:
     # - The result of subprocess call outputs are byte strings, meaning we need
     #   to pass a byte string to endswith.
     project_python_files = [filename for filename in get_project_files()
                             if filename.endswith(b'.py') and
-                            b'docs' not in filename]
+                            b'docs' not in filename and b'pcc' in filename]
     retcode = subprocess.call(
         ['pylama', '-o pylama.ini'] + project_python_files)
+    if retcode == 0:
+        files = [x.decode("utf-8") for x in project_python_files]
+        command = 'darglint -v 1 ' + ' '.join(files)
+        response = subprocess.run(command, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE, shell=True)
+        retcode = response.returncode
+        if retcode == 0:
+            retcode = 0 if not response.stdout else -1
+        if retcode != 0:
+            print(response.stdout.decode("utf-8"))
     if retcode == 0:
         print_success_message('No style errors')
     return retcode

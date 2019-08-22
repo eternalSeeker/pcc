@@ -23,6 +23,7 @@ class VariableReference(Expression):
         Args:
             register (ProcessorRegister): the register to load the result
             assembler (Assembler): the assembler to use
+
         Returns:
             bytearray: the compiled code to evaluate the expression
         """

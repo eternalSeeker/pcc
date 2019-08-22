@@ -229,7 +229,7 @@ class Preprocessor:
             included_file_as_list
 
     def remove_tokens(self):
-        """Remove the tokens from the macro list for the matching '#undef'
+        """Remove the tokens from the macro list for the matching undef.
 
         Returns:
             int: the number of source lines that are consumed
@@ -411,7 +411,7 @@ class Preprocessor:
         return evaluation
 
     def condition_compilation(self):
-        """Replace the '#if'
+        """Replace the preprocessor if.
 
         """
         if '#if' in self.list_of_code_lines[self.line_count]:
@@ -434,7 +434,6 @@ class Preprocessor:
             del self.list_of_code_lines[self.line_count: current_index]
             self.list_of_code_lines[self.line_count:self.line_count] = \
                 code_to_include
-            assert True
 
     def add_active_branch(self, code_to_include, current_index, finished,
                           if_line, number_of_nested_conditions,
@@ -489,11 +488,11 @@ class Preprocessor:
 
     def process_endif(self, finished, number_of_nested_conditions,
                       current_index):
-        """Process a line containing an '#endif'.
+        """Process a line containing an endif.
 
         Args:
             finished (bool): True if finished
-            number_of_nested_conditions (int): the number of nested contitions
+            number_of_nested_conditions (int): the number of nested conditions
             current_index (int): the current line number
 
         Returns:

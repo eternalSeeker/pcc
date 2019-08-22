@@ -19,16 +19,17 @@ class FunctionDefinition(Statement):
     def get_function_definition_node(self):
         """Get the  function  definition if found.
 
-        Returns(FunctionDefinition): self
+        Returns:
+            FunctionDefinition: self
 
         """
         return self
 
     def add_stack_variable(self, current_list):
-        """Add all stack variable to the list
+        """Add all stack variable to the list.
 
         Args:
-            current_list(list[StackVariable]): the current list
+            current_list (list[StackVariable]): the current list
         """
         self.statement_sequence[1].add_stack_variable(current_list)
 
@@ -61,7 +62,8 @@ class FunctionDefinition(Statement):
         """Compile this statement.
 
         Args:
-            assembler (Assembler)
+            assembler (Assembler): the assembler to use
+
         Returns:
             CompiledObject: the compiled version of this statement
         """

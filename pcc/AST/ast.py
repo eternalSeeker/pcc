@@ -158,6 +158,7 @@ class Ast:
         Args:
             right_hand_value (str): the string representation
             depth (int): depth in the tree
+
         Returns:
             Expression: the expression if correctly parsed else None
         """
@@ -319,15 +320,15 @@ class Ast:
         return line_number
 
     def is_function_declared(self, function_name):
-        """
-            check if the name corresponds to a known function
+        """Check if the name corresponds to a known function.
+
         Args:
             function_name (str): the identifier to check
 
         Returns:
             pcc.AST.function_declaration.FunctionDeclaration: the
-            declared function that corresponds to the function_name or None
-            if not found
+                declared function that corresponds to the function_name or None
+                if not found
         """
         for function_declaration in self.declared_functions:
             if function_declaration.name == function_name:

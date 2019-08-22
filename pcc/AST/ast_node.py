@@ -41,7 +41,8 @@ class AstNode:
     def get_function_definition_node(self):
         """Get the function definition if found.
 
-        Returns (FunctionDefinition): the definition if found else None
+        Returns:
+             FunctionDefinition: the definition if found else None
 
         """
         return None
@@ -50,8 +51,8 @@ class AstNode:
         """Add all stack variable to the list.
 
         Args:
-            current_list(list[pcc.AST.stack_variable.StackVariable]):
-                the current list
+            current_list(list[pcc.AST.stack_variable.StackVariable]): the
+                current list
         """
         pass
 

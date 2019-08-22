@@ -32,7 +32,8 @@ class IfStatement(Statement):
         """Compile this statement
 
         Args:
-            assembler (Assembler)
+            assembler (Assembler): the assembler to use
+
         Returns:
             CompiledObject: the compiled version of this statement
         """

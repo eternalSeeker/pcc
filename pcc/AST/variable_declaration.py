@@ -15,8 +15,8 @@ class VariableDeclaration(Statement):
         Args:
             variable_type (pcc.AST.ast.VariableType): the type
             name (str): the name of the variable
-            initializer (pcc.AST.expression.Expression):
-                the expression to initialize
+            initializer (pcc.AST.expression.Expression): the expression
+                to initialize
             depth (int): the depth in the tree
         """
         super(VariableDeclaration, self).__init__(depth)
@@ -35,10 +35,12 @@ class VariableDeclaration(Statement):
         return string
 
     def is_compatible_to(self, variable_declaration):
-        """
+        """Check if this variable declaration is compatible.
+
         Args:
             variable_declaration (VariableDeclaration): the variable to
-            compare to
+                compare to
+
         Returns:
             bool: if the object is compatible
         """
@@ -58,7 +60,8 @@ class VariableDeclaration(Statement):
         """Compile this statement
 
         Args:
-            assembler (Assembler)
+            assembler (Assembler): the assembler to use
+
         Returns:
             CompiledObject: the compiled version of this statement
         """

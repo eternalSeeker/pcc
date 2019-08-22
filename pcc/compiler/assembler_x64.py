@@ -185,12 +185,17 @@ class x64Assembler(Assembler):
         return value
 
     def push_value_to_stack(self, value_array, stack_offset):
-        """Pushes a value on stack
-        Attributes:
+        """Pushes a value on stack.
+
+        Args:
             value_array (bytearray): the value to push on stack
             stack_offset (int): the offset from the stack pointer
+
         Returns:
             bytearray: the machine code
+
+        Raises:
+            ValueError: if the value_array is not correct
         """
 
         if len(value_array) > 4:
@@ -224,6 +229,9 @@ class x64Assembler(Assembler):
         Args:
             stack_offset (int): the stack offset
             register (ProcessorRegister): the register to copy to
+
+        Returns:
+            bytearray: the machine code
         """
         value = bytearray()
         if is_single_scalar_reg(register):
@@ -252,6 +260,9 @@ class x64Assembler(Assembler):
         Args:
             stack_offset (int): the stack offset
             register (ProcessorRegister): the register to copy from
+
+        Returns:
+            bytearray: the machine code
         """
         value = bytearray()
         if is_single_scalar_reg(register):
@@ -459,6 +470,9 @@ class x64Assembler(Assembler):
 
         Returns:
             bytearray: the machine code
+
+        Raises:
+            NotImplementedError: if the mode is not yet implemented
         """
         value = bytearray()
 

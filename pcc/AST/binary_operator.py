@@ -15,7 +15,11 @@ class BinaryOperator(Operator):
             source (ProcessorRegister): the source operand
             destination (ProcessorRegister): the destination operand
             assembler (Assembler): the assembler to use
+
         Returns:
-            bytearray: the byte code
+            bytearray: the byte code # noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclass
         """
         raise NotImplementedError

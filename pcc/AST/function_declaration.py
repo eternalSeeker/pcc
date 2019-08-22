@@ -40,16 +40,22 @@ class FunctionDeclaration(Statement):
             self.statement_sequence[1].add_stack_variable(current_list)
 
     def update_depth(self, depth):
+        """Update the depth to the specified one
+
+        Args:
+            depth (int): the depth to set to
+        """
         super(FunctionDeclaration, self).update_depth(depth)
         for argument in self.argument_list:
             argument.update_depth(depth + 3)
 
     @staticmethod
     def compile(assembler):
-        """Compile this statement
+        """Compile this statement.
 
         Args:
-            assembler (Assembler)
+            assembler (Assembler): the assembler to use
+
         Returns:
             CompiledObject: the compiled version of this statement
         """

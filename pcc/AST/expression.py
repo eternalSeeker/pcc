@@ -15,7 +15,11 @@ class Expression(AstNode):
         Args:
             register (ProcessorRegister): the register to load the result
             assembler (Assembler): the assembler to use
+
         Returns:
-            bytearray: the compiled code to evaluate the expression
+            bytearray: the compiled code to evaluate the expression # noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclass
         """
         raise NotImplementedError

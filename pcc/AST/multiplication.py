@@ -15,6 +15,7 @@ class Multiplication(BinaryOperator):
             source (ProcessorRegister): the source operand
             destination (ProcessorRegister): the destination operand
             assembler (Assembler): the assembler to use
+
         Returns:
             bytearray: the byte code
         """

@@ -33,7 +33,10 @@ class Assembler:
             register (ProcessorRegister): the register to push on stack
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -44,7 +47,10 @@ class Assembler:
             register (ProcessorRegister): the register to push on stack
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -56,7 +62,10 @@ class Assembler:
             destination (ProcessorRegister): the destination register
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -68,7 +77,10 @@ class Assembler:
             destination (ProcessorRegister): the destination register
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -76,7 +88,10 @@ class Assembler:
         """Return to the caller routine.
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -84,7 +99,10 @@ class Assembler:
         """No operation.
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -94,7 +112,10 @@ class Assembler:
             value (bytearray): the value to push on stack
             stack_offset (int): the offset from the stack pointer
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -104,6 +125,12 @@ class Assembler:
         Args:
             stack_offset (int): the stack offset
             reg (ProcessorRegister): the register to copy to
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -113,6 +140,12 @@ class Assembler:
         Args:
             stack_offset (int): the stack offset
             reg (ProcessorRegister): the register to copy
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -124,7 +157,10 @@ class Assembler:
             destination (ProcessorRegister): the destination register
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -136,7 +172,10 @@ class Assembler:
             destination (ProcessorRegister): the destination register
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -148,7 +187,10 @@ class Assembler:
             destination (ProcessorRegister): the divider register
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -161,7 +203,10 @@ class Assembler:
             destination (ProcessorRegister): the source register
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -174,7 +219,10 @@ class Assembler:
             amount (int): the shift amount
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -186,7 +234,10 @@ class Assembler:
             register_2 (ProcessorRegister): the second register
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
 
@@ -197,6 +248,9 @@ class Assembler:
             jump_distance (int): the distance to jump in bytes
 
         Returns:
-            bytearray: the machine code
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError

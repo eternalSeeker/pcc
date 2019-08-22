@@ -15,10 +15,13 @@ from pcc.preprocessor.preprocess import Preprocessor
 
 
 def main(argv):
-    """Program entry point.
+    """Start the program.
 
-    :param argv: command-line arguments
-    :type argv: :class:`list`
+    Args:
+        argv ([str]): command-line arguments
+
+    Returns:
+        int: error code, 0 if successful
     """
     author_strings = []
     for name, email in zip(metadata.authors, metadata.emails):
@@ -103,7 +106,11 @@ URL: <{url}>
 
 
 def entry_point():
-    """Zero-argument entry point for use with setuptools/distribute."""
+    """Zero-argument entry point for use with setuptools/distribute.
+
+    Raises:
+        SystemExit: setting the error code
+    """
     raise SystemExit(main(sys.argv))
 
 

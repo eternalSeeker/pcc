@@ -17,7 +17,8 @@ Elf64_Sxword = 8
 
 
 def number_to_bytearray(number, size):
-    """
+    """Convert a number to a bytearray
+
     Args:
         number (int): the number to convert
         size (int): the size of the bytearray of the result
@@ -142,7 +143,7 @@ class ElfHeader:
         """Specify the offset of the section table in bytes.
 
         Args:
-            offset(int): the offset from the start of the file in bytes
+            offset (int): the offset from the start of the file in bytes
         """
         self.e_shoff[0] = offset & 0xff
         self.e_shoff[1] = (offset >> 8) & 0xff
@@ -266,7 +267,7 @@ class Section:
         Args:
             name (str): the canonical name of this section
             name_offset (int): the index of the name of the section
-            in the section string table
+                in the section string table
             section_type (SectionType): the type of the section
             flags (list[SectionFlags]): the list off all flags of the section
         """
