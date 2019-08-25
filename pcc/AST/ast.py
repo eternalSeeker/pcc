@@ -8,6 +8,7 @@ from pcc.AST.array_declaration import ArrayDeclaration
 from pcc.AST.assignment import Assignment
 from pcc.AST.ast_node import AstNode
 from pcc.AST.binary_op import BinaryOp
+from pcc.AST.bitwise_and import BitwiseAnd
 from pcc.AST.compound_statement import CompoundStatement
 from pcc.AST.constant_expression import ConstantExpression
 from pcc.AST.division import Division
@@ -152,6 +153,99 @@ class Ast:
 
         return type_string
 
+    def _extract_arithmetic_expression(self, right_hand_value, depth):
+        """Extract the arithmetic expression from string
+
+        Args:
+            right_hand_value (str): the expression to parse
+            depth (int): the depth in the tree
+
+        Returns:
+            Expression: the expression if parsed else None
+        """
+        # the initializer of a big double might use scientific notation
+        # e.g. 1e+3
+        # must match optional number and optional fraction with e or E
+        # and +- an
+        # exponent
+        exp_regex = re.compile(r"((-)?\d+(\.\d+)?)[Ee]([+\-])(\d+)")
+        regex_number_result = exp_regex.match(right_hand_value)
+
+        res_addition = re.match(r"(\S+)\+(\S+)", right_hand_value)
+        res_subtraction = re.match(r"(\S+)-(\S+)", right_hand_value)
+
+        res_division = re.match(r"(\S+)/(\S+)", right_hand_value)
+        res_multiplication = re.match(r"(\S+)\*(\S+)", right_hand_value)
+
+        if res_addition and not regex_number_result:
+
+            operand_1_str = res_addition.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_addition.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            operator = Addition()
+            expression = BinaryOp(depth, operator, operand_1, operand_2)
+        elif res_subtraction and not regex_number_result:
+
+            operand_1_str = res_subtraction.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_subtraction.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            operator = Subtraction()
+            expression = BinaryOp(depth, operator, operand_1, operand_2)
+
+        elif res_division:
+            operand_1_str = res_division.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_division.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            operator = Division()
+            expression = BinaryOp(depth, operator, operand_1, operand_2)
+        elif res_multiplication:
+            operand_1_str = res_multiplication.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_multiplication.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            operator = Multiplication()
+            expression = BinaryOp(depth, operator, operand_1, operand_2)
+        else:
+            expression = None
+
+        return expression
+
+    def _extract_bitwise_expression(self, right_hand_value, depth):
+        """Extract the bitwise expression from string
+
+        Args:
+            right_hand_value (str): the expression to parse
+            depth (int): the depth in the tree
+
+        Returns:
+            Expression: the expression if parsed else None
+        """
+        res_bitwise_and = re.match(r"(\S+)&(\S+)", right_hand_value)
+        if res_bitwise_and:
+            operand_1_str = res_bitwise_and.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_bitwise_and.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            operator = BitwiseAnd()
+            expression = BinaryOp(depth, operator, operand_1, operand_2)
+        else:
+            expression = None
+
+        return expression
+
     def get_right_hand_value(self, right_hand_value, depth):
         """Extract the right hand value out the string
 
@@ -166,63 +260,20 @@ class Ast:
             expression = None
         else:
             initializer_type = self.get_type_of_expression(right_hand_value)
-            # the initializer of a big double might use scientific notation
-            # e.g. 1e+3
-            # must match optional number and optional fraction with e or E
-            # and +- an
-            # exponent
-            exp_regex = re.compile(r"((-)?\d+(\.\d+)?)[Ee]([+\-])(\d+)")
-            regex_number_result = exp_regex.match(right_hand_value)
 
-            res_addition = re.match(r"(\S+)\+(\S+)", right_hand_value)
-            res_subtraction = re.match(r"(\S+)-(\S+)", right_hand_value)
+            arithmetic_exp = self._extract_arithmetic_expression(
+                right_hand_value, depth)
 
-            res_division = re.match(r"(\S+)/(\S+)", right_hand_value)
-            res_multiplication = re.match(r"(\S+)\*(\S+)", right_hand_value)
+            bitwise_exp = self._extract_bitwise_expression(right_hand_value,
+                                                           depth)
 
-            if res_addition and not regex_number_result:
-
-                operand_1_str = res_addition.group(1)
-                operand_1 = self.get_right_hand_value(operand_1_str, depth)
-
-                operand_2_str = res_addition.group(2)
-                operand_2 = self.get_right_hand_value(operand_2_str, depth)
-
-                operator = Addition()
-                expression = BinaryOp(depth, operator, operand_1, operand_2)
-            elif res_subtraction and not regex_number_result:
-
-                operand_1_str = res_subtraction.group(1)
-                operand_1 = self.get_right_hand_value(operand_1_str, depth)
-
-                operand_2_str = res_subtraction.group(2)
-                operand_2 = self.get_right_hand_value(operand_2_str, depth)
-
-                operator = Subtraction()
-                expression = BinaryOp(depth, operator, operand_1, operand_2)
-
-            elif res_division:
-                operand_1_str = res_division.group(1)
-                operand_1 = self.get_right_hand_value(operand_1_str, depth)
-
-                operand_2_str = res_division.group(2)
-                operand_2 = self.get_right_hand_value(operand_2_str, depth)
-
-                operator = Division()
-                expression = BinaryOp(depth, operator, operand_1, operand_2)
-            elif res_multiplication:
-                operand_1_str = res_multiplication.group(1)
-                operand_1 = self.get_right_hand_value(operand_1_str, depth)
-
-                operand_2_str = res_multiplication.group(2)
-                operand_2 = self.get_right_hand_value(operand_2_str, depth)
-
-                operator = Multiplication()
-                expression = BinaryOp(depth, operator, operand_1, operand_2)
+            if arithmetic_exp:
+                expression = arithmetic_exp
             elif self.get_variable_definition_from_id(right_hand_value):
                 expression = VariableReference(depth, right_hand_value)
                 expression.parent_node = self.current_node
-
+            elif bitwise_exp:
+                expression = bitwise_exp
             else:
                 function_call = self.parse_function_call(right_hand_value)
                 if function_call:

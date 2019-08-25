@@ -560,3 +560,28 @@ class x64Assembler(Assembler):
         value += encoded_amount
 
         return value
+
+    def bitwise_and(self, source, destination):
+        """Bitwise and the value of the source to the destination.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        """
+        value = bytearray()
+
+        value.append(0x21)  # AND r/m32, r32
+        rm = get_register_encoding(destination)
+        reg = get_register_encoding(source)
+        # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
+        # REG destination
+
+        mod = 0b11
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        return value

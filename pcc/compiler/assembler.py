@@ -268,3 +268,18 @@ class Assembler:
             NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
+
+    def bitwise_and(self, source, destination):
+        """Bitwise and the value of the source to the destination.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
