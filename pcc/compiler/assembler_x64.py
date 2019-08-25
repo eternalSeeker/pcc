@@ -542,3 +542,21 @@ class x64Assembler(Assembler):
         value += encoded_amount
 
         return value
+
+    def jmp(self, jump_distance):
+        """Jump.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code #noqa I202
+        """
+        value = bytearray()
+
+        # JMP rel8
+        value.append(0xeb)
+        encoded_amount = struct.pack("b", jump_distance)
+        value += encoded_amount
+
+        return value

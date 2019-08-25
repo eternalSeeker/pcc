@@ -254,3 +254,17 @@ class Assembler:
             NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
+
+    def jmp(self, jump_distance):
+        """Jump.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError

@@ -41,9 +41,12 @@ class IfStatement(Statement):
 
         if_part = self.if_statement.compile(assembler)
 
+        # compare the value from the condition, to 0. If not equal,
+        # go to the if part, else to the else part if present.
         condition_reg = ProcessorRegister.accumulator
         condition = self.condition.load_result_to_reg(condition_reg, assembler)
         value += condition
+
         compare_register = ProcessorRegister.counter
         value_to_load = 0
         value += assembler.copy_value_to_reg(value_to_load, compare_register)
@@ -51,9 +54,21 @@ class IfStatement(Statement):
         value += assembler.cmp(condition_reg, compare_register)
 
         jump_distance = len(if_part.value)
-        value += assembler.je(jump_distance)
+        if self.else_statement:
+            else_part = self.else_statement.compile(assembler)
+            jump_distance_else = len(else_part.value)
+            # if there if an else part, the last instruction of the if part
+            # is the jump over the else part.
+            jump_distance += len(assembler.jmp(jump_distance_else))
 
+        value += assembler.je(jump_distance)
         value += if_part.value
+
+        if self.else_statement:
+            # jump over the else part (for the if part)
+            value += assembler.jmp(jump_distance_else)
+            # the actual else part
+            value += else_part.value
 
         size = len(value)
         compiled_object = CompiledObject('if', size,

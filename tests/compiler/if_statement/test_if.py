@@ -19,6 +19,10 @@ files_to_test = [
     ('constant_false.c', 'intHelper.c', 'constant_false.out'),
     ('variable_true.c', 'intHelper.c', 'variable_true.out'),
     ('variable_false.c', 'intHelper.c', 'variable_false.out'),
+    ('constant_true_else.c', 'intHelper.c', 'constant_true_else.out'),
+    ('constant_false_else.c', 'intHelper.c', 'constant_false_else.out'),
+    ('variable_true_else.c', 'intHelper.c', 'variable_true_else.out'),
+    ('variable_false_else.c', 'intHelper.c', 'variable_false_else.out'),
 ]
 
 
