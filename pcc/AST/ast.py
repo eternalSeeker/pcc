@@ -9,6 +9,7 @@ from pcc.AST.assignment import Assignment
 from pcc.AST.ast_node import AstNode
 from pcc.AST.binary_op import BinaryOp
 from pcc.AST.bitwise_and import BitwiseAnd
+from pcc.AST.bitwise_or import BitwiseOr
 from pcc.AST.compound_statement import CompoundStatement
 from pcc.AST.constant_expression import ConstantExpression
 from pcc.AST.division import Division
@@ -232,6 +233,7 @@ class Ast:
             Expression: the expression if parsed else None
         """
         res_bitwise_and = re.match(r"(\S+)&(\S+)", right_hand_value)
+        res_bitwise_or = re.match(r"(\S+)\|(\S+)", right_hand_value)
         if res_bitwise_and:
             operand_1_str = res_bitwise_and.group(1)
             operand_1 = self.get_right_hand_value(operand_1_str, depth)
@@ -240,6 +242,15 @@ class Ast:
             operand_2 = self.get_right_hand_value(operand_2_str, depth)
 
             operator = BitwiseAnd()
+            expression = BinaryOp(depth, operator, operand_1, operand_2)
+        elif res_bitwise_or:
+            operand_1_str = res_bitwise_or.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_bitwise_or.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            operator = BitwiseOr()
             expression = BinaryOp(depth, operator, operand_1, operand_2)
         else:
             expression = None
