@@ -648,7 +648,7 @@ class x64Assembler(Assembler):
         """
         value = bytearray()
 
-        value.append(0xf7)  # XOR r/m32, r32
+        value.append(0xf7)  # F7 /2 	NOT r/m32
         rm = get_register_encoding(destination)
         reg = 2  # F7 /2 	NOT r/m32
         # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
