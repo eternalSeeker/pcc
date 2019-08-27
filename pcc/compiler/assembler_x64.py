@@ -610,3 +610,28 @@ class x64Assembler(Assembler):
         value.append(modr_byte)
 
         return value
+
+    def bitwise_xor(self, source, destination):
+        """Bitwise xor the value of the source to the destination.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        """
+        value = bytearray()
+
+        value.append(0x31)  # XOR r/m32, r32
+        rm = get_register_encoding(destination)
+        reg = get_register_encoding(source)
+        # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
+        # REG destination
+
+        mod = 0b11
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        return value
