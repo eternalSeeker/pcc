@@ -313,3 +313,17 @@ class Assembler:
             NotImplementedError: if not implemented in a subclasss
         """
         raise NotImplementedError
+
+    def bitwise_not(self, destination):
+        """Bitwise xor the value of the source to the destination.
+
+        Args:
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError

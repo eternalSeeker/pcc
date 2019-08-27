@@ -635,3 +635,27 @@ class x64Assembler(Assembler):
         value.append(modr_byte)
 
         return value
+
+    def bitwise_not(self, destination):
+        """Bitwise xor the value of the source to the destination.
+
+        Args:
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        """
+        value = bytearray()
+
+        value.append(0xf7)  # XOR r/m32, r32
+        rm = get_register_encoding(destination)
+        reg = 2  # F7 /2 	NOT r/m32
+        # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
+        # REG destination
+
+        mod = 0b11
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        return value
