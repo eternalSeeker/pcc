@@ -2,11 +2,9 @@ from pcc.AST.binary_operator import BinaryOperator
 
 
 class BitwiseOr(BinaryOperator):
-    def __init__(self):
-        super(BitwiseOr, self).__init__()
-
-    def __str__(self):
-        return '|'
+    def __init__(self, depth, operand_1, operand_2):
+        super(BitwiseOr, self).__init__(depth, operand_1, operand_2)
+        self.operator = '|'
 
     def evaluate(self, source, destination, assembler):
         """Evaluate the operator, leaving the result in the destination reg.

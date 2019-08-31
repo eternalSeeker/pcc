@@ -2,11 +2,15 @@ from pcc.AST.unary_operator import UnaryOperator
 
 
 class BitwiseNot(UnaryOperator):
-    def __init__(self):
-        super(BitwiseNot, self).__init__()
+    def __init__(self, depth, operand):
+        """Create a binary operator
 
-    def __str__(self):
-        return '~'
+        Args:
+            depth (int): the depth in the tree
+            operand (Expression): the operand
+        """
+        super(BitwiseNot, self).__init__(depth, operand)
+        self.operator = '~'
 
     def evaluate(self, destination, assembler):
         """Evaluate the operator, leaving the result in the destination reg.
