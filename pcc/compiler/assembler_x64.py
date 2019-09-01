@@ -525,6 +525,31 @@ class x64Assembler(Assembler):
 
         return value
 
+    def cmp_against_const(self, register, const):
+        """Compare the 2 registers.
+
+        Args:
+            register (ProcessorRegister): the register
+            const (int): the const value
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        # CMP r/m32, imm32
+        value.append(0x81)
+        mod = 0b11
+        rm = get_register_encoding(register)
+        reg = 7
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        encoded_const = struct.pack("i", const)
+        value += encoded_const
+
+        return value
+
     def je(self, jump_distance):
         """Jump if the equals flag is set.
 
@@ -539,6 +564,24 @@ class x64Assembler(Assembler):
         # JE rel8
         value.append(0x74)
         encoded_amount = struct.pack("b", jump_distance)
+        value += encoded_amount
+
+        return value
+
+    def jne(self, jump_distance):
+        """Jump if the equals flag is not set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        # 0F 85 cd 	JNE rel32
+        value.extend([0x0F, 0x85])
+        encoded_amount = struct.pack("i", jump_distance)
         value += encoded_amount
 
         return value
@@ -651,6 +694,87 @@ class x64Assembler(Assembler):
         value.append(0xf7)  # F7 /2 	NOT r/m32
         rm = get_register_encoding(destination)
         reg = 2  # F7 /2 	NOT r/m32
+        # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
+        # REG destination
+
+        mod = 0b11
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        return value
+
+    def logical_and(self, source, destination):
+        """Logical and the value of the source to the destination.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
+
+        """
+        value = bytearray()
+
+        value.append(0x85)  # TEST r/m32, r32
+        rm = get_register_encoding(destination)
+        reg = get_register_encoding(source)
+        # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
+        # REG destination
+
+        mod = 0b11
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        # clean the destination register, and only if the zero flag is set
+        # set the bits in the destination register
+        value += self.copy_value_to_reg(0, destination)
+        # the zero flag will be set if the and was zero
+        value += self.setnz(destination)
+        value += self.movzx(destination, destination)
+
+        return value
+
+    def setnz(self, destination):
+        """Set destination if the zero flag is not set.
+
+        Args:
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
+
+        """
+        value = bytearray()
+
+        value.extend([0x0F, 0x95])  # SETNZ r/m8
+        rm = get_register_encoding(destination)
+        reg = 0  # don't care
+        # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
+        # REG destination
+
+        mod = 0b11
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+
+        return value
+
+    def movzx(self, source, destination):
+        """Move from source to destination with sign extend.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code
+
+        """
+        value = bytearray()
+
+        value.extend([0x0F, 0xB6])  # MOVZX r32, r/m8
+        rm = get_register_encoding(source)
+        reg = get_register_encoding(destination)
         # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
         # REG destination
 

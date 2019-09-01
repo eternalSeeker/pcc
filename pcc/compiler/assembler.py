@@ -241,8 +241,36 @@ class Assembler:
         """
         raise NotImplementedError
 
+    def cmp_against_const(self, register, const):
+        """Compare the 2 registers.
+
+        Args:
+            register (ProcessorRegister): the register
+            const (int): the const value
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+
     def je(self, jump_distance):
         """Jump if the equals flag is set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
+    def jne(self, jump_distance):
+        """Jump if the equals flag is not set.
 
         Args:
             jump_distance (int): the distance to jump in bytes
@@ -318,6 +346,50 @@ class Assembler:
         """Bitwise xor the value of the source to the destination.
 
         Args:
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
+    def logical_and(self, source, destination):
+        """Logical and the value of the source to the destination.
+
+        Args:
+            source (ProcessorRegister): the source register
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
+    def setnz(self, destination):
+        """Set destination if the zero flag is not set.
+
+        Args:
+            destination (ProcessorRegister): the destination register
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
+    def movzx(self, source, destination):
+        """Move from source to destination with sign extend.
+
+        Args:
+            source (ProcessorRegister): the source register
             destination (ProcessorRegister): the destination register
 
         Returns:

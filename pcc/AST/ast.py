@@ -19,6 +19,8 @@ from pcc.AST.function_call import FunctionCall
 from pcc.AST.function_declaration import FunctionDeclaration
 from pcc.AST.function_definition import FunctionDefinition
 from pcc.AST.if_statement import IfStatement
+from pcc.AST.logical_and import LogicalAnd
+from pcc.AST.logical_or import LogicalOr
 from pcc.AST.multiplication import Multiplication
 from pcc.AST.return_statement import ReturnStatement
 from pcc.AST.subtraction import Subtraction
@@ -267,6 +269,40 @@ class Ast:
 
         return expression
 
+    def _extract_logical_expression(self, right_hand_value, depth):
+        """Extract the logical expression from string
+
+        Args:
+            right_hand_value (str): the expression to parse
+            depth (int): the depth in the tree
+
+        Returns:
+            Expression: the expression if parsed else None
+        """
+        res_logical_and = re.match(r"(\S+)&&(\S+)", right_hand_value)
+        res_logical_or = re.match(r"(\S+)\|\|(\S+)", right_hand_value)
+
+        if res_logical_and:
+            operand_1_str = res_logical_and.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_logical_and.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            expression = LogicalAnd(depth, operand_1, operand_2)
+        elif res_logical_or:
+            operand_1_str = res_logical_or.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_logical_or.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            expression = LogicalOr(depth, operand_1, operand_2)
+        else:
+            expression = None
+
+        return expression
+
     def get_right_hand_value(self, right_hand_value, depth):
         """Extract the right hand value out the string
 
@@ -284,12 +320,15 @@ class Ast:
 
             arithmetic_exp = self._extract_arithmetic_expression(
                 right_hand_value, depth)
-
+            logical_exp = self._extract_logical_expression(right_hand_value,
+                                                           depth)
             bitwise_exp = self._extract_bitwise_expression(right_hand_value,
                                                            depth)
 
             if arithmetic_exp:
                 expression = arithmetic_exp
+            elif logical_exp:
+                expression = logical_exp
             elif self.get_variable_definition_from_id(right_hand_value):
                 expression = VariableReference(depth, right_hand_value)
                 expression.parent_node = self.current_node
