@@ -4,8 +4,9 @@ pcc
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+  :maxdepth: 2
 
+  modules
 
 .. only:: html
 

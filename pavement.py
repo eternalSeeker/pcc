@@ -230,10 +230,13 @@ def doc_open():
     elif sys.platform == 'linux2':
         # All freedesktop-compatible desktops
         subprocess.check_call(['xdg-open', doc_index])
+    elif sys.platform == 'linux':
+        # Linux
+        subprocess.check_call(['xdg-open', doc_index])
     else:
         print_failure_message(
-            "Unsupported platform. Please open `{0}' manually.".format(
-                doc_index))
+            "Unsupported platform{1}. Please open `{0}' manually.".format(
+                doc_index, sys.platform))
 
 
 @task
