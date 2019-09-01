@@ -27,6 +27,7 @@ from pcc.AST.return_statement import ReturnStatement
 from pcc.AST.subtraction import Subtraction
 from pcc.AST.variable_declaration import VariableDeclaration
 from pcc.AST.variable_reference import VariableReference
+from pcc.AST.while_statement import WhileStatement
 from pcc.utils.stringListParsing import extract_closing_char
 from pcc.utils.stringParsing import extract_text_for_enclosed_parenthesis
 
@@ -844,6 +845,52 @@ class Ast:
             line_number = -1
         return line_number
 
+    def read_while_statement(self, statements):
+
+        line_number, statement = self.join_lines_until_next_non_empty_line(
+            statements)
+        if line_number == -1:
+            return line_number
+
+        while_stat = re.match(r"\s+while\((\S+)\)", statement)
+
+        if while_stat:
+            depth = self.get_depth_in_tree()
+            condition_str = while_stat.group(1)
+            # the condition is one deeper than the if condition
+            condition = self.get_right_hand_value(condition_str, depth)
+            body = None
+            while_statement = WhileStatement(depth, condition, body)
+            self.current_node.add_statement(while_statement)
+            self.current_node = while_statement
+            # found a correct condition line
+            line_number += 1
+            next_statements = statements[line_number:]
+            processed_lines = self.parse_line(next_statements)
+            if processed_lines == -1:
+                self.ast_error("could not process the body of the while %s" %
+                               ''.join(next_statements))
+                return -1
+            if len(while_statement.statement_sequence) != 1:
+                self.ast_error("could not recognise the statements %s" %
+                               ''.join(next_statements))
+                return -1
+            # move the body statement inside the object instead of the list
+            while_statement.body_statement = \
+                while_statement.statement_sequence[0]
+            while_statement.statement_sequence.pop()
+
+            # update the number of processed lines
+            line_number += processed_lines
+
+            # set the current node back tot he parent of the while statement
+            self.current_node = while_statement.parent_node
+
+        else:
+            # this was not a while statement
+            line_number = -1
+        return line_number
+
     def join_lines_until_next_semicolon(self, statements):
         line_number, position = self.find_first_semicolon_in_list(statements)
         if line_number == -1:
@@ -934,6 +981,11 @@ class Ast:
             int: the number of processed lines or -1 in case of error
         """
         processed_line_count = -1
+
+        # if there is nothing left, consider the line parsed
+        if len(lines) == 1 and not lines[0]:
+            return 1
+
         list_of_parsing_methods = [
             self.read_variable,
             self.read_function_declaration,
@@ -943,6 +995,7 @@ class Ast:
             self.read_return_statement,
             self.read_assignment,
             self.read_if_statement,
+            self.read_while_statement,
         ]
         for method in list_of_parsing_methods:
             processed_line_count = method(list(lines))

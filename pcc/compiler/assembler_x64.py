@@ -597,9 +597,9 @@ class x64Assembler(Assembler):
         """
         value = bytearray()
 
-        # JMP rel8
-        value.append(0xeb)
-        encoded_amount = struct.pack("b", jump_distance)
+        # JMP rel32
+        value.append(0xe9)
+        encoded_amount = struct.pack("i", jump_distance)
         value += encoded_amount
 
         return value
