@@ -20,6 +20,7 @@ from pcc.AST.function_declaration import FunctionDeclaration
 from pcc.AST.function_definition import FunctionDefinition
 from pcc.AST.if_statement import IfStatement
 from pcc.AST.logical_and import LogicalAnd
+from pcc.AST.logical_not import LogicalNot
 from pcc.AST.logical_or import LogicalOr
 from pcc.AST.multiplication import Multiplication
 from pcc.AST.return_statement import ReturnStatement
@@ -281,6 +282,7 @@ class Ast:
         """
         res_logical_and = re.match(r"(\S+)&&(\S+)", right_hand_value)
         res_logical_or = re.match(r"(\S+)\|\|(\S+)", right_hand_value)
+        res_logical_not = re.match(r"!(\S+)", right_hand_value)
 
         if res_logical_and:
             operand_1_str = res_logical_and.group(1)
@@ -298,6 +300,11 @@ class Ast:
             operand_2 = self.get_right_hand_value(operand_2_str, depth)
 
             expression = LogicalOr(depth, operand_1, operand_2)
+        elif res_logical_not:
+            operand_1_str = res_logical_not.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            expression = LogicalNot(depth, operand_1)
         else:
             expression = None
 
