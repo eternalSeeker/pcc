@@ -11,6 +11,8 @@ from pcc.AST.bitwise_and import BitwiseAnd
 from pcc.AST.bitwise_not import BitwiseNot
 from pcc.AST.bitwise_or import BitwiseOr
 from pcc.AST.bitwise_xor import BitwiseXor
+from pcc.AST.compare_equal import CompareEqual
+from pcc.AST.compare_not_equal import CompareNotEqual
 from pcc.AST.compound_statement import CompoundStatement
 from pcc.AST.constant_expression import ConstantExpression
 from pcc.AST.division import Division
@@ -311,6 +313,40 @@ class Ast:
 
         return expression
 
+    def _extract_compare_expression(self, right_hand_value, depth):
+        """Extract the compare expression from string.
+
+        Args:
+            right_hand_value (str): the expression to parse
+            depth (int): the depth in the tree
+
+        Returns:
+            Expression: the expression if parsed else None
+        """
+        res_compare_equal = re.match(r"(\S+)==(\S+)", right_hand_value)
+        res_compare_not_equal = re.match(r"(\S+)!=(\S+)", right_hand_value)
+
+        if res_compare_equal:
+            operand_1_str = res_compare_equal.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_compare_equal.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            expression = CompareEqual(depth, operand_1, operand_2)
+        elif res_compare_not_equal:
+            operand_1_str = res_compare_not_equal.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_compare_not_equal.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            expression = CompareNotEqual(depth, operand_1, operand_2)
+        else:
+            expression = None
+
+        return expression
+
     def get_right_hand_value(self, right_hand_value, depth):
         """Extract the right hand value out the string
 
@@ -332,6 +368,8 @@ class Ast:
                                                            depth)
             bitwise_exp = self._extract_bitwise_expression(right_hand_value,
                                                            depth)
+            compare_exp = self._extract_compare_expression(right_hand_value,
+                                                           depth)
 
             if arithmetic_exp:
                 expression = arithmetic_exp
@@ -342,6 +380,8 @@ class Ast:
                 expression.parent_node = self.current_node
             elif bitwise_exp:
                 expression = bitwise_exp
+            elif compare_exp:
+                expression = compare_exp
             else:
                 function_call = self.parse_function_call(right_hand_value)
                 if function_call:
@@ -370,7 +410,9 @@ class Ast:
                 if '=' in declaration:
                     parts = declaration.split('=')
                     identifier = parts[0]
-                    initializer = parts[1]
+                    # comparisons might still have equals signs inside, so
+                    # add them back to the initializer
+                    initializer = '='.join(parts[1:])
                     # remove all whitespace chars from initializer
                     initializer = ''.join(initializer.split())
                 else:
