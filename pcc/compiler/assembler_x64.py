@@ -586,6 +586,78 @@ class x64Assembler(Assembler):
 
         return value
 
+    def jge(self, jump_distance):
+        """Jump if the greater or equal flags are set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        # 0F 8D cd 	JGE rel32
+        value.extend([0x0F, 0x8D])
+        encoded_amount = struct.pack("i", jump_distance)
+        value += encoded_amount
+
+        return value
+
+    def jle(self, jump_distance):
+        """Jump if the less or equal flags are set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        # 0F 8E cw 	JLE rel32
+        value.extend([0x0F, 0x8E])
+        encoded_amount = struct.pack("i", jump_distance)
+        value += encoded_amount
+
+        return value
+
+    def jg(self, jump_distance):
+        """Jump if the greater flags are set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        # 0F 8F cd 	JG rel32
+        value.extend([0x0F, 0x8F])
+        encoded_amount = struct.pack("i", jump_distance)
+        value += encoded_amount
+
+        return value
+
+    def jl(self, jump_distance):
+        """Jump if the less flags are set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code
+        """
+        value = bytearray()
+
+        # 0F 8C cd 	JL rel32
+        value.extend([0x0F, 0x8C])
+        encoded_amount = struct.pack("i", jump_distance)
+        value += encoded_amount
+
+        return value
+
     def jmp(self, jump_distance):
         """Jump.
 

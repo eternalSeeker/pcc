@@ -12,6 +12,10 @@ from pcc.AST.bitwise_not import BitwiseNot
 from pcc.AST.bitwise_or import BitwiseOr
 from pcc.AST.bitwise_xor import BitwiseXor
 from pcc.AST.compare_equal import CompareEqual
+from pcc.AST.compare_less import CompareLess
+from pcc.AST.compare_less_or_equal import CompareLessOrEqual
+from pcc.AST.compare_more import CompareMore
+from pcc.AST.compare_more_or_equal import CompareMoreOrEqual
 from pcc.AST.compare_not_equal import CompareNotEqual
 from pcc.AST.compound_statement import CompoundStatement
 from pcc.AST.constant_expression import ConstantExpression
@@ -326,6 +330,12 @@ class Ast:
         res_compare_equal = re.match(r"(\S+)==(\S+)", right_hand_value)
         res_compare_not_equal = re.match(r"(\S+)!=(\S+)", right_hand_value)
 
+        res_compare_less = re.match(r"(\S+)<(\S+)", right_hand_value)
+        res_compare_more = re.match(r"(\S+)>(\S+)", right_hand_value)
+
+        res_compare_less_or_equal = re.match(r"(\S+)<=(\S+)", right_hand_value)
+        res_compare_more_or_equal = re.match(r"(\S+)>=(\S+)", right_hand_value)
+
         if res_compare_equal:
             operand_1_str = res_compare_equal.group(1)
             operand_1 = self.get_right_hand_value(operand_1_str, depth)
@@ -342,6 +352,39 @@ class Ast:
             operand_2 = self.get_right_hand_value(operand_2_str, depth)
 
             expression = CompareNotEqual(depth, operand_1, operand_2)
+
+        elif res_compare_more_or_equal:
+            operand_1_str = res_compare_more_or_equal.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_compare_more_or_equal.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            expression = CompareMoreOrEqual(depth, operand_1, operand_2)
+        elif res_compare_less_or_equal:
+            operand_1_str = res_compare_less_or_equal.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_compare_less_or_equal.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            expression = CompareLessOrEqual(depth, operand_1, operand_2)
+        elif res_compare_less:
+            operand_1_str = res_compare_less.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_compare_less.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            expression = CompareLess(depth, operand_1, operand_2)
+        elif res_compare_more:
+            operand_1_str = res_compare_more.group(1)
+            operand_1 = self.get_right_hand_value(operand_1_str, depth)
+
+            operand_2_str = res_compare_more.group(2)
+            operand_2 = self.get_right_hand_value(operand_2_str, depth)
+
+            expression = CompareMore(depth, operand_1, operand_2)
         else:
             expression = None
 

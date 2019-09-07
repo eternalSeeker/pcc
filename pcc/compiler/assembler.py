@@ -283,6 +283,62 @@ class Assembler:
         """
         raise NotImplementedError
 
+    def jge(self, jump_distance):
+        """Jump if the greater or equal flags are set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
+    def jle(self, jump_distance):
+        """Jump if the less or equal flags are set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
+    def jg(self, jump_distance):
+        """Jump if the greater flags are set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
+    def jl(self, jump_distance):
+        """Jump if the less flags are set.
+
+        Args:
+            jump_distance (int): the distance to jump in bytes
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
     def jmp(self, jump_distance):
         """Jump.
 
