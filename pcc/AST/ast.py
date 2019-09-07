@@ -242,7 +242,7 @@ class Ast:
         res_bitwise_and = re.match(r"(\S+)&(\S+)", right_hand_value)
         res_bitwise_or = re.match(r"(\S+)\|(\S+)", right_hand_value)
         res_bitwise_xor = re.match(r"(\S+)\^(\S+)", right_hand_value)
-        res_bitwise_not = re.match(r"\~(\S+)", right_hand_value)
+        res_bitwise_not = re.match(r"~(\S+)", right_hand_value)
         if res_bitwise_and:
             operand_1_str = res_bitwise_and.group(1)
             operand_1 = self.get_right_hand_value(operand_1_str, depth)
@@ -757,7 +757,6 @@ class Ast:
                     self.current_node.add_statement(return_statement)
                 else:
                     # probably is a constant expression
-                    func_def = None
                     func_def = self.current_node.get_function_definition_node()
                     if func_def:
                         expression_type = self.get_type_of_expression(retval)

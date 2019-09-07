@@ -137,7 +137,8 @@ class TestMultiplication(object):
         os.remove(pcc_output_file_path)
         os.remove(gcc_exe)
 
-    def extractFileContents(self, outputFileWithPath):
+    @staticmethod
+    def extractFileContents(outputFileWithPath):
         with open(outputFileWithPath, 'r') as fileToRead:
             outputFileAsString = fileToRead.read()
         outputFileAsString = outputFileAsString.replace('\r', '')

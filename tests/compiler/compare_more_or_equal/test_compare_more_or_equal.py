@@ -69,7 +69,8 @@ def generate_compiler_outputs():
 class TestCompareMoreOrEqual(object):
 
     @parametrize('file_to_test,helper,output_file', files_to_test)
-    def test_compare_more_or_equal(self, file_to_test, helper, output_file, capsys):
+    def test_compare_more_or_equal(self, file_to_test, helper,
+                                   output_file, capsys):
         includeDirs = []
         inputPath = 'input'
         outputPath = 'output'
@@ -135,7 +136,8 @@ class TestCompareMoreOrEqual(object):
         os.remove(pcc_output_file_path)
         os.remove(gcc_exe)
 
-    def extractFileContents(self, outputFileWithPath):
+    @staticmethod
+    def extractFileContents(outputFileWithPath):
         with open(outputFileWithPath, 'r') as fileToRead:
             outputFileAsString = fileToRead.read()
         outputFileAsString = outputFileAsString.replace('\r', '')

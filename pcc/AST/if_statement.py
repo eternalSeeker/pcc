@@ -10,8 +10,9 @@ class IfStatement(Statement):
 
         Args:
             depth (int): depth in the ast tree
-            condition (pcc.AST.expression.Expression): the conditional to
-                evaluate to true to jump to the if branch else the else
+            condition (Union[pcc.AST.expression.Expression,None]): the
+                conditional to evaluate to true to jump to the if branch
+                else the else
             if_statement (pcc.AST.Statement): the if branch
             else_statement (Union[pcc.AST.Statement, None]): the if branch
         """

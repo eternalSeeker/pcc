@@ -20,7 +20,7 @@ if 'check_output' not in dir(subprocess):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
         out, err = proc.communicate()
         if proc.returncode != 0:
-            raise subprocess.CalledProcessError(args)
+            raise subprocess.CalledProcessError(proc.returncode, cmd_args)
         return out
     subprocess.check_output = check_output
 
