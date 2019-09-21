@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
+from tests.preprocessor.preprocessorhelper import PreprocessorHelper
+from ...preprocessor.preprocessorhelper import generate_preprocessor_outputs
 
-import subprocess
-from os.path import join, abspath, dirname
-
-# The parametrize function is generated, so it does not work to import
+from os.path import abspath, dirname
 import pytest
 
 import tests.generateOutputsDecorator
-from pcc.main import main
 
+# The parametrize function is generated, so it does not work to import
 parametrize = pytest.mark.parametrize
 generate_outputs = tests.generateOutputsDecorator.generate_outputs
 
@@ -25,64 +24,22 @@ files_to_test = [
 
 @generate_outputs
 def generate_ast_outputs():
-    for file in files_to_test:
-        folder = dirname(__file__)
-        file_input_path = join(folder, 'input', file)
-        file_output_path = join(folder, 'output', file)
-        command = 'gcc -E %s' % file_input_path
+    """Generate the output for the tests.
 
-        response = subprocess.run(command, stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE, shell=True)
-        # decode the outputted string to ascii and split the line while
-        # keeping the new line character(s)
-        captured_result = response.stdout.decode('ascii').splitlines(True)
-
-        if response:
-            if response.returncode == 0:
-                with open(file_output_path, 'w') as f:
-                    for output_line in captured_result:
-                        if '#' not in output_line:
-                            f.write(output_line)
-            else:
-                print('ERROR checking %s, got <%s>' % (file, response.stderr))
+    """
+    folder = dirname(__file__)
+    generate_preprocessor_outputs(files_to_test, folder)
 
 
-class TestConditionalCompilation(object):
+class TestConditionalCompilation(PreprocessorHelper):
 
     @parametrize('file_to_test', files_to_test)
-    def test_include(self, file_to_test, capsys):
-        includeDirs = ['-Itests/preprocessor/conditionalCompilation/input']
-        inputPath = 'input'
-        outputPath = 'output'
-        pathOfThisFile = abspath(dirname(__file__))
-        inputPath = join(pathOfThisFile, inputPath)
-        outputPath = join(pathOfThisFile, outputPath)
+    def test_conditional_compilation(self, file_to_test, capsys):
+        """Execute the conditional compilation test.
 
-        fileToPreprocess = file_to_test
-        inputFileWithPath = join(inputPath, fileToPreprocess)
-        outputFileWithPath = join(outputPath, fileToPreprocess)
-        # this test will not raise SystemExit
-        argsv = list(['progname'])
-        argsv.append('-E')
-        argsv.extend(includeDirs)
-        argsv.append(inputFileWithPath)
-        main(argsv)
-        out, err = capsys.readouterr()
-        with open(outputFileWithPath, 'r') as fileToRead:
-            outputFileAsString = fileToRead.read()
-        # the outputted file needs to match exactly
-        outputFileAsString = outputFileAsString.replace('\r', '')
-        outputList = out.split('\n')
-        outputFileAsList = outputFileAsString.split('\n')
-        outputListSize = len(outputList)
-        outputFileAsListSize = len(outputFileAsList)
-        assert outputListSize == outputFileAsListSize, \
-            'for file %s, size %d(got) != %d(req), got <%s> should be <%s>' % \
-            (fileToPreprocess, outputListSize, outputFileAsListSize,
-             out, outputFileAsString)
-        for i in range(outputFileAsListSize):
-            assert outputList[i] == outputFileAsList[i], \
-                'for file %s line %d, <%s> != <%s>' % \
-                (fileToPreprocess, i, outputList, outputFileAsList)
-        # there should be no error
-        assert err == ''
+        Args:
+            file_to_test (str): the file to test
+            capsys (method): the capsys fixture from pytest
+        """
+        path_of_this_file = abspath(dirname(__file__))
+        self.execute_test(file_to_test,capsys, path_of_this_file)
