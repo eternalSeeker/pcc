@@ -1,8 +1,8 @@
 import struct
 
 from pcc.AST.compiled_object import CompiledObjectType, CompiledObject
-from pcc.AST.function_argument import FunctionArgument
-from pcc.AST.stack_variable import StackVariable
+from pcc.AST.functions.function_argument import FunctionArgument
+from pcc.AST.variables.stack_variable import StackVariable
 from pcc.AST.statement import Statement
 from pcc.compiler.assembler import ProcessorRegister
 
