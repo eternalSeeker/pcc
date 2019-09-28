@@ -663,8 +663,6 @@ class Ast:
         if '(' not in statement:
             # a function call always has an opening and closing bracket
             return -1
-        splitted_statement = statement.split('(')[0]
-        splitted_statement = splitted_statement.split()
 
         function_call = self.parse_function_call(statement)
         if function_call:
@@ -745,11 +743,11 @@ class Ast:
             code_list)
         if line_number == -1:
             return line_number
-        splited_statement = statement.split()
-        if 'return' == splited_statement[0]:
+        splitted_statement = statement.split()
+        if 'return' == splitted_statement[0]:
             depth = self.get_depth_in_tree()
-            if len(splited_statement) == 2:
-                retval = splited_statement[1]
+            if len(splitted_statement) == 2:
+                retval = splitted_statement[1]
                 if self.get_variable_definition_from_id(retval):
                     expression = VariableReference(depth, retval)
                     return_statement = ReturnStatement(depth, expression)
@@ -921,7 +919,7 @@ class Ast:
                 line_number += (line_number_else + 1)
                 line_number += (processed_lines + 1)
 
-            # set the current node back tot he partent of the if statement
+            # set the current node back tot he parent of the if statement
             self.current_node = if_statement.parent_node
 
         else:

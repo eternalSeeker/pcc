@@ -65,10 +65,10 @@ def is_double_scalar_reg(register):
         return False
 
 
-class x64Assembler(Assembler):
+class X64Assembler(Assembler):
 
     def __init__(self):
-        super(x64Assembler).__init__()
+        super(X64Assembler).__init__()
 
     def push_to_stack(self, register):
         """Push a register on stack.
@@ -204,7 +204,7 @@ class x64Assembler(Assembler):
         value = bytearray()
         value.append(0xc7)  # mov
         # Table 2-2.  32-Bit Addressing Forms with the ModR/M Byte
-        # indirect adressing with byte displacement
+        # indirect addressing with byte displacement
         mod = 0b01
         destination = ProcessorRegister.base_pointer
         rm = get_register_encoding(destination)
@@ -241,7 +241,7 @@ class x64Assembler(Assembler):
         else:
             value.append(0x8b)  # mov
         # Table 2-2.  32-Bit Addressing Forms with the ModR/M Byte
-        # indirect adressing with byte displacement
+        # indirect addressing with byte displacement
         mod = 0b01
         destination = ProcessorRegister.base_pointer
         rm = get_register_encoding(destination)
@@ -272,7 +272,7 @@ class x64Assembler(Assembler):
         else:
             value.append(0x89)  # mov
         # Table 2-2.  32-Bit Addressing Forms with the ModR/M Byte
-        # indirect adressing with byte displacement
+        # indirect addressing with byte displacement
         mod = 0b01
         destination = ProcessorRegister.base_pointer
         rm = get_register_encoding(destination)

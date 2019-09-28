@@ -4,7 +4,7 @@
 
 from pcc.AST.ast_node import AstNode
 from pcc.AST.compiled_object import CompiledObjectType
-from pcc.compiler.assembler_x64 import x64Assembler
+from pcc.compiler.assembler_x64 import X64Assembler
 from pcc.compiler.objectFile import ObjectFile, Symbol
 
 
@@ -21,7 +21,7 @@ class Compiler:
         self.input_file_name = input_file_name
         self.ast_root_node = ast_root_node
         self.object_file = ObjectFile(self.input_file_name)
-        self.assembler = x64Assembler()
+        self.assembler = X64Assembler()
 
     def compile(self):
         """Compile the AST.
@@ -30,13 +30,13 @@ class Compiler:
         if not isinstance(self.ast_root_node, AstNode):
             return
         for statement in self.ast_root_node.statement_sequence:
-            compiled_opject = statement.compile(self.assembler)
-            if compiled_opject:
+            compiled_object = statement.compile(self.assembler)
+            if compiled_object:
                 is_text = False
-                if compiled_opject.type == CompiledObjectType.code:
+                if compiled_object.type == CompiledObjectType.code:
                     is_text = True
-                symbol = Symbol(compiled_opject.name, compiled_opject.value,
-                                compiled_opject.size, is_text)
+                symbol = Symbol(compiled_object.name, compiled_object.value,
+                                compiled_object.size, is_text)
                 self.object_file.add_symbol(symbol)
 
     def write_object_file_to_file(self, file_name):

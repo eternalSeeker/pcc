@@ -50,11 +50,12 @@ class FunctionDeclaration(Statement):
             argument.update_depth(depth + 3)
 
     @staticmethod
-    def compile(assembler):
+    def compile(_):
         """Compile this statement.
 
         Args:
-            assembler (Assembler): the assembler to use
+            _ (Assembler): the assembler to use, unused but required because
+                inheritance prototype.
 
         Returns:
             CompiledObject: the compiled version of this statement

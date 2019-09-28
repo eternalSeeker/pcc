@@ -25,7 +25,7 @@ class MacroObject:
         self.argument_list = argument_list
 
     def get_number_of_arguments(self):
-        """Get the number of argments of the macro
+        """Get the number of arguments of the macro
 
         Returns:
             int: the number of arguments
@@ -49,7 +49,7 @@ class MacroObject:
         return self.token_sequence
 
     def fill_macro_in(self, arguments):
-        """Return the macro subsitution with the supplied arguments
+        """Return the macro substitution with the supplied arguments
 
         Args:
             arguments (List[str]): the arguments for the macro

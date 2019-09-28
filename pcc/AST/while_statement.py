@@ -56,7 +56,7 @@ class WhileStatement(Statement):
 
         value += body_part.value
         # the distance to jump back, is the relative distance after the jump
-        # instruction. So the complete distande is the length of the body,
+        # instruction. So the complete distance is the length of the body,
         # the length of the condition and this jump (use the length of a
         # random jump to know the length)
         jump_back_dist = -len_condition - body_len - \

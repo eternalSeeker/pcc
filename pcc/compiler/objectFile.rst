@@ -25,7 +25,7 @@ I compiled this examples with.
 
     gcc -c test.c
 
-This generates 'test.o', which is formated for my in the ELF format. But how do
+This generates 'test.o', which is formatted for my in the ELF format. But how do
 I know and can you check of you? Well you can inspect the file by dumping the
 content. I used:
 
@@ -150,8 +150,8 @@ in the 16 byte e_ident, do not have a meaning for our configuration.
 As we know the endianess, it is possible from now on to specify field longer
 than 1 byte. The type is 1, so ET_REL. It is a relocatable file, which is what
 we expect, as it only contains a global variable. Machine is 003E, which we
-cann find back on http://refspecs.linuxbase.org/elf/gabi4+/ch4.eheader.html.
-The decimal interpretation is 62. On the webpage it is listed as EM_X86_64:
+can find back on http://refspecs.linuxbase.org/elf/gabi4+/ch4.eheader.html.
+The decimal interpretation is 62. On the web page it is listed as EM_X86_64:
 AMD x86-64 architecture. This is indeed the case. I ran the test on a 64 bit
 Intel CPU. Version is 1 as mandated. Entry is 0, as the elf file has no entry
 point because it is not an executable.
@@ -173,7 +173,7 @@ Elf Section Header Table
 You can find the interpretation of the section header table below.
 
 +----------+------+------+------+------+-------+------+---------+-------+------------+------+------+------+------+------+------+------+-----------------------+
-| address  |  0   |  1   |  2   |  3   |  4    |  5   |  6      |   7   |  8         |  9   |  10  | 11   | 12   | 13   |  14  | 15   | asccii interpretation |
+| address  |  0   |  1   |  2   |  3   |  4    |  5   |  6      |   7   |  8         |  9   |  10  | 11   | 12   | 13   |  14  | 15   | ascii interpretation |
 +==========+======+======+======+======+=======+======+=========+=======+============+======+======+======+======+======+======+======+=======================+
 |**Sect 0**| sh_name                   | sh_type                |   sh_flags                                                          |                       |
 +----------+------+------+------+------+-------+------+---------+-------+------------+------+------+------+------+------+------+------+-----------------------+
@@ -351,7 +351,7 @@ which is short for Section Header String Table. This makes sense.
 Sh_type is 0x3, SHT_STRTAB. SH_flags is 0, so no flags for this section.
 Sh_addr is 0 as it does not contain a image that needs in memory. Sh_link is 0,
 so it is not linked to other sections. Sh_info is 0, so no additional
-information. Sh_addralign is 1, the section allignement is byte aligned.
+information. Sh_addralign is 1, the section alignment is byte aligned.
 Sh_entsize is 0 as it is not a fixed size entry.
 
 
@@ -403,7 +403,7 @@ The name is located at 0x145 + 0x21 = 0x166 (2e 64  61 74 61 00) or ".data".
 The type is again SHT_PROGBITS, the flags for SHF_WRITE(1) and SHF_ALLOC(2) are
 set. The section contains writable data allocated in the program. The size is
 6 and it is located at byte offset 0x40. This is (74 65 73 74 0a 00). This is
-the ascci string "test\\n". .data contains writable data for the
+the ascii string "test\\n". .data contains writable data for the
 program.
 
 
@@ -486,12 +486,12 @@ entry size = 0x18
 
 The name is located at 0x145 + 0x1 = 0x146 (2e 73  79 6d 74 61 62 00) or
 ".systab". The type is SHT_SYMTAB, and no flags are set. The contents are
-located at byteoffset 0x78 and the size is 0xc. This contains the linker
+located at byte offset 0x78 and the size is 0xc. This contains the linker
 symbol table. It link to section 7, and info field is 7. The section is
-alligned on a multiple of 8 bytes.
+aligned on a multiple of 8 bytes.
 
 The size of an entry is 0x18. This is the expected size for a entry in the
-symbol table. The size of the symbol table is 0xc0, so there are 8 elelements
+symbol table. The size of the symbol table is 0xc0, so there are 8 elements
 in the stable (0xc0/0x18 == 0x8). The raw dump is blow.
 
 
@@ -699,7 +699,7 @@ entry size = 0
 
 The name is located at 0x145 + 0x9 = 0x14e (2e 73 74 72 74 61 62 00) or
 ".strtab".  The type is SHT_STRTAB, a symbol string table thus. The flags for
-SHF_WRITE(1) and SHF_ALLOC(2) are set. The byteoffset is 0x138 and the size is
+SHF_WRITE(1) and SHF_ALLOC(2) are set. The byte offset is 0x138 and the size is
 0xd. The content is:
 
 00 74 65 73 74 2e 63 00 6e 61 6d 65 00 or "test.c" and "name"

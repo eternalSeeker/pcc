@@ -6,7 +6,7 @@ import os
 # https://www.uclibc.org/docs/elf-64-gen.pdf
 # https://0x00sec.org/t/dissecting-and-exploiting-elf-files/7267
 
-# sizes and allignements for the elf words
+# sizes and alignments for the elf words
 Elf64_Addr = 8
 Elf64_Off = 8
 Elf64_Half = 2
@@ -173,8 +173,8 @@ class ElfHeader:
 
     def _fill_in_machine(self):
         # http://www.sco.com/developers/gabi/latest/ch4.eheader.html
-        EM_X86_64 = [62, 0]  # AMD x86-64  architecture
-        self.e_machine = EM_X86_64
+        em_x86_64 = [62, 0]  # AMD x86-64  architecture
+        self.e_machine = em_x86_64
 
     def _fill_in_type(self, obj_type):
         if obj_type == ObjectFileType.RELOCATABLE_OBJECT_FILE:
@@ -627,7 +627,7 @@ class ObjectFile:
             offset += len(section.section_content)
             section_content += section.section_content
 
-        # allign the section headers on a 8 byte boundary
+        # align the section headers on a 8 byte boundary
         padding = offset % 8
         padding = (8 - padding)
         offset += padding
