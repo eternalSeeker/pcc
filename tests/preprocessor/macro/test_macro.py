@@ -6,8 +6,8 @@ from os.path import abspath, dirname
 import pytest
 
 import tests.generateOutputsDecorator
-from tests.preprocessor.preprocessorhelper import generate_preprocessor_outputs, \
-    PreprocessorHelper
+from tests.preprocessor.preprocessorhelper import \
+    generate_preprocessor_outputs, PreprocessorHelper
 
 parametrize = pytest.mark.parametrize
 generate_outputs = tests.generateOutputsDecorator.generate_outputs
@@ -40,4 +40,4 @@ class TestMacro(PreprocessorHelper):
             capsys (method): the capsys fixture from pytest
         """
         path_of_this_file = abspath(dirname(__file__))
-        self.execute_test(file_to_test,capsys, path_of_this_file)
+        self.execute_test(file_to_test, capsys, path_of_this_file)

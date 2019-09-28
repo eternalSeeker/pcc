@@ -8,9 +8,7 @@ from os.path import join, abspath, dirname
 import pytest
 
 import tests.generateOutputsDecorator
-from pcc.main import main
-from tests.preprocessor.preprocessorhelper import generate_preprocessor_outputs, \
-    PreprocessorHelper
+from tests.preprocessor.preprocessorhelper import PreprocessorHelper
 
 parametrize = pytest.mark.parametrize
 generate_outputs = tests.generateOutputsDecorator.generate_outputs
@@ -41,7 +39,7 @@ class TestTrigraphs(PreprocessorHelper):
         """
         path_of_this_file = abspath(dirname(__file__))
         include_dirs = ['-Itests/preprocessor/trigraphs/input']
-        self.execute_test(file_to_test,capsys, path_of_this_file,
+        self.execute_test(file_to_test, capsys, path_of_this_file,
                           include_dirs)
 
 

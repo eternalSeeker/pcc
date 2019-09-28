@@ -21,12 +21,12 @@ files_to_test = [
 
 
 @generate_outputs
-def generate_ast_outputs():
+def generate_ast_test_outputs():
     folder = dirname(__file__)
     generate_ast_outputs(files_to_test, folder)
 
 
-class TestConditionalCompilation(ASTHelper):
+class TestVariableDeclaration(ASTHelper):
 
     @parametrize('file_to_test', files_to_test)
     def test_variable_declaration(self, file_to_test, capsys):

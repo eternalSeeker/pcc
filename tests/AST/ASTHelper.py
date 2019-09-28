@@ -19,48 +19,45 @@ def generate_ast_outputs(files_to_test, folder_path):
 class ASTHelper(object):
 
     @staticmethod
-    def execute_test(file_to_test, capsys, path_of_files,
-                     include_dirs=None):
+    def execute_test(file_to_test, capsys, path_of_files):
         """Execute the tests for the preprocessor.
 
         Args:
             file_to_test (str): the file to test
             capsys (method): the capsys fixture from pytest
             path_of_files (str): the path of the
-            include_dirs (Union[str, None]): the include command line
-                argument if needed
         """
-        includeDirs = []
-        inputPath = 'input'
-        outputPath = 'output'
-        inputPath = join(path_of_files, inputPath)
-        outputPath = join(path_of_files, outputPath)
+        include_dirs = []
+        input_path = 'input'
+        output_path = 'output'
+        input_path = join(path_of_files, input_path)
+        output_path = join(path_of_files, output_path)
 
-        fileToPreprocess = file_to_test
-        inputFileWithPath = join(inputPath, fileToPreprocess)
-        outputFileWithPath = join(outputPath, fileToPreprocess)
+        file_to_preprocess = file_to_test
+        input_file_with_path = join(input_path, file_to_preprocess)
+        output_file_with_path = join(output_path, file_to_preprocess)
         # this test will not raise SystemExit
         argsv = list(['progname'])
         argsv.append('-fdump_tree')
-        argsv.extend(includeDirs)
-        argsv.append(inputFileWithPath)
+        argsv.extend(include_dirs)
+        argsv.append(input_file_with_path)
         main(argsv)
         out, err = capsys.readouterr()
-        with open(outputFileWithPath, 'r') as fileToRead:
-            outputFileAsString = fileToRead.read()
+        with open(output_file_with_path, 'r') as fileToRead:
+            output_file_as_string = fileToRead.read()
         # the outputted file needs to match exactly
-        outputFileAsString = outputFileAsString.replace('\r', '')
-        outputList = out.split('\n')
-        outputFileAsList = outputFileAsString.split('\n')
-        outputListSize = len(outputList)
-        outputFileAsListSize = len(outputFileAsList)
-        assert outputListSize == outputFileAsListSize, \
+        output_file_as_string = output_file_as_string.replace('\r', '')
+        output_list = out.split('\n')
+        output_file_as_list = output_file_as_string.split('\n')
+        output_list_size = len(output_list)
+        output_file_as_list_size = len(output_file_as_list)
+        assert output_list_size == output_file_as_list_size, \
             'for file %s, size %d != %d \n(%s)' % \
-            (fileToPreprocess, outputListSize, outputFileAsListSize,
+            (file_to_preprocess, output_list_size, output_file_as_list_size,
              out)
-        for i in range(outputFileAsListSize):
-            assert outputList[i] == outputFileAsList[i], \
+        for i in range(output_file_as_list_size):
+            assert output_list[i] == output_file_as_list[i], \
                 'for file %s line %d, <%s> != <%s>' % \
-                (fileToPreprocess, i, outputList[i], outputFileAsList[i])
+                (file_to_preprocess, i, output_list[i], output_file_as_list[i])
         # there should be no error
         assert err == ''

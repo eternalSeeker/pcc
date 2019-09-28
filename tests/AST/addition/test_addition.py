@@ -39,5 +39,4 @@ class TestAddition(ASTHelper):
     @parametrize('file_to_test', files_to_test)
     def test_addition(self, file_to_test, capsys):
         path_of_this_file = abspath(dirname(__file__))
-        self.execute_test(file_to_test,capsys, path_of_this_file)
-
+        self.execute_test(file_to_test, capsys, path_of_this_file)

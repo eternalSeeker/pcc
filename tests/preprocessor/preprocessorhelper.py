@@ -1,5 +1,5 @@
 import subprocess
-from os.path import join, dirname
+from os.path import join
 
 from pcc.main import main
 

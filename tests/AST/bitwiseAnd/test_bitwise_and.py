@@ -23,6 +23,7 @@ files_to_test = [
     'variable_variable_init.c',
 ]
 
+
 @generate_outputs
 def generate_outputs():
     folder = dirname(__file__)
@@ -34,4 +35,4 @@ class TestBitwiseAnd(ASTHelper):
     @parametrize('file_to_test', files_to_test)
     def test_bitwise_and(self, file_to_test, capsys):
         path_of_this_file = abspath(dirname(__file__))
-        self.execute_test(file_to_test,capsys, path_of_this_file)
+        self.execute_test(file_to_test, capsys, path_of_this_file)

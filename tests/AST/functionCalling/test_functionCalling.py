@@ -22,7 +22,7 @@ files_to_test = [
 
 
 @generate_outputs
-def generate_ast_outputs():
+def generate_ast_test_outputs():
     folder = dirname(__file__)
     generate_ast_outputs(files_to_test, folder)
 
@@ -30,6 +30,6 @@ def generate_ast_outputs():
 class TestFunctionCalling(ASTHelper):
 
     @parametrize('file_to_test', files_to_test)
-    def test_functionCalling(self, file_to_test, capsys):
+    def test_function_calling(self, file_to_test, capsys):
         path_of_this_file = abspath(dirname(__file__))
         self.execute_test(file_to_test, capsys, path_of_this_file)

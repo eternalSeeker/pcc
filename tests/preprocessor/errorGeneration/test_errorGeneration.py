@@ -46,20 +46,18 @@ class TestErrorGeneration(object):
 
     @parametrize('file_to_test', files_to_test)
     def test_include(self, file_to_test, capsys):
-        includeDirs = ['-Itests/preprocessor/include/input']
-        inputPath = 'input'
-        outputPath = 'output'
-        pathOfThisFile = abspath(dirname(__file__))
-        inputPath = join(pathOfThisFile, inputPath)
-        outputPath = join(pathOfThisFile, outputPath)
-        fileToPreprocess = file_to_test
-        inputFileWithPath = join(inputPath, fileToPreprocess)
+        include_dirs = ['-Itests/preprocessor/include/input']
+        input_path = 'input'
+        path_of_this_file = abspath(dirname(__file__))
+        input_path = join(path_of_this_file, input_path)
+        file_to_preprocess = file_to_test
+        input_file_with_path = join(input_path, file_to_preprocess)
 
         # this test will not raise SystemExit
         argsv = list(['progname'])
         argsv.append('-E')
-        argsv.extend(includeDirs)
-        argsv.append(inputFileWithPath)
+        argsv.extend(include_dirs)
+        argsv.append(input_file_with_path)
         main(argsv)
         out, err = capsys.readouterr()
 
