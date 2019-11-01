@@ -9,7 +9,6 @@ pycparser==2.19
 
 # Linting
 pylama==7.7.1
-pylama-pylint==3.1.1
 eradicate==1.0
 darglint==0.6.1
 
