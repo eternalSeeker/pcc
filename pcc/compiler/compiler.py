@@ -3,7 +3,6 @@
 
 
 from pcc.AST.ast_node import AstNode
-from pcc.AST.compiled_object import CompiledObjectType
 from pcc.compiler.assembler_x64 import X64Assembler
 from pcc.compiler.objectFile import ObjectFile, Symbol
 
@@ -32,11 +31,8 @@ class Compiler:
         for statement in self.ast_root_node.statement_sequence:
             compiled_object = statement.compile(self.assembler)
             if compiled_object:
-                is_text = False
-                if compiled_object.type == CompiledObjectType.code:
-                    is_text = True
                 symbol = Symbol(compiled_object.name, compiled_object.value,
-                                compiled_object.size, is_text)
+                                compiled_object.size, compiled_object.type)
                 self.object_file.add_symbol(symbol)
 
     def write_object_file_to_file(self, file_name):

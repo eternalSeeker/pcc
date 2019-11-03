@@ -9,7 +9,8 @@ from pcc.compiler.assembler import ProcessorRegister
 
 class VariableDeclaration(Statement):
 
-    def __init__(self, variable_type, name, initializer, depth):
+    def __init__(self, variable_type, name, initializer,
+                 depth, is_extern=False):
         """Create a variable declaration.
 
         Args:
@@ -18,15 +19,19 @@ class VariableDeclaration(Statement):
             initializer (pcc.AST.expression.Expression): the expression
                 to initialize
             depth (int): the depth in the tree
+            is_extern (bool): True if this is an external variable
         """
         super(VariableDeclaration, self).__init__(depth)
         self.variable_type = variable_type
         self.name = name
         self.initializer = initializer
         self.stack_var = None
+        self.is_extern = is_extern
 
     def __str__(self):
-        string = self._depth * '  ' + 'Decl: ' + self.name + ', [], [], []\n'
+        external = '\'extern\'' if self.is_extern is True else ''
+        string = self._depth * '  ' + 'Decl: ' + self.name
+        string += ', [], [' + external + '], []\n'
         string += self._depth * '  ' + '  TypeDecl: ' + self.name + ', []\n'
         string += self._depth * '  ' + '    IdentifierType: [\'' \
             + self.variable_type.name + '\']\n'
@@ -67,7 +72,26 @@ class VariableDeclaration(Statement):
         """
         size = self.variable_type.size
         value = bytearray()
-        compiled_object = None
+        if self.is_extern:
+            size = 0
+            compiled_object = CompiledObject(self.name, size, value,
+                                             CompiledObjectType.data)
+        else:
+            compiled_object = self.compile_internal_variable(assembler, size)
+
+        return compiled_object
+
+    def compile_internal_variable(self, assembler, size):
+        """Compile a non-external variable
+
+        Args:
+            assembler (Assembler): the assembler to use
+            size (int): the size of the type of this variable
+
+        Returns:
+            CompiledObject: the compiled version of this variable
+        """
+        value = bytearray()
         if self.parent_node.parent_node:
             if self.initializer:
                 stack_variable = self.stack_var
@@ -90,7 +114,6 @@ class VariableDeclaration(Statement):
                 value = self.initializer_to_bytearray(size)
             compiled_object = CompiledObject(self.name, size, value,
                                              CompiledObjectType.data)
-
         return compiled_object
 
     def initializer_to_bytearray(self, size):

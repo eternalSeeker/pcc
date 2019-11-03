@@ -7,6 +7,9 @@ import os
 # https://0x00sec.org/t/dissecting-and-exploiting-elf-files/7267
 
 # sizes and alignments for the elf words
+import pcc
+from pcc.AST.compiled_object import CompiledObjectType
+
 Elf64_Addr = 8
 Elf64_Off = 8
 Elf64_Half = 2
@@ -380,7 +383,7 @@ class SpecialSymbolIndex(enum.IntEnum):
 
 
 class Symbol:
-    def __init__(self, name, value, size, is_text):
+    def __init__(self, name, value, size, symbol_type):
         """Create a compiled symbol object
 
         Args:
@@ -388,12 +391,12 @@ class Symbol:
             value (bytearray): the value of the symbol
             size (int): the size of the symbol, if value is empty,
                         it represents the size of the actual symbol
-            is_text (bool): is text
+            symbol_type (SymbolType): the tyoe
         """
         self.name = name
         self.value = value
         self.size = size
-        self.is_text = is_text
+        self.type = symbol_type
 
 
 class SymbolTableEntry:
@@ -553,15 +556,25 @@ class ObjectFile:
         """
         name = add_to_table(symbol.name, self.string_table)
         size = len(symbol.value)
-        if symbol.is_text:
+        if symbol.type == CompiledObjectType.code:
             section_index = self.get_section_index('.text')
             self.get_section('.text').section_content += symbol.value
-        elif size == 0:
+        elif symbol.type == CompiledObjectType.data:
+            if size == 0:
+                size = symbol.size
+                section_index = self.get_section_index('.bss')
+            else:
+                section_index = self.get_section_index('.data')
+                self.dot_data_content += symbol.value
+        elif symbol.type == CompiledObjectType.none_type:
+            section_index = 0
             size = symbol.size
-            section_index = self.get_section_index('.bss')
         else:
-            section_index = self.get_section_index('.data')
-            self.dot_data_content += symbol.value
+            message = f'Could not identify type of {symbol.name}, ' \
+                      f'got {symbol.type}\nIgnoring this symbol'
+            pcc.utils.warning.error(self.input_file_name, line_number=-1,
+                                    message=message)
+            return
         entry = SymbolTableEntry(name, SymbolType.STT_OBJECT,
                                  SymbolBinding.STB_GLOBAL, section_index, size)
         self.symbol_table.append(entry)

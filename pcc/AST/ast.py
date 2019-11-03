@@ -439,6 +439,11 @@ class Ast:
     def extract_variable_declaration_from_string(self, statement):
         list_of_tokens = statement.split()
         result_list = []
+        is_extern = False
+        if list_of_tokens[0] == 'extern':
+            list_of_tokens.pop(0)
+            statement = statement.replace('extern', '')
+            is_extern = True
         variable_type = self.get_type_from_name(list_of_tokens[0])
         if variable_type:
             declarations = statement.replace(variable_type.name + ' ', '')
@@ -478,7 +483,8 @@ class Ast:
                     statement = VariableDeclaration(variable_type,
                                                     identifier,
                                                     initializer_exp,
-                                                    depth)
+                                                    depth,
+                                                    is_extern)
                 result_list.append(statement)
         return result_list
 

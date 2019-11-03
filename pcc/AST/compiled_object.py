@@ -2,6 +2,7 @@ import enum
 
 
 class CompiledObjectType(enum.Enum):
+    none_type = 0,
     data = 1,
     code = 2,
 
