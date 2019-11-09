@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import enum
 import os
 
@@ -383,20 +382,50 @@ class SpecialSymbolIndex(enum.IntEnum):
 
 
 class Symbol:
-    def __init__(self, name, value, size, symbol_type):
+    def __init__(self, name, value, size, symbol_type, relocation_objects):
         """Create a compiled symbol object
 
         Args:
             name (str): the name of the symbol
             value (bytearray): the value of the symbol
             size (int): the size of the symbol, if value is empty,
-                        it represents the size of the actual symbol
-            symbol_type (SymbolType): the tyoe
+                it represents the size of the actual symbol
+            symbol_type (SymbolType): the type
+            relocation_objects(List[RelocationObject]): the relocation objects
+                if applicable
         """
         self.name = name
         self.value = value
         self.size = size
         self.type = symbol_type
+        self.relocation_objects = relocation_objects
+
+
+class RelocationTableEntry:
+    def __init__(self, offset, info, addend):
+        """Create a relocation table entry
+
+        Args:
+            offset (int): offset into the section
+            info (int): the encoded info
+            addend (int): the addend
+        """
+        self.offset = offset
+        self.addend = addend
+        self.info = info
+
+    def to_binary_array(self):
+        """Get the byte array representation of the relocation table entry
+
+        Returns:
+            bytearray: the binary representation
+        """
+        byte_array = bytearray()
+        byte_array += number_to_bytearray(self.offset, 8)
+        byte_array += number_to_bytearray(self.info, 8)
+        byte_array += number_to_bytearray(self.addend, 8)
+
+        return byte_array
 
 
 class SymbolTableEntry:
@@ -434,6 +463,17 @@ class SymbolTableEntry:
 
         return byte_array
 
+    def __str__(self):
+        string = 'SymbolTableEntry '
+        string += f'name offset in string table {self.st_name} '
+        string += f'info {self.st_info} '
+        string += f'other {self.st_other} '
+        string += f'section header index {self.st_shndx} '
+        string += f'value {self.st_value} '
+        string += f'size {self.st_size} '
+
+        return string
+
 
 def add_to_table(name, table):
     """Add a string to the table
@@ -466,6 +506,7 @@ class ObjectFile:
         self.section_string_table = bytearray()
         self.string_table = bytearray()
         self.dot_data_content = bytearray()
+        self.text_rela_table = []
 
         none = add_to_table('', self.string_table)
         # only add the base name of the file to the object file
@@ -473,20 +514,30 @@ class ObjectFile:
         file_name = add_to_table(name, self.string_table)
         self.symbol_table = [
             SymbolTableEntry(none, SymbolType.STT_NOTYPE,
-                             SymbolBinding.STB_LOCAL, 0, 0),
+                             SymbolBinding.STB_LOCAL, section_index=0,
+                             symbol_size=0),
             SymbolTableEntry(file_name, SymbolType.STT_FILE,
                              SymbolBinding.STB_LOCAL,
                              SpecialSymbolIndex.SHN_ABS, 0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBinding.STB_LOCAL, 1, 0),
+                             SymbolBinding.STB_LOCAL, section_index=1,
+                             symbol_size=0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBinding.STB_LOCAL, 2, 0),
+                             SymbolBinding.STB_LOCAL, section_index=2,
+                             symbol_size=0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBinding.STB_LOCAL, 3, 0),
+                             SymbolBinding.STB_LOCAL, section_index=3,
+                             symbol_size=0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBinding.STB_LOCAL, 5, 0),
+                             SymbolBinding.STB_LOCAL, section_index=4,
+                             symbol_size=0),
             SymbolTableEntry(none, SymbolType.STT_SECTION,
-                             SymbolBinding.STB_LOCAL, 4, 0),
+                             SymbolBinding.STB_LOCAL, section_index=5,
+                             symbol_size=0),
+            SymbolTableEntry(none, SymbolType.STT_SECTION,
+                             SymbolBinding.STB_LOCAL, section_index=6,
+                             symbol_size=0),
+
         ]
 
         self.elf_header = ElfHeader(ObjectFileType.RELOCATABLE_OBJECT_FILE)
@@ -494,6 +545,7 @@ class ObjectFile:
         ax_flags = [SectionFlags.SHF_ALLOC, SectionFlags.SHF_EXECINSTR]
         wa_flags = [SectionFlags.SHF_ALLOC, SectionFlags.SHF_WRITE]
         ms_flags = [SectionFlags.SHF_MERGE, SectionFlags.SHF_STRINGS]
+        link_flags = [SectionFlags.SHF_INFO_LINK]
 
         none = add_to_table('', self.section_string_table)
         dot_symtab = add_to_table('.symtab', self.section_string_table)
@@ -502,6 +554,7 @@ class ObjectFile:
         dot_text = add_to_table('.text', self.section_string_table)
         dot_data = add_to_table('.data', self.section_string_table)
         dot_bss = add_to_table('.bss', self.section_string_table)
+        dot_rela_text = add_to_table('.text.rela', self.section_string_table)
         dot_comment = add_to_table('.comment', self.section_string_table)
         dot_note_gnu_stack = add_to_table('.note.GNU-stack',
                                           self.section_string_table)
@@ -512,6 +565,8 @@ class ObjectFile:
             Section('.text', dot_text, SectionType.SHT_PROGBITS, ax_flags),
             Section('.data', dot_data, SectionType.SHT_PROGBITS, wa_flags),
             Section('.bss', dot_bss, SectionType.SHT_NOBITS, wa_flags),
+            Section('.text.rela', dot_rela_text, SectionType.SHT_RELA,
+                    link_flags),
             Section('.comment', dot_comment, SectionType.SHT_PROGBITS,
                     ms_flags),
             Section('.note.GNU-stack', dot_note_gnu_stack,
@@ -533,6 +588,14 @@ class ObjectFile:
         self.get_section('.symtab').alignment = 8
 
         self.get_section('.comment').entry_size = 1
+
+        self.get_section('.text.rela').link = self.get_section_index('.symtab')
+        self.get_section('.text.rela').info = self.get_section_index('.text')
+        self.get_section('.text.rela').alignment = 8
+        # create a dummpy entry to calculate the size of the entry
+        dummy_entry = RelocationTableEntry(0, 0, 0)
+        self.get_section('.text.rela').entry_size = \
+            len(dummy_entry.to_binary_array())
 
         str_index = self.get_section_index('.shstrtab')
         self.elf_header.set_section_string_index(str_index)
@@ -556,15 +619,28 @@ class ObjectFile:
         """
         name = add_to_table(symbol.name, self.string_table)
         size = len(symbol.value)
+        original_section_size = 0
+        symbol_binding = SymbolBinding.STB_GLOBAL
+        symbol_type = SymbolType.STT_OBJECT
         if symbol.type == CompiledObjectType.code:
             section_index = self.get_section_index('.text')
-            self.get_section('.text').section_content += symbol.value
+            section_content = self.get_section('.text').section_content
+            original_section_size = len(section_content)
+            section_content += symbol.value
+            symbol_type = SymbolType.STT_FUNC
         elif symbol.type == CompiledObjectType.data:
             if size == 0:
                 size = symbol.size
-                section_index = self.get_section_index('.bss')
+                if size != 0:
+                    section_index = self.get_section_index('.bss')
+                else:
+                    # undefined section
+                    section_index = 0
+                    symbol_binding = SymbolBinding.STB_GLOBAL
+                    symbol_type = SymbolType.STT_NOTYPE
             else:
                 section_index = self.get_section_index('.data')
+                original_section_size = len(self.dot_data_content)
                 self.dot_data_content += symbol.value
         elif symbol.type == CompiledObjectType.none_type:
             section_index = 0
@@ -575,9 +651,58 @@ class ObjectFile:
             pcc.utils.warning.error(self.input_file_name, line_number=-1,
                                     message=message)
             return
-        entry = SymbolTableEntry(name, SymbolType.STT_OBJECT,
-                                 SymbolBinding.STB_GLOBAL, section_index, size)
+        entry = SymbolTableEntry(name, symbol_type,
+                                 symbol_binding, section_index, size)
+        if symbol.relocation_objects:
+            self.handle_relocation_objects(original_section_size, symbol)
         self.symbol_table.append(entry)
+
+    def handle_relocation_objects(self, original_section_size, symbol):
+        """Handle the relocation objects
+
+        Args:
+            original_section_size (int): the original size of the section
+            symbol (Symbol): The symbol that has the objects
+
+        Raises:
+            NotImplementedError: for comiled object types not yet supported
+        """
+        for rela_object in symbol.relocation_objects:
+            offset = rela_object.offset
+            offset += original_section_size
+            # info is the encoding of the type of the relocated object and
+            # the index of the symbol in the symbol table, which after
+            # addition will be the length before addition
+            if rela_object.type == CompiledObjectType.data:
+                info = 2
+            else:
+                raise NotImplementedError
+            index = -1
+            for sym in self.symbol_table:
+                name = self.get_name_at_offset_of_string_table(sym.st_name)
+                if name == rela_object.name:
+                    index = self.symbol_table.index(sym)
+                    break
+            if index == -1:
+                message = f'Could not find the referenced symbol ' \
+                          f'{sym.st_name}'
+                pcc.utils.warning.error(self.input_file_name,
+                                        line_number=-1,
+                                        message=message)
+            info += index << 32
+            obj = RelocationTableEntry(offset, info, rela_object.addend)
+            self.text_rela_table.append(obj)
+
+    def get_name_at_offset_of_string_table(self, offset):
+        name = ''
+
+        working_offset = offset
+        while working_offset < len(self.string_table) and \
+                self.string_table[working_offset] != 0:
+            name += chr(self.string_table[working_offset])
+            working_offset += 1
+
+        return name
 
     def get_section(self, name):
         """Get the section from the name.
@@ -616,6 +741,11 @@ class ObjectFile:
 
         self.get_section('.shstrtab').fill(self.section_string_table)
         self.get_section('.data').fill(self.dot_data_content)
+
+        text_rela_content = bytearray()
+        for rela in self.text_rela_table:
+            text_rela_content += rela.to_binary_array()
+        self.get_section('.text.rela').fill(text_rela_content)
 
         byte_array = bytearray()
         for i in range(len(self.symbol_table)):

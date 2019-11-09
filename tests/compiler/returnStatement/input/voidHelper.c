@@ -7,4 +7,5 @@ int main(void)
 {
     foo();
     printf("done\n");
+    return 0;
 }

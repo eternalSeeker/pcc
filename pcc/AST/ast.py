@@ -442,7 +442,8 @@ class Ast:
         is_extern = False
         if list_of_tokens[0] == 'extern':
             list_of_tokens.pop(0)
-            statement = statement.replace('extern', '')
+            # remove the extern keyword from the statement and continue
+            statement = ' '.join(list_of_tokens)
             is_extern = True
         variable_type = self.get_type_from_name(list_of_tokens[0])
         if variable_type:

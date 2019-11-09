@@ -1,1 +1,1 @@
- error "error"
+    2 | error "error"

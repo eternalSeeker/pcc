@@ -7,4 +7,5 @@ int main(void)
 {
     char c = foo();
     printf("done %d\n", c);
+    return 0;
 }

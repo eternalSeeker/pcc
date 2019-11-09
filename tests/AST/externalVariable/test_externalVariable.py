@@ -14,6 +14,7 @@ parametrize = pytest.mark.parametrize
 
 files_to_test = [
     'externalVariable.c',
+    'useExternalVariable.c'
 ]
 
 

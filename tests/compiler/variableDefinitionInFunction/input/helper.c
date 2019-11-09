@@ -9,4 +9,5 @@ int main(void)
     foo();
     char d = 7;
     printf("done %d, %d\n", c, d);
+    return 0;
 }

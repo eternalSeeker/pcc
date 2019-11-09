@@ -83,7 +83,7 @@ class CompilerHelper(object):
 
         response = subprocess.run(command, stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE, shell=True)
-        assert response.returncode == 0
+        assert response.returncode == 0, response.stderr
 
         command = './' + gcc_exe
         response = subprocess.run(command, stdout=subprocess.PIPE,

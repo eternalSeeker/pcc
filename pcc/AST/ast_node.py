@@ -56,6 +56,28 @@ class AstNode:
         """
         pass
 
+    def get_global_symbol(self, identifier):
+        """Returns the AST node with the specified identifier
+
+        Args:
+            identifier (str): the identifier to look up
+
+        Returns:
+            AstNode: the node to look up if exists
+        """
+        if self.parent_node is None:
+            for node in self.statement_sequence:
+                try:
+                    if node.name == identifier:
+                        return node
+                except AttributeError:
+                    # not having the attribute, continuing
+                    pass
+            else:
+                return None
+        else:
+            return self.parent_node.get_global_symbol(identifier)
+
     def add_statement(self, statement):
         statement.parent_node = self
         self.statement_sequence.append(statement)

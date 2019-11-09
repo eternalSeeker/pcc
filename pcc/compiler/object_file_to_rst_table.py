@@ -210,7 +210,7 @@ def print_section(data, address, section_size, string_table, object_file,
         print_symbol_table(section_data, section_entry_size,
                            section_offset, symbol_names)
 
-    if section_name == '.rela.text':
+    if section_name == '.text.rela':
         print_relocatable_text(section_data, section_entry_size,
                                section_offset, section_type, section_link)
 

@@ -7,4 +7,5 @@ int main(void)
 {
     float f = foo();
     printf("done %f\n", f);
+    return 0;
 }

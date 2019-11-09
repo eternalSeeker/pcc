@@ -7,4 +7,5 @@ int main(void)
 {
     c = 42;
     printf("c == %d\n", c);
+    return 0;
 }

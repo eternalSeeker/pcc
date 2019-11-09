@@ -32,7 +32,8 @@ class Compiler:
             compiled_object = statement.compile(self.assembler)
             if compiled_object:
                 symbol = Symbol(compiled_object.name, compiled_object.value,
-                                compiled_object.size, compiled_object.type)
+                                compiled_object.size, compiled_object.type,
+                                compiled_object.relocation_objects)
                 self.object_file.add_symbol(symbol)
 
     def write_object_file_to_file(self, file_name):

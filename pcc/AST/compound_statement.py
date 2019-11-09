@@ -34,14 +34,22 @@ class CompoundStatement(Statement):
             CompiledObject: the compiled version of this statement
         """
         value = bytearray()
+        relocation_objects = []
         for statement in self.statement_sequence:
-            result = statement.compile(assembler)
-            if result:
-                value += result.value
+            compiled_object = statement.compile(assembler)
+            if compiled_object is None:
+                continue
+            reloc_objects = compiled_object.relocation_objects
+            for relocation_object in reloc_objects:
+                additional_offset = len(value)
+                relocation_object.offset += additional_offset
+                relocation_objects.append(relocation_object)
+            value += compiled_object.value
 
         size = len(value)
         compiled_object = CompiledObject('compoundStatement', size,
-                                         value, CompiledObjectType.code)
+                                         value, CompiledObjectType.code,
+                                         relocation_objects)
         return compiled_object
 
     def add_stack_variable(self, current_list):

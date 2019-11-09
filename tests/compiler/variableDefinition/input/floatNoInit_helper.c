@@ -7,4 +7,5 @@ int main(void)
 {
     f = 42.0;
     printf("f == %f\n", f);
+    return 0;
 }
