@@ -840,6 +840,7 @@ class X64Assembler(Assembler):
 
         Returns:
             bytearray: the machine code
+            int: the offset to the displacement
 
         """
         value = bytearray()
@@ -851,9 +852,10 @@ class X64Assembler(Assembler):
         mod = 0b00
         modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
         value.append(modr_byte)
+        displacement_offset = len(value)
         encoded_displacement = struct.pack("i", displacement)
         value += encoded_displacement
-        return value
+        return value, displacement_offset
 
     def movzx(self, source, destination):
         """Move from source to destination with sign extend.

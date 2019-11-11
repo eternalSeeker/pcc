@@ -99,10 +99,12 @@ class Assignment(Statement):
             register = ProcessorRegister.accumulator
 
         value += self.initializer_exp.load_result_to_reg(register, assembler)
-        # the 2 is for the 2 bytes the next instruction will add
-        offset = len(value) + 2
+
         # use a 0 displacement as the linker will fill it in
-        value += assembler.mov_dispacement(register, displacement=0)
+        compiled_code, displacement_offset = \
+            assembler.mov_dispacement(register, displacement=0)
+        offset = len(value) + displacement_offset
+        value += compiled_code
         # the offset in the symbol is 4
         addend = -4
         size = len(value)

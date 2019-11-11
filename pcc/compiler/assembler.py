@@ -435,6 +435,7 @@ class Assembler:
 
         Returns:
             bytearray: the machine code #noqa I202
+            int: the offset to the displacement
 
         Raises:
             NotImplementedError: if not implemented in a subclasss
