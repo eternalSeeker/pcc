@@ -1,9 +1,9 @@
 
 extern int external_integer;
 
-void foo(void);
+int foo(void);
 
-void foo(void)
+int foo(void)
 {
-    return;
+    return 0;
 }

@@ -16,6 +16,7 @@ parametrize = pytest.mark.parametrize
 files_to_test = [
     ('externalInteger.c', 'int_helper.c', 'externalInteger.out'),
     ('useExternalVariable.c', 'int_helper.c', 'useExternalVariable.out'),
+    ('loadGlobalVariable.c', 'int_helper.c', 'loadGlobalVariable.out'),
 ]
 
 

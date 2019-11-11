@@ -36,13 +36,25 @@ class UnaryOperator(Expression):
         raise NotImplementedError
 
     def load_result_to_reg(self, register, assembler):
+        """Load the result of the unary operator to the specified register
+
+            Args:
+                register (ProcessorRegister): the register to load the result
+                assembler (Assembler): the assembler to use
+
+            Returns:
+                bytearray: the compiled code to evaluate the expression
+                List[RelocationObject]: the required relocation objects
+
+        """
         if register == ProcessorRegister.single_scalar_0:
             register_1 = ProcessorRegister.single_scalar_0
         elif register == ProcessorRegister.double_scalar_0:
             register_1 = ProcessorRegister.double_scalar_0
         else:
             register_1 = ProcessorRegister.accumulator
-        value = self.operand.load_result_to_reg(register_1, assembler)
+        value, relocation_objects = \
+            self.operand.load_result_to_reg(register_1, assembler)
 
         value += self.evaluate(destination=register_1, assembler=assembler)
 
@@ -51,4 +63,4 @@ class UnaryOperator(Expression):
         if register != register_1:
             value += assembler.copy_from_reg_to_reg(register_1, register)
 
-        return value
+        return value, relocation_objects

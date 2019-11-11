@@ -1,4 +1,6 @@
+from pcc.AST.compiled_object import CompiledObjectType
 from pcc.AST.expression import Expression
+from pcc.compiler.relocation_object import RelocationObject
 
 
 class VariableReference(Expression):
@@ -26,13 +28,27 @@ class VariableReference(Expression):
 
         Returns:
             bytearray: the compiled code to evaluate the expression
+            List[RelocationObject]: the required relocation objects
         """
         value = bytearray()
         parent = self.parent_node
         identifier = self.name
         stack_variable = parent.get_stack_variable(identifier)
-        stack_offset = stack_variable.stack_offset
+        relocation_objects = []
+        if stack_variable is not None:
+            stack_offset = stack_variable.stack_offset
+            value += assembler.copy_stack_to_reg(stack_offset, register)
+        else:
+            node = self.get_global_symbol(identifier)
+            compiled_code, displacement_offset = \
+                assembler.mov_from_displacement(register, displacement=0)
+            offset = len(value) + displacement_offset
+            value += compiled_code
+            # the offset in the symbol is 4
+            addend = -4
+            relocation_object = RelocationObject(node.name, offset,
+                                                 CompiledObjectType.data,
+                                                 addend)
+            relocation_objects.append(relocation_object)
 
-        value += assembler.copy_stack_to_reg(stack_offset, register)
-
-        return value
+        return value, relocation_objects

@@ -66,10 +66,16 @@ class Assignment(Statement):
             register = ProcessorRegister.single_scalar_0
         else:
             register = ProcessorRegister.accumulator
-        value += self.initializer_exp.load_result_to_reg(register, assembler)
+        compiled_code, relocation_objects = \
+            self.initializer_exp.load_result_to_reg(register, assembler)
+        for relocation_object in relocation_objects:
+            additional_offset = len(value)
+            relocation_object.offset += additional_offset
+        value += compiled_code
         value += assembler.copy_reg_to_stack(stack_offset, register)
         compiled_object = CompiledObject(self.id, size,
-                                         value, CompiledObjectType.code)
+                                         value, CompiledObjectType.code,
+                                         relocation_objects)
         return compiled_object
 
     def compile_global_variable(self, assembler, identifier):
@@ -98,11 +104,14 @@ class Assignment(Statement):
         else:
             register = ProcessorRegister.accumulator
 
-        value += self.initializer_exp.load_result_to_reg(register, assembler)
+        compiled_code, relocation_objects = \
+            self.initializer_exp.load_result_to_reg(register, assembler)
+
+        value += compiled_code
 
         # use a 0 displacement as the linker will fill it in
         compiled_code, displacement_offset = \
-            assembler.mov_dispacement(register, displacement=0)
+            assembler.mov_to_displacement(register, displacement=0)
         offset = len(value) + displacement_offset
         value += compiled_code
         # the offset in the symbol is 4
@@ -110,8 +119,9 @@ class Assignment(Statement):
         size = len(value)
         relocation_object = RelocationObject(node.name, offset,
                                              CompiledObjectType.data, addend)
+        relocation_objects.append(relocation_object)
         compiled_object = CompiledObject(self.id, size,
                                          value, CompiledObjectType.code,
-                                         [relocation_object])
+                                         relocation_objects)
 
         return compiled_object

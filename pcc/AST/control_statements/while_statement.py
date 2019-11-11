@@ -40,8 +40,9 @@ class WhileStatement(Statement):
         # compare the value from the condition, to 0. If not equal,
         # go to the if part, else to the else part if present.
         condition_reg = ProcessorRegister.accumulator
-        condition = self.condition.load_result_to_reg(condition_reg, assembler)
-        value += condition
+        condition_code, relocation_objects = \
+            self.condition.load_result_to_reg(condition_reg, assembler)
+        value += condition_code
 
         body_len = len(body_part.value)
 
@@ -65,7 +66,8 @@ class WhileStatement(Statement):
 
         size = len(value)
         compiled_object = CompiledObject('if', size,
-                                         value, CompiledObjectType.code)
+                                         value, CompiledObjectType.code,
+                                         relocation_objects)
         return compiled_object
 
     def get_stack_variable(self, variable_name):

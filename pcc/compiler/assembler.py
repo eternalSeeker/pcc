@@ -442,8 +442,23 @@ class Assembler:
         """
         raise NotImplementedError
 
-    def mov_dispacement(self, register, displacement):
-        """Move from source to destination with sign extend.
+    def mov_to_displacement(self, register, displacement):
+        """Move the value from the register to the displacement.
+
+        Args:
+            register (ProcessorRegister): the destination register
+            displacement (int): the displacement offset
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
+    def mov_from_displacement(self, register, displacement):
+        """Move the value from the displacement to the register.
 
         Args:
             register (ProcessorRegister): the destination register

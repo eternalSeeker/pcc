@@ -5,6 +5,7 @@ int foo(void);
 
 int foo(void)
 {
-    external_integer = 10;
-    return 1;
+    int i = 5;
+    i = i + external_integer;
+    return i;
 }

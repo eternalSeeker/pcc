@@ -49,8 +49,11 @@ class ReturnStatement(Statement):
                 reg = ProcessorRegister.single_scalar_0
             else:
                 reg = ProcessorRegister.accumulator
-
-            value += self.expression.load_result_to_reg(reg, assembler)
+            compiled_code, rela_objects = \
+                self.expression.load_result_to_reg(reg, assembler)
+            value += compiled_code
+        else:
+            rela_objects = []
 
         # restore the frame pointer from stack
         ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)
@@ -62,5 +65,6 @@ class ReturnStatement(Statement):
 
         size = len(value)
         compiled_object = CompiledObject(self.expression, size,
-                                         value, CompiledObjectType.code)
+                                         value, CompiledObjectType.code,
+                                         rela_objects)
         return compiled_object

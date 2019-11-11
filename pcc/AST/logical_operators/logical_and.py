@@ -31,21 +31,31 @@ class LogicalAnd(BinaryOperator):
 
         Returns:
             bytearray: the compiled code to evaluate the expression
+            List[RelocationObject]: the required relocation objects
 
         """
         value = bytearray()
+        relocation_objects = []
         if register != ProcessorRegister.accumulator:
             register_1 = ProcessorRegister.accumulator
         else:
             register_1 = ProcessorRegister.counter
         clear_result = assembler.copy_value_to_reg(0, register)
         set_result = assembler.copy_value_to_reg(1, register)
-        if_instructions = self.operand_1.load_result_to_reg(register_1,
-                                                            assembler)
+        if_instructions, rela_objects_if = \
+            self.operand_1.load_result_to_reg(register_1, assembler)
+        for rela_obj in rela_objects_if:
+            additional_offset = len(clear_result)
+            rela_obj.offset += additional_offset
+            relocation_objects.append(rela_obj)
         if_instructions += assembler.cmp_against_const(register_1, 0)
 
-        else_instructions = self.operand_2.load_result_to_reg(register_1,
-                                                              assembler)
+        else_instructions, rela_objects_else = \
+            self.operand_2.load_result_to_reg(register_1, assembler)
+        for rela_obj in rela_objects_else:
+            additional_offset = len(clear_result + if_instructions)
+            rela_obj.offset += additional_offset
+            relocation_objects.append(rela_obj)
         else_instructions += assembler.cmp_against_const(register_1, 0)
         jump_amount = len(set_result)
         else_instructions += assembler.je(jump_amount)
@@ -58,4 +68,4 @@ class LogicalAnd(BinaryOperator):
         value += else_instructions
         value += set_result
 
-        return value
+        return value, relocation_objects

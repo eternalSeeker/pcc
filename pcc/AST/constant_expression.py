@@ -22,6 +22,7 @@ class ConstantExpression(Expression):
 
         Returns:
             bytearray: the compiled code to evaluate the expression
+            List[RelocationObject]: the required relocation objects
         """
         if register == ProcessorRegister.double_scalar_0 or \
                 register == ProcessorRegister.double_scalar_1:
@@ -36,5 +37,5 @@ class ConstantExpression(Expression):
             val = int(self.exp_value)
 
         value = assembler.copy_value_to_reg(val, register)
-
-        return value
+        # no relocation objects
+        return value, []

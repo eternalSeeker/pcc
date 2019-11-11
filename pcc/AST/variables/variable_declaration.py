@@ -103,12 +103,13 @@ class VariableDeclaration(Statement):
                 else:
                     register = ProcessorRegister.accumulator
 
-                value += self.initializer.load_result_to_reg(register,
-                                                             assembler)
-
+                compiled_code, relocation_objects = \
+                    self.initializer.load_result_to_reg(register, assembler)
+                value += compiled_code
                 value += assembler.copy_reg_to_stack(stack_offset, register)
                 compiled_object = CompiledObject(self.name, size, value,
-                                                 CompiledObjectType.data)
+                                                 CompiledObjectType.data,
+                                                 relocation_objects)
         else:
             if self.initializer:
                 value = self.initializer_to_bytearray(size)

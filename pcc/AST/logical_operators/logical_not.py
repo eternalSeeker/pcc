@@ -36,7 +36,7 @@ class LogicalNot(UnaryOperator):
 
         Returns:
             bytearray: the compiled code to evaluate the expression
-
+            List[RelocationObject]: the required relocation objects
         """
         value = bytearray()
         if register != ProcessorRegister.accumulator:
@@ -45,15 +45,20 @@ class LogicalNot(UnaryOperator):
             register_1 = ProcessorRegister.counter
         clear_result = assembler.copy_value_to_reg(0, register)
         set_result = assembler.copy_value_to_reg(1, register)
-        if_instructions = self.operand.load_result_to_reg(register_1,
-                                                          assembler)
+        if_instructions, relocation_objects = \
+            self.operand.load_result_to_reg(register_1, assembler)
         if_instructions += assembler.cmp_against_const(register_1, 0)
 
         jump_amount = len(set_result)
         if_instructions += assembler.jne(jump_amount)
 
         value += clear_result
+
+        for rela_obj in relocation_objects:
+            additional_offset = len(clear_result)
+            rela_obj.offset += additional_offset
+
         value += if_instructions
         value += set_result
 
-        return value
+        return value, relocation_objects

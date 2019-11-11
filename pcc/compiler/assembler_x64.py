@@ -831,21 +831,45 @@ class X64Assembler(Assembler):
 
         return value
 
-    def mov_dispacement(self, register, displacement):
-        """Move from source to destination with sign extend.
+    def mov_to_displacement(self, register, displacement):
+        """Move the value from the register to the displacement.
 
         Args:
             register (ProcessorRegister): the destination register
             displacement (int): the displacement offset
 
         Returns:
-            bytearray: the machine code
-            int: the offset to the displacement
+            bytearray: the machine code #noqa I202
 
         """
         value = bytearray()
         # 89 /r 	MOV r/m32,r32
         value.append(0x89)
+
+        rm = 5  # disp32
+        reg = get_register_encoding(register)
+        mod = 0b00
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        value.append(modr_byte)
+        displacement_offset = len(value)
+        encoded_displacement = struct.pack("i", displacement)
+        value += encoded_displacement
+        return value, displacement_offset
+
+    def mov_from_displacement(self, register, displacement):
+        """Move the value from the displacement to the register.
+
+        Args:
+            register (ProcessorRegister): the destination register
+            displacement (int): the displacement offset
+
+        Returns:
+            bytearray: the machine code #noqa I202
+
+        """
+        value = bytearray()
+        # 8B /r 	MOV r32,r/m32
+        value.append(0x8b)
 
         rm = 5  # disp32
         reg = get_register_encoding(register)

@@ -2,12 +2,12 @@
 #include <stdio.h>
 
 int external_integer;
-void foo(void);
+int foo(void);
 
 int main(void)
 {
     external_integer = 1;
-    foo();
-    printf("i == %d\n", external_integer);
+    int res = foo();
+    printf("i == %d\nres == %d", external_integer, res);
     return 0;
 }

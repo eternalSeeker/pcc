@@ -48,8 +48,11 @@ class BinaryOperator(Expression):
 
         Returns:
             bytearray: the compiled code to evaluate the expression
+            List[RelocationObject]: the required relocation objects
 
         """
+        compiled_code = bytearray()
+        relocation_objects = []
         if register == ProcessorRegister.single_scalar_0:
             register_1 = ProcessorRegister.single_scalar_0
             register_2 = ProcessorRegister.single_scalar_1
@@ -59,17 +62,27 @@ class BinaryOperator(Expression):
         else:
             register_1 = ProcessorRegister.accumulator
             register_2 = ProcessorRegister.counter
-        value = self.operand_1.load_result_to_reg(register_1, assembler)
+        value, objects = self.operand_1.load_result_to_reg(register_1,
+                                                           assembler)
+        compiled_code += value
+        relocation_objects += objects
+        value, objects = self.operand_2.load_result_to_reg(register_2,
+                                                           assembler)
+        # update the offsets
+        for obj in objects:
+            additional_offset = len(compiled_code)
+            obj.offset += additional_offset
+            relocation_objects.append(obj)
+        compiled_code += value
 
-        value += self.operand_2.load_result_to_reg(register_2, assembler)
-
-        value += self.evaluate(source=register_2,
-                               destination=register_1,
-                               assembler=assembler)
+        compiled_code += self.evaluate(source=register_2,
+                                       destination=register_1,
+                                       assembler=assembler)
 
         # the result is in register_1, make sure
         # that is the specified register
         if register != register_1:
-            value += assembler.copy_from_reg_to_reg(register_1, register)
+            compiled_code += assembler.copy_from_reg_to_reg(register_1,
+                                                            register)
 
-        return value
+        return compiled_code, relocation_objects
