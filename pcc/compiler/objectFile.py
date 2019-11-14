@@ -430,7 +430,7 @@ class RelocationTableEntry:
 
 class SymbolTableEntry:
     def __init__(self, name_index, symbol_type, binding,
-                 section_index, symbol_size):
+                 section_index, symbol_size, offset_in_section=0):
         """Create a symbol table entry
 
         Args:
@@ -439,12 +439,13 @@ class SymbolTableEntry:
             binding (SymbolBinding): the binding of the symbol
             section_index (int): The index of the section of this symbol
             symbol_size (int): the size of the symbol
+            offset_in_section (int, optional): The offset in the section
         """
         self.st_name = name_index
         self.st_info = symbol_type + (binding << 4)
         self.st_other = 0
         self.st_shndx = section_index
-        self.st_value = 0
+        self.st_value = offset_in_section
         self.st_size = symbol_size
 
     def to_binary_array(self):
@@ -652,7 +653,8 @@ class ObjectFile:
                                     message=message)
             return
         entry = SymbolTableEntry(name, symbol_type,
-                                 symbol_binding, section_index, size)
+                                 symbol_binding, section_index, size,
+                                 offset_in_section=original_section_size)
         if symbol.relocation_objects:
             self.handle_relocation_objects(original_section_size, symbol)
         self.symbol_table.append(entry)
@@ -674,6 +676,8 @@ class ObjectFile:
             # the index of the symbol in the symbol table, which after
             # addition will be the length before addition
             if rela_object.type == CompiledObjectType.data:
+                info = 2
+            elif rela_object.type == CompiledObjectType.code:
                 info = 2
             else:
                 raise NotImplementedError

@@ -466,6 +466,8 @@ class Assembler:
 
         Returns:
             bytearray: the machine code #noqa I202
+            int: the displacement offset in the machine code
+                 for the displacement
 
         Raises:
             NotImplementedError: if not implemented in a subclasss
@@ -481,6 +483,22 @@ class Assembler:
 
         Returns:
             bytearray: the machine code #noqa I202
+
+        Raises:
+            NotImplementedError: if not implemented in a subclasss
+        """
+        raise NotImplementedError
+
+    def call(self, displacement):
+        """call the symbol with the specified displacement
+
+        Args:
+            displacement (int): the displacement offset
+
+        Returns:
+            bytearray: the machine code #noqa I202
+            int: the displacement offset in the machine code
+                 for the displacement
 
         Raises:
             NotImplementedError: if not implemented in a subclasss

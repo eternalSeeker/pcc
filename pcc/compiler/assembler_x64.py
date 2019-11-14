@@ -864,7 +864,9 @@ class X64Assembler(Assembler):
             displacement (int): the displacement offset
 
         Returns:
-            bytearray: the machine code #noqa I202
+            bytearray: the machine code
+            int: the displacement offset in the machine code
+                 for the displacement
 
         """
         value = bytearray()
@@ -905,3 +907,24 @@ class X64Assembler(Assembler):
         value.append(modr_byte)
 
         return value
+
+    def call(self, displacement):
+        """call the symbol with the specified displacement
+
+        Args:
+            displacement (int): the displacement offset
+
+        Returns:
+            bytearray: the machine code
+            int: the displacement offset in the machine code
+                 for the displacement
+
+        """
+        value = bytearray()
+        # E8 cd 	CALL rel32
+        value.append(0xe8)
+
+        displacement_offset = len(value)
+        encoded_displacement = struct.pack("i", displacement)
+        value += encoded_displacement
+        return value, displacement_offset
