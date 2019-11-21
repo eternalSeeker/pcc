@@ -716,9 +716,7 @@ class ObjectFile:
                                  section_index=section_index,
                                  symbol_size=size,
                                  offset_in_section=original_section_size)
-        if symbol.name == 'putchar':
-            entry.st_other = 0x0
-            entry.st_info = 0x10
+
         self.symbol_table.append(entry)
 
     def handle_relocation_objects(self, original_section_size, symbol):
