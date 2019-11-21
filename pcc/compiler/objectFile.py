@@ -442,11 +442,20 @@ class SymbolTableEntry:
             offset_in_section (int, optional): The offset in the section
         """
         self.st_name = name_index
-        self.st_info = symbol_type + (binding << 4)
+        self.st_info = (symbol_type & 0xf) + (binding << 4)
         self.st_other = 0
         self.st_shndx = section_index
         self.st_value = offset_in_section
         self.st_size = symbol_size
+
+    def update_info(self, symbol_type, binding):
+        """Update the info field
+
+        Args:
+            symbol_type (SymbolType): the type
+            binding (SymbolBinding): the binding
+        """
+        self.st_info = symbol_type + (binding << 4)
 
     def to_binary_array(self):
         """Get the byte array representation of the symbol table entry
@@ -618,17 +627,34 @@ class ObjectFile:
         Args:
             symbol (Symbol): the symbol to add
         """
-        name = add_to_table(symbol.name, self.string_table)
+        for sym in self.symbol_table:
+            name = self.get_name_at_offset_of_string_table(sym.st_name)
+            if name == symbol.name:
+                # name = self.symbol_table.index(sym)
+                self.update_symbol(sym, symbol)
+                return
+        else:
+            self.add_new_symbol(symbol)
+
+    def handle_symbol(self, symbol):
         size = len(symbol.value)
         original_section_size = 0
         symbol_binding = SymbolBinding.STB_GLOBAL
         symbol_type = SymbolType.STT_OBJECT
         if symbol.type == CompiledObjectType.code:
-            section_index = self.get_section_index('.text')
-            section_content = self.get_section('.text').section_content
-            original_section_size = len(section_content)
-            section_content += symbol.value
-            symbol_type = SymbolType.STT_FUNC
+            if symbol.size > 0:
+                section_index = self.get_section_index('.text')
+                section_content = self.get_section('.text').section_content
+                original_section_size = len(section_content)
+                section_content += symbol.value
+                symbol_type = SymbolType.STT_FUNC
+            else:
+                section_index = self.get_section_index('none')
+                section_content = self.get_section('none').section_content
+                original_section_size = len(section_content)
+                symbol_type = SymbolType.STT_NOTYPE
+                symbol_binding = SymbolBinding.STB_WEAK
+
         elif symbol.type == CompiledObjectType.data:
             if size == 0:
                 size = symbol.size
@@ -652,11 +678,47 @@ class ObjectFile:
             pcc.utils.warning.error(self.input_file_name, line_number=-1,
                                     message=message)
             return
-        entry = SymbolTableEntry(name, symbol_type,
-                                 symbol_binding, section_index, size,
-                                 offset_in_section=original_section_size)
         if symbol.relocation_objects:
             self.handle_relocation_objects(original_section_size, symbol)
+        return symbol_type, symbol_binding, \
+            section_index, size, original_section_size
+
+    def update_symbol(self, original_symbol, updated_symbol):
+        """Update the symbol in the symbol table.
+
+        Args:
+            original_symbol(SymbolTableEntry): the entry to update
+            updated_symbol (Symbol): the updated symbol
+        """
+        symbol_type, symbol_binding, \
+            section_index, size, original_section_size = \
+            self.handle_symbol(updated_symbol)
+        original_symbol.update_info(symbol_type, symbol_binding)
+        original_symbol.st_shndx = section_index
+        original_symbol.st_size = size
+        original_symbol.st_value = original_section_size
+
+    def add_new_symbol(self, symbol):
+        """Add a new symbol.
+
+        Args:
+            symbol (Symbol): the symbol to add
+
+        """
+        name = add_to_table(symbol.name, self.string_table)
+        symbol_type, symbol_binding, \
+            section_index, size, original_section_size = \
+            self.handle_symbol(symbol)
+
+        entry = SymbolTableEntry(name_index=name,
+                                 symbol_type=symbol_type,
+                                 binding=symbol_binding,
+                                 section_index=section_index,
+                                 symbol_size=size,
+                                 offset_in_section=original_section_size)
+        if symbol.name == 'putchar':
+            entry.st_other = 0x0
+            entry.st_info = 0x10
         self.symbol_table.append(entry)
 
     def handle_relocation_objects(self, original_section_size, symbol):
@@ -678,7 +740,7 @@ class ObjectFile:
             if rela_object.type == CompiledObjectType.data:
                 info = 2
             elif rela_object.type == CompiledObjectType.code:
-                info = 2
+                info = 4
             else:
                 raise NotImplementedError
             index = -1

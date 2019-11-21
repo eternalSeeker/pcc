@@ -623,6 +623,15 @@ class Ast:
                     if statement.name == name_id:
                         # found it
                         return statement
+                elif isinstance(statement, FunctionDeclaration):
+                    for argument in statement.argument_list:
+                        if isinstance(argument, FunctionArgument) and \
+                                argument.identifier == name_id:
+                            return argument
+                        elif isinstance(argument, VariableDeclaration) and \
+                                argument.name == name_id:
+                            return statement
+
             node = node.parent_node
         # no match found
         return None

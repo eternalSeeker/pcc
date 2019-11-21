@@ -1,11 +1,23 @@
 import copy
 
+from pcc.AST.compiled_object import CompiledObject, CompiledObjectType
+from pcc.AST.functions.function_argument import FunctionArgument
 from pcc.AST.statement import Statement
+from pcc.AST.variables.stack_variable import StackVariable
+from pcc.AST.variables.variable_declaration import VariableDeclaration
 
 
 class FunctionDeclaration(Statement):
 
     def __init__(self, return_type, name, argument_list, depth):
+        """Create a function declaration
+
+        Args:
+            return_type (VariableType): the type of the return argument
+            name (str): the identifier of the function
+            argument_list ([FunctionArgument]): the arguments for this function
+            depth (int): the depth in the tree
+        """
         super(FunctionDeclaration, self).__init__(depth)
         self.return_type = return_type
         self.name = name
@@ -36,6 +48,23 @@ class FunctionDeclaration(Statement):
         Args:
             current_list(list[StackVariable]): the current list
         """
+        for argument in self.argument_list:
+            if isinstance(argument, FunctionArgument):
+                name = argument.identifier
+                if name == 'void':
+                    # void arguemnts do not need to be added to the stack
+                    continue
+                variable_type = argument.type_decl
+            elif isinstance(argument, VariableDeclaration):
+                name = argument.name
+                variable_type = argument.variable_type
+            stack_var = StackVariable(name=name,
+                                      size=variable_type.size,
+                                      initializer_byte_array=bytearray(),
+                                      type_name=variable_type.name)
+            current_list.append(stack_var)
+        # a function declaration can only hold one 1 statement,
+        # a compound statement
         if len(self.statement_sequence) > 1:
             self.statement_sequence[1].add_stack_variable(current_list)
 
@@ -49,8 +78,7 @@ class FunctionDeclaration(Statement):
         for argument in self.argument_list:
             argument.update_depth(depth + 3)
 
-    @staticmethod
-    def compile(_):
+    def compile(self, _):
         """Compile this statement.
 
         Args:
@@ -60,7 +88,12 @@ class FunctionDeclaration(Statement):
         Returns:
             CompiledObject: the compiled version of this statement
         """
-        return None
+        value = bytearray()
+        size = 0
+        compiled_object = CompiledObject(self.name, size,
+                                         value, CompiledObjectType.code)
+
+        return compiled_object
 
     def get_stack_variable(self, variable_name):
         """Get the stack variable by name.

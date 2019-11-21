@@ -31,7 +31,15 @@ class ConstantExpression(Expression):
                 register == ProcessorRegister.single_scalar_1:
             val = float(self.exp_value)
         elif register == ProcessorRegister.accumulator:
-            val = int(self.exp_value)
+            try:
+                val = int(self.exp_value)
+            except ValueError:
+                char = self.exp_value[1:]
+                char = char[:len(char)-1]
+                if char == '\\n':
+                    val = ord('\n')
+                else:
+                    val = ord(char)
         else:
             # all other types interpreted as int
             val = int(self.exp_value)

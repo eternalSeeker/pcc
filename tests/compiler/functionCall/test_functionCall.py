@@ -15,6 +15,8 @@ parametrize = pytest.mark.parametrize
 
 files_to_test = [
     ('simpleFunctionCall.c', 'int_helper.c', 'simpleFunctionCall.out'),
+    ('functionCallIntArg.c', 'int_helper.c', 'functionCallIntArg.out'),
+    ('helloWorld.c', 'int_helper.c', 'helloWorld.out'),
 ]
 
 

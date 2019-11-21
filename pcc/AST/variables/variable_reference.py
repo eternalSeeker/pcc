@@ -28,7 +28,7 @@ class VariableReference(Expression):
 
         Returns:
             bytearray: the compiled code to evaluate the expression
-            List[RelocationObject]: the required relocation objects
+            list[RelocationObject]: the required relocation objects
         """
         value = bytearray()
         parent = self.parent_node

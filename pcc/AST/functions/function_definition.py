@@ -1,6 +1,9 @@
 from pcc.AST.ast_node import push_variable_on_stack
 from pcc.AST.compiled_object import CompiledObjectType, CompiledObject
+from pcc.AST.functions.function_argument import FunctionArgument
+from pcc.AST.functions.function_declaration import FunctionDeclaration
 from pcc.AST.statement import Statement
+from pcc.AST.variables.variable_declaration import VariableDeclaration
 from pcc.compiler.assembler import ProcessorRegister
 
 
@@ -31,7 +34,8 @@ class FunctionDefinition(Statement):
         Args:
             current_list (list[StackVariable]): the current list
         """
-        self.statement_sequence[1].add_stack_variable(current_list)
+        for statement in self.statement_sequence:
+            statement.add_stack_variable(current_list)
 
     def get_return_type(self):
         """Get the return type.
@@ -58,6 +62,41 @@ class FunctionDefinition(Statement):
 
         return stack_variable
 
+    def _copy_argmuments_to_stack(self, assembler):
+        """Copy all the arguments of this function to their stack variables.
+
+        Args:
+            assembler (Assembler): the assembler to use
+
+        Returns:
+            bytearray: the compiled machine code
+
+        """
+        compiled_code = bytearray()
+        function_definition: FunctionDeclaration = self.statement_sequence[0]
+        available_integer_registers = [
+            ProcessorRegister.integer_argument_0,
+            ProcessorRegister.integer_argument_1,
+            ProcessorRegister.integer_argument_2,
+            ProcessorRegister.integer_argument_3,
+            ProcessorRegister.integer_argument_4,
+            ProcessorRegister.integer_argument_5]
+        for argument in function_definition.argument_list:
+            if isinstance(argument, FunctionArgument):
+                stack_var = self.get_stack_variable(argument.identifier)
+            elif isinstance(argument, VariableDeclaration):
+                stack_var = self.get_stack_variable(argument.name)
+            if not stack_var and argument.identifier == 'void':
+                continue
+            stack_offset = stack_var.stack_offset
+            if stack_var.type_name not in ['float', 'double']:
+                register = available_integer_registers.pop(0)
+            compiled_code += \
+                assembler.copy_reg_to_stack(register=register,
+                                            stack_offset=stack_offset)
+
+        return compiled_code
+
     def compile(self, assembler):
         """Compile this statement.
 
@@ -74,8 +113,10 @@ class FunctionDefinition(Statement):
         value.extend(ret)
 
         # set the stack pointer as the new base pointer
-        ret = assembler.copy_from_reg_to_reg(ProcessorRegister.base_pointer,
-                                             ProcessorRegister.frame_pointer)
+        dest = ProcessorRegister.base_pointer
+        src = ProcessorRegister.frame_pointer
+        ret = assembler.copy_from_reg_to_reg(destination=dest,
+                                             source=src)
         value.extend(ret)
 
         current_list = []
@@ -92,9 +133,12 @@ class FunctionDefinition(Statement):
             stack_var.stack_offset = stack_offset
 
         self.stack_variable_list = current_list
+
         # add a nop
         ret = assembler.nop()
         value.extend(ret)
+
+        value += self._copy_argmuments_to_stack(assembler)
 
         relocation_objects = []
         for statement in self.statement_sequence:

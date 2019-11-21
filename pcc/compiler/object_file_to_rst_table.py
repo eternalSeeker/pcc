@@ -290,10 +290,10 @@ def print_symbol_table(table, entry_size, start_address, string_table):
         print(header)
         data = table[i * entry_size: (i + 1) * entry_size]
 
-        name = get_word(data, index=0, length=2)
+        name = get_word(data, index=0, length=4)
         name = get_string(string_table, name)
-        info = get_word(data, index=2, length=2)
-        other = get_word(data, index=4, length=2)
+        info = get_word(data, index=4, length=1)
+        other = get_word(data, index=5, length=1)
         shndx = get_word(data, index=6, length=2)
         if shndx == 0xfff1:
             shndx = 'SHN_ABS'

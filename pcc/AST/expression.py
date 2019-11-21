@@ -18,7 +18,7 @@ class Expression(AstNode):
 
         Returns:
             bytearray: the compiled code to evaluate the expression # noqa I202
-            List[RelocationObject]: the required relocation objects
+            list[RelocationObject]: the required relocation objects
 
         Raises:
             NotImplementedError: if not implemented in a subclass

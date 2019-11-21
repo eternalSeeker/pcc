@@ -14,6 +14,12 @@ class ProcessorRegister(enum.Enum):
     single_scalar_1 = 6
     double_scalar_1 = 7
     data = 8
+    integer_argument_0 = 9
+    integer_argument_1 = 10
+    integer_argument_2 = 11
+    integer_argument_3 = 12
+    integer_argument_4 = 13
+    integer_argument_5 = 14
 
 
 class ShiftMode(enum.Enum):
@@ -134,12 +140,12 @@ class Assembler:
         """
         raise NotImplementedError
 
-    def copy_reg_to_stack(self, stack_offset, reg):
+    def copy_reg_to_stack(self, stack_offset, register):
         """Copy the contents of the register to the stack
 
         Args:
             stack_offset (int): the stack offset
-            reg (ProcessorRegister): the register to copy
+            register (ProcessorRegister): the register to copy
 
         Returns:
             bytearray: the machine code #noqa I202

@@ -86,3 +86,10 @@ class AstNode:
         self._depth = depth
         for statement in self.statement_sequence:
             statement.update_depth(depth + 1)
+            statement.update_parent()
+
+    def update_parent(self):
+        """Update the parent node of all underlying nodes
+
+        """
+        pass

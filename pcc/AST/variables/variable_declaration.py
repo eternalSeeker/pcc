@@ -110,6 +110,9 @@ class VariableDeclaration(Statement):
                 compiled_object = CompiledObject(self.name, size, value,
                                                  CompiledObjectType.data,
                                                  relocation_objects)
+            else:
+                compiled_object = CompiledObject(self.name, size, value,
+                                                 CompiledObjectType.data)
         else:
             if self.initializer:
                 value = self.initializer_to_bytearray(size)
@@ -155,7 +158,7 @@ class VariableDeclaration(Statement):
                 size = self.variable_type.size
                 initializer = bytearray([0x0] * size)
             else:
-                initializer = 0
+                initializer = bytearray()
             stack_var = StackVariable(self.name, self.variable_type.size,
                                       initializer, self.variable_type.name)
             self.stack_var = stack_var

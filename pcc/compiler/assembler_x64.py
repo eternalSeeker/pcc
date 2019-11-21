@@ -9,7 +9,8 @@ from pcc.compiler.assembler import Assembler, ProcessorRegister, ShiftMode
 # http://ref.x86asm.net/coder64.html
 # https://www.amd.com/system/files/TechDocs/24594.pdf
 # page 74 for
-
+# integer calling register order:
+#     rdi - rsi - rdx - rcx - r8 - r9 - rest on stack
 def get_register_encoding(register):
     if register == ProcessorRegister.frame_pointer:
         return 4
@@ -17,7 +18,35 @@ def get_register_encoding(register):
         return 5
     elif register == ProcessorRegister.accumulator:
         return 0
-    elif register == ProcessorRegister.single_scalar_0:
+    elif register == ProcessorRegister.counter:
+        return 1
+    elif register == ProcessorRegister.data:
+        return 2
+    else:
+        encoding = process_input_regs(register)
+        if encoding >= 0:
+            return encoding
+        encoding = process_floating_regs(register)
+        if encoding >= 0:
+            return encoding
+        raise NotImplementedError
+
+
+def process_input_regs(register):
+    if register == ProcessorRegister.integer_argument_0:
+        return 7
+    elif register == ProcessorRegister.integer_argument_1:
+        return 6
+    elif register == ProcessorRegister.integer_argument_2:
+        return 2
+    elif register == ProcessorRegister.integer_argument_3:
+        return 1
+    else:
+        return -1
+
+
+def process_floating_regs(register):
+    if register == ProcessorRegister.single_scalar_0:
         return 0
     elif register == ProcessorRegister.single_scalar_1:
         return 1
@@ -25,12 +54,8 @@ def get_register_encoding(register):
         return 0
     elif register == ProcessorRegister.double_scalar_1:
         return 1
-    elif register == ProcessorRegister.counter:
-        return 1
-    elif register == ProcessorRegister.data:
-        return 2
     else:
-        raise NotImplementedError
+        return -1
 
 
 def is_single_scalar_reg(register):
@@ -122,7 +147,8 @@ class X64Assembler(Assembler):
         mod = 0b11
         reg = get_register_encoding(destination)
         rm = get_register_encoding(source)
-        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
+        # TODO investigate regression because of this mistake
+        modr_byte = (mod << 6) + (rm << 3) + (reg << 0)
         value.extend([0x48, 0x89, modr_byte])
 
         return value
@@ -383,22 +409,28 @@ class X64Assembler(Assembler):
             # idiv eax = edx:eax / divider
             if divider == ProcessorRegister.accumulator:
                 tmp_reg = ProcessorRegister.data
-                value += self.copy_from_reg_to_reg(divider, tmp_reg)
+                value += self.copy_from_reg_to_reg(destination=divider,
+                                                   source=tmp_reg)
                 divider = tmp_reg
                 # so dividend is no accumulator
                 tmp_reg = ProcessorRegister.accumulator
-                value += self.copy_from_reg_to_reg(dividend, tmp_reg)
+                value += self.copy_from_reg_to_reg(destination=dividend,
+                                                   source=tmp_reg)
 
                 tmp_reg = ProcessorRegister.counter
-                value += self.copy_from_reg_to_reg(divider, tmp_reg)
+                value += self.copy_from_reg_to_reg(destination=divider,
+                                                   source=tmp_reg)
                 divider = tmp_reg
 
-            value += self.copy_from_reg_to_reg(dividend,
-                                               ProcessorRegister.accumulator)
+            src = ProcessorRegister.accumulator
+            value += self.copy_from_reg_to_reg(destination=dividend,
+                                               source=src)
 
-            # mov edx -> eax
-            value += self.copy_from_reg_to_reg(ProcessorRegister.data,
-                                               ProcessorRegister.accumulator)
+            # mov eax -> edx
+            src = ProcessorRegister.accumulator
+            dest = ProcessorRegister.data
+            value += self.copy_from_reg_to_reg(destination=dest,
+                                               source=src)
 
             # shift edx by 31 -> contains the highest bits of the dividend,
             # eax the lowest 31 bits

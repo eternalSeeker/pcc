@@ -1,3 +1,4 @@
+watchdog
 # Runtime requirements
 --requirement requirements.txt
 
@@ -10,7 +11,7 @@ pycparser==2.19
 # Linting
 pylama==7.7.1
 eradicate==1.0
-darglint==0.6.1
+darglint==0.5.7
 
 # Documentation
 Sphinx==2.2.0
