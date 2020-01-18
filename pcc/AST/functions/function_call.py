@@ -20,6 +20,7 @@ class FunctionCall(Statement, Expression):
         if self.expression_list:
             string += self._depth * '  ' + '  ExprList: \n'
             for expression in self.expression_list:
+                expression._depth = self._depth + 1
                 string += "%s\n" % str(expression)
         index = string.rfind('\n')
         string = string[:index] + string[index+1:]

@@ -3,6 +3,7 @@ import re
 
 import pcc
 import pcc.utils.warning
+from pcc import utils
 from pcc.AST.arithmetic_operators.addition import Addition
 from pcc.AST.array_declaration import ArrayDeclaration
 from pcc.AST.variables.assignment import Assignment
@@ -161,6 +162,11 @@ class Ast:
         ind = expression.find('.')
         if ind > -1:
             type_string = 'double'
+            return type_string
+
+        ind = expression.find('\'')
+        if ind > -1:
+            type_string = 'char'
             return type_string
 
         return type_string
@@ -327,14 +333,17 @@ class Ast:
         Returns:
             Expression: the expression if parsed else None
         """
-        res_compare_equal = re.match(r"(\S+)==(\S+)", right_hand_value)
-        res_compare_not_equal = re.match(r"(\S+)!=(\S+)", right_hand_value)
+        res_compare_equal = re.match(r"([^=]+)==([^=]+)", right_hand_value)
+        res_compare_not_equal = re.match(r"([^=!]+)!=([^=!]+)",
+                                         right_hand_value)
 
-        res_compare_less = re.match(r"(\S+)<(\S+)", right_hand_value)
-        res_compare_more = re.match(r"(\S+)>(\S+)", right_hand_value)
+        res_compare_less = re.match(r"([^<]+)<([^<]+)", right_hand_value)
+        res_compare_more = re.match(r"([^>]+)>([^>]+)", right_hand_value)
 
-        res_compare_less_or_equal = re.match(r"(\S+)<=(\S+)", right_hand_value)
-        res_compare_more_or_equal = re.match(r"(\S+)>=(\S+)", right_hand_value)
+        res_compare_less_or_equal = re.match(r"([^<=]+)<=([^<=]+)",
+                                             right_hand_value)
+        res_compare_more_or_equal = re.match(r"([^>=]+)>=([^>=]+)",
+                                             right_hand_value)
 
         if res_compare_equal:
             operand_1_str = res_compare_equal.group(1)
@@ -419,7 +428,7 @@ class Ast:
             elif logical_exp:
                 expression = logical_exp
             elif self.get_variable_definition_from_id(right_hand_value):
-                expression = VariableReference(depth, right_hand_value)
+                expression = VariableReference(depth, right_hand_value.strip())
                 expression.parent_node = self.current_node
             elif bitwise_exp:
                 expression = bitwise_exp
@@ -431,7 +440,7 @@ class Ast:
                     expression = function_call
                 else:
                     expression = ConstantExpression(initializer_type,
-                                                    right_hand_value,
+                                                    right_hand_value.strip(),
                                                     depth)
 
         return expression
@@ -615,21 +624,20 @@ class Ast:
         return compatible
 
     def get_variable_definition_from_id(self, name_id):
-
         node = self.current_node
         while node:
             for statement in node.statement_sequence:
                 if isinstance(statement, VariableDeclaration):
-                    if statement.name == name_id:
+                    if statement.name == name_id.strip():
                         # found it
                         return statement
                 elif isinstance(statement, FunctionDeclaration):
                     for argument in statement.argument_list:
                         if isinstance(argument, FunctionArgument) and \
-                                argument.identifier == name_id:
+                                argument.identifier == name_id.strip():
                             return argument
                         elif isinstance(argument, VariableDeclaration) and \
-                                argument.name == name_id:
+                                argument.name == name_id.strip():
                             return statement
 
             node = node.parent_node
@@ -873,11 +881,21 @@ class Ast:
         if line_number == -1:
             return line_number
 
-        if_stat = re.match(r"\s+if\((\S+)\)", statement)
-
-        if if_stat:
+        if statement.strip().startswith('if'):
             depth = self.get_depth_in_tree()
-            condition_str = if_stat.group(1)
+            start_index = statement.find('if') + len('if')
+            end_line, end_pos = utils.stringListParsing.extract_closing_char(
+                list_to_process=statements,
+                open_char='(',
+                start_line=0,
+                start_index=start_index,
+                closing_char=')')
+            if end_line == 0:
+                condition_str = statement[start_index+1:end_pos]
+            else:
+                condition_str = statement[start_index+1:]
+                condition_str += statements[1:end_line]
+                condition_str += statements[end_line][:end_pos]
             # the condition is one deeper than the if condition
             condition = None
             if_branch = None
@@ -889,7 +907,7 @@ class Ast:
             condition = self.get_right_hand_value(condition_str, depth)
             if_statement.condition = condition
             # found a correct if line
-            line_number += 1
+            line_number += 1 + end_line
             next_statements = statements[line_number:]
             processed_lines = self.parse_line(next_statements)
             if processed_lines == -1:
