@@ -145,10 +145,10 @@ class X64Assembler(Assembler):
         # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
         # REG destination
         mod = 0b11
-        reg = get_register_encoding(destination)
-        rm = get_register_encoding(source)
-        # TODO investigate regression because of this mistake
-        modr_byte = (mod << 6) + (rm << 3) + (reg << 0)
+        reg = get_register_encoding(source)
+        rm = get_register_encoding(destination)
+
+        modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
         value.extend([0x48, 0x89, modr_byte])
 
         return value
@@ -362,7 +362,7 @@ class X64Assembler(Assembler):
             rm = get_register_encoding(source)
             reg = get_register_encoding(destination)
         else:
-            value.append(0x29)  # sub
+            value.extend([0x48, 0x29])  # sub
             rm = get_register_encoding(destination)
             reg = get_register_encoding(source)
         # ModR_byte encoded operands ( ModR/M Byte) MOD 11, RM source and
@@ -470,23 +470,23 @@ class X64Assembler(Assembler):
         if is_single_scalar_reg(destination):
             value.extend([0xF3, 0x0F, 0x59])  # mulss
             mod = 0b11
-            rm = get_register_encoding(destination)
-            reg = get_register_encoding(source)
+            reg = get_register_encoding(destination)
+            rm = get_register_encoding(source)
             modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
             value.append(modr_byte)
         elif is_double_scalar_reg(destination):
             value.extend([0xF2, 0x0F, 0x59])  # mulsd
             mod = 0b11
-            rm = get_register_encoding(destination)
-            reg = get_register_encoding(source)
+            reg = get_register_encoding(destination)
+            rm = get_register_encoding(source)
             modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
             value.append(modr_byte)
         else:
             value.extend([0x0F, 0xAF])  # imul
 
             mod = 0b11
-            rm = get_register_encoding(destination)
-            reg = get_register_encoding(source)
+            reg = get_register_encoding(destination)
+            rm = get_register_encoding(source)
             modr_byte = (mod << 6) + (reg << 3) + (rm << 0)
             value.append(modr_byte)
 

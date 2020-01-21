@@ -134,6 +134,16 @@ class FunctionDefinition(Statement):
 
         self.stack_variable_list = current_list
 
+        reg = ProcessorRegister.counter
+        # allign the stack to a multiple of 16
+        # stack_offset is a negative number that is rounded to a multiple
+        # of 16, stack_offset=12 -> allinged_stack_size=16
+        allinged_stack_size = 16*((-stack_offset)//16 + 1)
+        value += assembler.copy_value_to_reg(imm_value=allinged_stack_size,
+                                             destination=reg)
+        value += assembler.sub(source=reg,
+                               destination=ProcessorRegister.frame_pointer)
+
         # add a nop
         ret = assembler.nop()
         value.extend(ret)

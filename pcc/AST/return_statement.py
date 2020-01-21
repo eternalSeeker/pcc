@@ -55,6 +55,13 @@ class ReturnStatement(Statement):
         else:
             rela_objects = []
 
+        # set the base pointer as the new stack pointer
+        src = ProcessorRegister.base_pointer
+        dest = ProcessorRegister.frame_pointer
+        ret = assembler.copy_from_reg_to_reg(destination=dest,
+                                             source=src)
+        value.extend(ret)
+
         # restore the frame pointer from stack
         ret = assembler.pop_from_stack(ProcessorRegister.base_pointer)
         value.extend(ret)

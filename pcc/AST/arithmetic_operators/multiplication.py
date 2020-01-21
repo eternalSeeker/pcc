@@ -18,5 +18,5 @@ class Multiplication(BinaryOperator):
             bytearray: the byte code
         """
         value = bytearray()
-        value += assembler.mul(source, destination)
+        value += assembler.mul(source=source, destination=destination)
         return value

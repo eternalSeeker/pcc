@@ -64,11 +64,19 @@ class IfStatement(Statement):
             jump_distance += len(assembler.jmp(jump_distance_else))
 
         value += assembler.je(jump_distance)
+        for relocation_object in if_part.relocation_objects:
+            additional_offset = len(value)
+            relocation_object.offset += additional_offset
+            relocation_objects.append(relocation_object)
         value += if_part.value
 
         if self.else_statement:
             # jump over the else part (for the if part)
             value += assembler.jmp(jump_distance_else)
+            for relocation_object in else_part.relocation_objects:
+                additional_offset = len(value)
+                relocation_object.offset += additional_offset
+                relocation_objects.append(relocation_object)
             # the actual else part
             value += else_part.value
 
@@ -88,3 +96,21 @@ class IfStatement(Statement):
             StackVariable: the stack variable if found, else None
         """
         return self.parent_node.get_stack_variable(variable_name)
+
+    def get_return_type(self):
+        """Get the return type.
+
+        Returns:
+            str: the return type
+        """
+        return self.parent_node.get_return_type()
+
+    def add_stack_variable(self, current_list):
+        """Add all stack variable to the list
+
+        Args:
+            current_list(list[StackVariable]): the current list
+        """
+        self.if_statement.add_stack_variable(current_list)
+        if self.else_statement:
+            self.else_statement.add_stack_variable(current_list)

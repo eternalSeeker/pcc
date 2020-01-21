@@ -18,6 +18,8 @@ class Assignment(Statement):
         super(Statement, self).__init__(depth)
         self.id = identifier
         self.initializer_exp = initializer_exp
+        if self.initializer_exp:
+            self.initializer_exp.parent_node = self
 
     def __str__(self):
         string = self._depth * '  ' + 'Assignment: =\n'
@@ -125,3 +127,14 @@ class Assignment(Statement):
                                          relocation_objects)
 
         return compiled_object
+
+    def get_stack_variable(self, variable_name):
+        """Get the stack variable by name.
+
+        Args:
+            variable_name (str): the name of the variable
+
+        Returns:
+            StackVariable: the stack variable if found, else None
+        """
+        return self.parent_node.get_stack_variable(variable_name)

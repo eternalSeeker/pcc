@@ -75,11 +75,11 @@ class Assembler:
         """
         raise NotImplementedError
 
-    def copy_value_to_reg(self, value, destination):
+    def copy_value_to_reg(self, imm_value, destination):
         """Copy the value from one register to another one.
 
         Args:
-            value (int): the value to copy
+            imm_value (int): the value to copy
             destination (ProcessorRegister): the destination register
 
         Returns:

@@ -13,6 +13,8 @@ class FunctionCall(Statement, Expression):
             expression_list = []
         self.id = identifier
         self.expression_list = expression_list
+        for expression in self.expression_list:
+            expression.parent_node = self
 
     def __str__(self):
         string = self._depth * '  ' + 'FuncCall: \n'
@@ -38,7 +40,28 @@ class FunctionCall(Statement, Expression):
         return self.parent_node.get_stack_variable(variable_name)
 
     def load_result_to_reg(self, register, assembler):
-        pass
+        """Load the result of the expression to the specified register
+
+        Args:
+            register (ProcessorRegister): the register to load the result
+            assembler (Assembler): the assembler to use
+
+        Returns:
+            bytearray: the compiled code to evaluate the expression
+            List[RelocationObject]: the required relocation objects
+
+        """
+        compiled_object = self.compile(assembler)
+        relocation_objects = compiled_object.relocation_objects
+        value = compiled_object.value
+        # the result is stored in the accumulator register for a function call
+        if ProcessorRegister.accumulator != register:
+            value += assembler.copy_from_reg_to_reg(
+                source=ProcessorRegister.accumulator,
+                destination=register)
+        value += assembler.copy_value_to_reg(imm_value=6,
+                                             destination=register)
+        return value, relocation_objects
 
     def update_parent(self):
         for expression in self.expression_list:
