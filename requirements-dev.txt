@@ -16,7 +16,7 @@ darglint==0.5.7
 # Documentation
 Sphinx==2.2.0
 docutils==0.15.2
-Jinja2==2.10.3
+Jinja2==2.11.3
 MarkupSafe==1.1.1
 Pygments==2.4.2
 
